@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="15dp"
+    android:background="@color/white"
+    android:padding="10dp">
+
+    <LinearLayout
+        android:id="@+id/ll_item_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/image_background"
+        android:padding="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/iv_item_image"
+            android:layout_width="70dp"
+            android:layout_height="70dp"
+            android:contentDescription="@string/image"
+            android:scaleType="fitXY" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_product_details"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/ll_item_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/nama_pengguna"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/nama_pengguna" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/pekerjaan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/pekerjaan" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/txt_nilai"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/txt_nilai"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/nilai_pengguna"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/nilai_pengguna"
+                app:layout_constraintStart_toEndOf="@id/txt_nilai"
+                app:layout_constraintTop_toTopOf="@id/txt_nilai"
+                android:layout_marginStart="8dp" />
+
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_1"
+                android:layout_width="5dp"
+                android:layout_height="5dp"
+                app:layout_constraintStart_toEndOf="@id/nilai_pengguna"
+                app:layout_constraintTop_toTopOf="@id/txt_nilai"
+                android:layout_marginStart="30dp"
+                app:flow_verticalAlign="center"
+                />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/pemesanan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pemesanan"
+                android:layout_marginStart="30dp"
+                app:layout_constraintStart_toEndOf="@id/divider_1"
+                app:layout_constraintTop_toTopOf="@id/txt_nilai"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/banyak_pemesanan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/Banyak_pemesanan"
+                app:layout_constraintStart_toEndOf="@id/pemesanan"
+                app:layout_constraintTop_toTopOf="@id/txt_nilai"/>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/deskripsi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/deskripsi"
+        app:layout_constraintTop_toBottomOf="@+id/ll_item_image"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

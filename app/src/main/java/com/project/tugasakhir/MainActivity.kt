@@ -10,6 +10,7 @@ import com.project.tugasakhir.Article.ArticleFragment
 import com.project.tugasakhir.Chat.ChatFragment
 import com.project.tugasakhir.Map.MapFragment
 import com.project.tugasakhir.Cart.CartFragment
+import com.project.tugasakhir.Katalog.KatalogFragment
 import com.project.tugasakhir.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -32,8 +33,8 @@ class MainActivity : AppCompatActivity() {
                     loadFragment(MapFragment())
                     return@setOnItemSelectedListener true
                 }
-                R.id.article -> {
-                    loadFragment(ArticleFragment())
+                R.id.katalog -> {
+                    loadFragment(KatalogFragment())
                     return@setOnItemSelectedListener true
                 }
                 R.id.chat -> {

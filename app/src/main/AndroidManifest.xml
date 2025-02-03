@@ -13,6 +13,12 @@
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
         <activity
+            android:name=".Katalog.Product.UbahProdukActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Katalog.Product.InfoProductActivity"
+            android:exported="false" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

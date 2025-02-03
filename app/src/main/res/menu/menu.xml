@@ -5,9 +5,9 @@
         android:icon="@drawable/map"
         android:title="Map"/>
     <item
-        android:id="@+id/article"
+        android:id="@+id/katalog"
         android:icon="@drawable/article"
-        android:title="Article"/>
+        android:title="Katalog"/>
     <item
         android:id="@+id/chat"
         android:icon="@drawable/forum"
