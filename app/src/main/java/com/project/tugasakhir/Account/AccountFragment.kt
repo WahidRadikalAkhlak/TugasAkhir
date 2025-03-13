@@ -1,60 +1,79 @@
 package com.project.tugasakhir.Account
 
+import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import com.project.tugasakhir.R
+import com.project.tugasakhir.databinding.FragmentAccountBinding
+import de.hdodenhof.circleimageview.CircleImageView
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [AccountFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class AccountFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private lateinit var binding: FragmentAccountBinding
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_account, container, false)
+
+        binding = FragmentAccountBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment AccountFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            AccountFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+
+        updateUI()
+
+        binding.tvLogout.setOnClickListener {
+            if (isLoggedIn()) {
+                logout()
+            } else {
+                login()
             }
+        }
+    }
+
+    private fun isLoggedIn(): Boolean {
+        return sharedPreferences.getBoolean("isLoggedIn", false)
+    }
+
+    private fun updateUI() {
+        if (isLoggedIn()) {
+            // Menampilkan informasi pengguna setelah login
+            binding.tvUserName.text = "Nama Pengguna"
+            binding.noPhone.text = "0812...."
+            binding.imageUser.setImageResource(R.drawable.avatar)
+            binding.tvLogout.text = "Logout"
+        } else {
+            // Jika belum login
+            binding.tvUserName.text = "Login untuk melihat info"
+            binding.noPhone.text = ""
+            binding.imageUser.setImageResource(R.drawable.avatar)
+            binding.tvLogout.text = "Login"
+        }
+    }
+
+    private fun login() {
+        // Simulasi proses login
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("isLoggedIn", true)
+        editor.apply()
+        updateUI()  // Perbarui UI setelah login
+    }
+
+    private fun logout() {
+        // Menghapus status login
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("isLoggedIn", false)
+        editor.apply()
+        updateUI()  // Perbarui UI setelah logout
     }
 }

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".Account.Login.LoginActivity">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_welcome_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="WelcomeBack"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"/>
+
+    <!-- User Image -->
+    <ImageView
+        android:id="@+id/iv_user_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:clipToOutline="true"
+        android:src="@drawable/logo"
+        android:layout_below="@id/tv_welcome_back"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"/>
+
+    <!-- Email Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Email"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/iv_user_image"
+        android:layout_marginTop="30dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Email Edit Text -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your email"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_email"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Password Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Password"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/et_email"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Password Edit Text -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your password"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_password"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <ImageView
+        android:id="@+id/imageLogin"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_below="@+id/et_password"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="20dp"
+        app:srcCompat="@drawable/btn_arraw1" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_below="@+id/imageLogin"
+        android:padding="10dp"
+        android:layout_marginTop="20dp"
+        android:id="@+id/rl_google"
+        android:background="@drawable/border_backround"
+        >
+
+    <ImageView
+        android:id="@+id/img_google"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/icon_google"
+        android:adjustViewBounds="true"
+        />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txt_google"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Sign In With Google"
+            android:textStyle="bold"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="45dp"
+        android:layout_below="@+id/rl_google"
+        android:padding="10dp"
+        android:id="@+id/rl_facebook"
+        android:background="@drawable/border_backround"
+        android:layout_marginTop="5dp"
+        >
+
+        <ImageView
+            android:id="@+id/img_facebook"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/icon_facebook"
+            android:adjustViewBounds="true"
+            />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txt_facebook"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Sign In With Facebook"
+            android:textStyle="bold"
+            />
+    </RelativeLayout>
+
+
+    <!-- Register Link -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Are you new user? Register"
+        android:textSize="14sp"
+        android:textColor="@color/dark_grey"
+        android:layout_below="@id/rl_facebook"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"/>
+</RelativeLayout>

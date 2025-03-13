@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "475862672953",
+    "project_id": "farmora-126cb",
+    "storage_bucket": "farmora-126cb.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:475862672953:android:ea71ded64a34f532728fe8",
+        "android_client_info": {
+          "package_name": "com.project.tugasakhir"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBm0LcbbTsTxaBXMzju2wcKJv3gU-XkqPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

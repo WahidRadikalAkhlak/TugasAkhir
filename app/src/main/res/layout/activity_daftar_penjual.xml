@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".Account.Penjual.DaftarPenjualActivity">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Welcome Text -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_daftar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Daftar Akun Bisnis"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"/>
+
+
+        <!-- Name Text -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_nohp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nomor Telepon Lain"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/tv_daftar"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentStart="true"/>
+
+        <!-- Name Input Field -->
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_no_hp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Masukkan Nomor HandPhone Anda"
+            android:background="@drawable/edit_text_background"
+            android:layout_below="@id/tv_nohp"
+            android:layout_marginTop="8dp"
+            android:padding="16dp"/>
+
+        <!-- Alamat Toko Text -->
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_alamat_toko"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alamat Toko Anda"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/et_no_hp"
+            android:layout_marginTop="20dp"
+            android:layout_alignParentStart="true"/>
+
+        <!-- Alamat Input Field with AutoComplete for Google Places -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/tl_alamat_toko"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tv_alamat_toko"
+            android:layout_marginTop="8dp">
+
+            <AutoCompleteTextView
+                android:id="@+id/et_alamat_toko"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Masukkan Alamat Toko Anda"
+                android:inputType="text"
+                android:background="@drawable/edit_text_background"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Button to Launch Map Search -->
+        <Button
+            android:id="@+id/btn_search_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:backgroundTint="@drawable/chip_background"
+            android:text="Cari Lokasi di Peta"
+            android:layout_below="@id/tl_alamat_toko"
+            android:layout_marginTop="10dp"
+            android:layout_centerHorizontal="true"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_no_izin_usaha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Izin Usaha"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/btn_search_location"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentStart="true"/>
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_no_izinusaha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Masukkan Nomor Izin Usaha / Sertifikat "
+            android:background="@drawable/edit_text_background"
+            android:layout_below="@id/tv_no_izin_usaha"
+            android:layout_marginTop="8dp"
+            android:padding="16dp"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_deskripsi_profil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Deskripsi Profil"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/et_no_izinusaha"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentStart="true"/>
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_deskripsi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Deskripsi Profil"
+            android:background="@drawable/edit_text_background"
+            android:layout_below="@id/tv_deskripsi_profil"
+            android:layout_marginTop="8dp"
+            android:padding="16dp"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tv_sosial_media"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sosial Media"
+            android:textSize="14sp"
+            android:textColor="@android:color/black"
+            android:layout_below="@id/et_deskripsi"
+            android:layout_marginTop="10dp"
+            android:layout_alignParentStart="true"/>
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/et_sosial_media"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Sosial Media Instagram, Facebook, dll"
+            android:background="@drawable/edit_text_background"
+            android:layout_below="@id/tv_sosial_media"
+            android:layout_marginTop="8dp"
+            android:padding="16dp"/>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:text="Daftar"
+            android:textStyle="bold"
+            android:layout_marginTop="26dp"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/et_sosial_media"
+
+            />
+
+    </RelativeLayout>
+</ScrollView>

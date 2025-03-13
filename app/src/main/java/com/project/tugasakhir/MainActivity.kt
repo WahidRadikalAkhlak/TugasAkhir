@@ -6,10 +6,10 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.project.tugasakhir.Account.AccountFragment
-import com.project.tugasakhir.Article.ArticleFragment
 import com.project.tugasakhir.Chat.ChatFragment
-import com.project.tugasakhir.Map.MapFragment
 import com.project.tugasakhir.Cart.CartFragment
+import com.project.tugasakhir.Katalog.KatalogFragment
+import com.project.tugasakhir.Map.MapsFragment
 import com.project.tugasakhir.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -25,15 +25,15 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         val bottomNavigationView = binding.bottomnav
-        loadFragment(MapFragment())
+        loadFragment(MapsFragment())
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.map -> {
-                    loadFragment(MapFragment())
+                    loadFragment(MapsFragment())
                     return@setOnItemSelectedListener true
                 }
-                R.id.article -> {
-                    loadFragment(ArticleFragment())
+                R.id.katalog -> {
+                    loadFragment(KatalogFragment())
                     return@setOnItemSelectedListener true
                 }
                 R.id.chat -> {

@@ -1,6 +1,143 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:padding="16dp"
+    tools:context="com.project.tugasakhir.Katalog.KatalogFragment">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <!-- MaterialCardView for the Product Card -->
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_product"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="12dp"
+        app:strokeWidth="2dp"
+        android:layout_centerInParent="true"
+        android:layout_marginBottom="16dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- Product Image -->
+            <ImageView
+                android:id="@+id/img_product"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="16dp"
+                android:src="@drawable/gradient_profile"
+                android:contentDescription="@string/gambar_produk"
+                android:scaleType="centerCrop" />
+
+            <!-- Product Title -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/title_product"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/img_product"
+                android:text="@string/nama_produk"
+                android:textSize="18sp"
+                android:textColor="@android:color/black"
+                android:layout_alignParentTop="true"
+                android:layout_marginTop="5dp" />
+
+
+            <!-- Product Type and Category -->
+            <RelativeLayout
+                android:id="@+id/layout_jenis_tipe"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/title_product"
+                android:layout_alignStart="@id/title_product"
+                android:layout_marginTop="10dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/jenis_produk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/jenis_produk"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.divider.MaterialDivider
+                    android:id="@+id/divider_2"
+                    android:layout_width="1dp"
+                    android:layout_height="16dp"
+                    android:layout_toEndOf="@id/jenis_produk"
+                    android:layout_marginStart="12dp"
+                    android:layout_centerVertical="true"
+                    app:dividerThickness="1dp"
+                    app:dividerColor="@android:color/darker_gray" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tipe_produk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tipe_produk"
+                    android:layout_toEndOf="@id/divider_2"
+                    android:textSize="14sp" />
+            </RelativeLayout>
+
+            <!-- Product Description below 'layout_jenis_tipe' -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/deskripsi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/deskripsi"
+                android:textSize="14sp"
+                android:layout_below="@id/layout_jenis_tipe"
+                android:layout_alignStart="@id/layout_jenis_tipe"
+                android:layout_marginTop="10dp" />
+
+            <!-- Availability and Quantity -->
+            <RelativeLayout
+                android:id="@+id/detail_tersedia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/deskripsi"
+                android:layout_alignStart="@id/deskripsi"
+                android:layout_marginTop="10dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/tersedia"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/tersedia"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/jumlah_tersedia"
+                    android:layout_toEndOf="@id/tersedia"
+                    android:textSize="14sp"
+                    android:layout_marginStart="8dp" />
+            </RelativeLayout>
+
+            <!-- Price Section: Harga and Kg -->
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/harga"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/harga"
+                android:textSize="16sp"
+                android:layout_below="@id/detail_tersedia"
+                android:layout_marginTop="15dp"
+                android:layout_alignStart="@id/detail_tersedia" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/kg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/kg"
+                android:textSize="14sp"
+                android:layout_below="@id/harga"
+                android:layout_marginTop="5dp"
+                android:layout_alignStart="@id/harga" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
+</RelativeLayout>

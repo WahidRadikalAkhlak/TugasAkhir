@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    tools:context=".Account.Register.RegisterActivity">
+
+  <RelativeLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content">
+
+    <!-- Welcome Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_welcome_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Create Account"
+        android:textSize="30sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"/>
+
+    <!-- User Image -->
+    <ImageView
+        android:id="@+id/iv_user_image"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:clipToOutline="true"
+        android:src="@drawable/logo"
+        android:layout_below="@id/tv_welcome_back"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"/>
+
+    <!-- Name Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Name"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/iv_user_image"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Name Input Field -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your Name"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_name"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Email Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_email"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Email"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/et_name"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Email Input Field -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_email"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your email"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_email"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Handphone Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_handphone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/no_handphone"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/et_email"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Handphone Input Field -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_handphone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your Phone Number"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_handphone"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Password Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Password"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/et_handphone"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Password Input Field -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your password"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_password"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Confirm Password Text -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_confirm_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Konfirmasi Password"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:layout_below="@id/et_password"
+        android:layout_marginTop="10dp"
+        android:layout_alignParentStart="true"/>
+
+    <!-- Confirm Password Input Field -->
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_confirm_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your Confirm Password"
+        android:background="@drawable/edit_text_background"
+        android:layout_below="@id/tv_confirm_password"
+        android:layout_marginTop="8dp"
+        android:padding="16dp"/>
+
+    <!-- Registration Button (Image) -->
+    <ImageView
+        android:id="@+id/imageRegist"
+        android:layout_width="55dp"
+        android:layout_height="55dp"
+        android:layout_below="@id/et_confirm_password"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="20dp"
+        app:srcCompat="@drawable/btn_arraw1" />
+
+    <!-- Register Link -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_register"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Already have an account? Login"
+        android:textSize="14sp"
+        android:textColor="@color/dark_grey"
+        android:layout_below="@id/imageRegist"
+        android:layout_marginTop="10dp"
+        android:layout_centerHorizontal="true"/>
+
+  </RelativeLayout>
+</ScrollView>

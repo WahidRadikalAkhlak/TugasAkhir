@@ -1,5 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <color name="white">#FFFFFFFF</color>\
+    <color name="dark_grey">#A9A9A9</color>
+    <color name="chip_bg_states">#B3D8A8</color>
+    <color name="fontColor">#FF404A3A</color>
+    <color name="light_grey">#EFF3EA</color>
+    <color name="chip_bg">#D9D9D9</color>
 </resources>
