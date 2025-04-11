@@ -1,79 +1,83 @@
 package com.project.tugasakhir.Account
 
 import android.content.Context
-import android.content.SharedPreferences
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.Fragment
+import com.google.firebase.firestore.FirebaseFirestore
+import com.project.tugasakhir.Account.Login.LoginActivity
+import com.project.tugasakhir.Account.Penjual.DaftarPenjualActivity  // Import activity yang benar
+import com.project.tugasakhir.Account.Penjual.DaftarProductActivity
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.FragmentAccountBinding
-import de.hdodenhof.circleimageview.CircleImageView
 
 class AccountFragment : Fragment() {
 
     private lateinit var binding: FragmentAccountBinding
-    private lateinit var sharedPreferences: SharedPreferences
+    private val db = FirebaseFirestore.getInstance()
 
+    // onCreateView to set up the view binding for this fragment
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         binding = FragmentAccountBinding.inflate(inflater, container, false)
         return binding.root
     }
 
+    // onViewCreated to handle logic after the fragment view is created
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        // Ambil data user dari Bundle yang diteruskan
+        val userName = arguments?.getString("userName") ?: "Nama tidak ditemukan"
+        val userEmail = arguments?.getString("userEmail") ?: "Email tidak ditemukan"
 
-        updateUI()
+        // Tampilkan data pengguna
+        binding.tvUserName.text = userName
+        binding.email.text = userEmail
 
-        binding.tvLogout.setOnClickListener {
-            if (isLoggedIn()) {
-                logout()
-            } else {
-                login()
-            }
+        // Set up the logout button logic
+        binding.clLogout.setOnClickListener {
+            logout()
         }
-    }
 
-    private fun isLoggedIn(): Boolean {
-        return sharedPreferences.getBoolean("isLoggedIn", false)
-    }
-
-    private fun updateUI() {
-        if (isLoggedIn()) {
-            // Menampilkan informasi pengguna setelah login
-            binding.tvUserName.text = "Nama Pengguna"
-            binding.noPhone.text = "0812...."
-            binding.imageUser.setImageResource(R.drawable.avatar)
-            binding.tvLogout.text = "Logout"
-        } else {
-            // Jika belum login
-            binding.tvUserName.text = "Login untuk melihat info"
-            binding.noPhone.text = ""
-            binding.imageUser.setImageResource(R.drawable.avatar)
-            binding.tvLogout.text = "Login"
+        // Navigate to ActivityDaftarPenjual when the button is clicked
+        binding.btnDaftarbisnis.setOnClickListener {
+            navigateToDaftarPenjual()
         }
-    }
-
-    private fun login() {
-        // Simulasi proses login
-        val editor = sharedPreferences.edit()
-        editor.putBoolean("isLoggedIn", true)
-        editor.apply()
-        updateUI()  // Perbarui UI setelah login
+        binding.btnDaftarProduct.setOnClickListener {
+            navigateToDaftarProduct()
+        }
     }
 
     private fun logout() {
-        // Menghapus status login
+        // Perform any logout logic, such as clearing preferences or tokens
+        val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        editor.putBoolean("isLoggedIn", false)
+        editor.clear()
         editor.apply()
-        updateUI()  // Perbarui UI setelah logout
+
+        // Navigate to the login screen after logout
+        navigateToLogin()
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(requireContext(), LoginActivity::class.java)
+        startActivity(intent)
+        activity?.finish()  // Optionally finish the current activity to avoid back navigation
+    }
+
+    private fun navigateToDaftarPenjual() {
+        val intent = Intent(requireContext(), DaftarPenjualActivity::class.java)
+        startActivity(intent)
+    }
+    private fun navigateToDaftarProduct() {
+        val intent = Intent(requireContext(), DaftarProductActivity::class.java)
+        startActivity(intent)
     }
 }

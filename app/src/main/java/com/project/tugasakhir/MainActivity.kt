@@ -9,7 +9,7 @@ import com.project.tugasakhir.Account.AccountFragment
 import com.project.tugasakhir.Chat.ChatFragment
 import com.project.tugasakhir.Cart.CartFragment
 import com.project.tugasakhir.Katalog.KatalogFragment
-import com.project.tugasakhir.Map.MapsFragment
+import com.project.tugasakhir.Map.MapFragment
 import com.project.tugasakhir.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -25,11 +25,11 @@ class MainActivity : AppCompatActivity() {
             insets
         }
         val bottomNavigationView = binding.bottomnav
-        loadFragment(MapsFragment())
+        loadFragment(MapFragment())
         bottomNavigationView.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.map -> {
-                    loadFragment(MapsFragment())
+                    loadFragment(MapFragment())
                     return@setOnItemSelectedListener true
                 }
                 R.id.katalog -> {

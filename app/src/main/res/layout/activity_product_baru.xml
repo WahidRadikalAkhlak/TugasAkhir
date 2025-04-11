@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
@@ -7,187 +7,162 @@
     android:layout_height="match_parent"
     tools:context=".Katalog.ProductPenjual.ProductBaruActivity">
 
+    <!-- ImageView for product image upload -->
+    <ImageView
+        android:id="@+id/agregarImg"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_marginTop="15dp"
+        android:src="@drawable/agregar_img"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <RelativeLayout
-        android:id="@+id/RL_Imagen"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <ImageView
-            android:id="@+id/agregarImg"
-            android:layout_marginTop="15dp"
-            android:layout_centerInParent="true"
-            android:src="@drawable/agregar_img"
-            android:layout_width="100dp"
-            android:layout_height="100dp"/>
-
-    </RelativeLayout>
-
+    <!-- NestedScrollView to contain all the form elements -->
     <androidx.core.widget.NestedScrollView
-        android:layout_below="@+id/RL_Imagen"
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp">
+        android:layout_height="0dp"
+        android:padding="10dp"
+        app:layout_constraintBottom_toTopOf="@id/Btn_simpan_produk"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/agregarImg">
 
-        <RelativeLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/RV_Imagenes"
                 app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
-                tools:listitem="@layout/item_imagenes_seleccionadas"
+                tools:listitem="@layout/item_gambar_produk"
                 app:spanCount="4"
+                tools:itemCount="8"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
 
-            <!-- Marca del producto -->
+            <!-- Product Name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_namaproduct"
-                android:layout_below="@+id/RV_Imagenes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxCornerRadiusTopStart="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:boxCornerRadiusTopStart="8dp">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/nama_product"
-                    android:hint="@string/nama_produk"
-                    android:inputType="textPersonName|textCapSentences"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
+                    android:layout_height="wrap_content"
+                    android:hint="@string/nama_produk"
+                    android:inputType="textPersonName|textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Categoría -->
+            <!-- Jenis produk -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_jenisproduk"
-                android:layout_below="@+id/TIL_namaproduct"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxCornerRadiusTopStart="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:boxCornerRadiusTopStart="8dp">
 
-                <AutoCompleteTextView
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/jenis_produk"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:hint="@string/jenis_produk"
-                    android:inputType="none"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
+                    android:inputType="textPersonName|textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/TIL_kondisiproduk"
-                android:layout_below="@+id/TIL_jenisproduk"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-                android:layout_marginTop="10dp"
-                app:boxCornerRadiusBottomStart="8dp"
-                app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxCornerRadiusTopStart="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <AutoCompleteTextView
-                    android:id="@+id/Condicion"
-                    android:hint="@string/Kondisi_Produk"
-                    android:inputType="none"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
-            </com.google.android.material.textfield.TextInputLayout>
-
+            <!-- Description -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_deskripsi"
-                android:layout_below="@+id/TIL_kondisiproduk"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxCornerRadiusTopStart="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:boxCornerRadiusTopStart="8dp">
 
-                <AutoCompleteTextView
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/deskripsi"
-                    android:hint="@string/deskripsi"
-                    android:inputType="none"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-
+                    android:layout_height="wrap_content"
+                    android:hint="@string/deskripsi"
+                    android:inputType="textMultiLine"
+                    android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Stock Available -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_stoktersedia"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                android:layout_below="@+id/TIL_deskripsi"
                 app:boxCornerRadiusTopStart="8dp">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/stok_tersedia"
-                    android:hint="Stok Tersedia"
-                    android:inputType="number"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:hint="Stok Tersedia"
+                    android:inputType="number" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Harga per satuan/kg -->
+            <!-- Price per unit -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_hargaperunit"
-                android:layout_below="@id/TIL_stoktersedia"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
                 app:boxCornerRadiusBottomStart="8dp"
                 app:boxCornerRadiusTopEnd="8dp"
-                app:boxCornerRadiusBottomEnd="8dp"
-                app:boxCornerRadiusTopStart="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                app:boxCornerRadiusTopStart="8dp">
 
-                <EditText
+                <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/harga_per_unit"
-                    android:hint="Harga per satuan/kg"
-                    android:inputType="numberDecimal"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:hint="Harga per satuan/kg"
+                    android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
 
+            <!-- Switch for displaying product for sale -->
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switch_tampilkanproduk"
-                android:layout_below="@id/TIL_hargaperunit"
-                android:layout_marginTop="10dp"
-                android:layout_centerHorizontal="true"
-                android:text="Tampilkan produk untuk dijual"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_gravity="center_horizontal"
+                android:text="Tampilkan produk untuk dijual" />
 
-        </RelativeLayout>
-
-
+        </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <!-- Save Product Button -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/Btn_simpan_produk"
-        android:text="@string/Simpan"
-        android:layout_alignParentBottom="true"
-        android:layout_margin="10dp"
-        app:cornerRadius="8dp"
-        android:textAllCaps="true"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        />
+        android:layout_margin="10dp"
+        android:text="@string/Simpan"
+        android:textAllCaps="true"
+        app:cornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

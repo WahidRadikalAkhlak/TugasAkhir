@@ -1,14 +1,16 @@
 package com.project.tugasakhir.Katalog
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.FragmentKatalogBinding
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.databinding.ItemProductBinding
 
 class KatalogFragment : Fragment(R.layout.fragment_katalog) {
@@ -88,11 +90,10 @@ class KatalogAdapter(private val productList: List<Product>) :
         fun bind(product: Product) {
             binding.titleProduct.text = product.name
             binding.harga.text = product.price
-            // Here you would set the image using product.imageResourceId, assuming you have an image resource
-            // binding.productImage.setImageResource(product.imageResId)
+            // Example for loading images using Glide (You can use Picasso as well)
+            Glide.with(binding.imgProduct.context)
+                .load(product.imageResId) // Assuming imageResId is a URL or drawable name
+                .into(binding.imgProduct)
         }
     }
 }
-
-// Data class for Product
-data class Product(val name: String, val price: String, val imageResId: String)

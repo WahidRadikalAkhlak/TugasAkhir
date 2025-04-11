@@ -1,21 +1,27 @@
 package com.project.tugasakhir.Account.Penjual
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import com.project.tugasakhir.R
+import com.project.tugasakhir.databinding.ActivityDaftarProductBinding
+import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity  // Import the target activity
 
 class DaftarProductActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityDaftarProductBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_daftar_product)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        // Initialize ViewBinding
+        binding = ActivityDaftarProductBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // Handle Add Product button click to navigate to ProductBaruActivity
+        binding.btnAddProduct.setOnClickListener {
+            // Create an intent to open ProductBaruActivity
+            val intent = Intent(this, ProductBaruActivity::class.java)
+            startActivity(intent)  // Start the activity
         }
     }
 }

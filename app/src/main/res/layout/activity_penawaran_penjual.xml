@@ -56,10 +56,10 @@
 
                 <!-- Job Title -->
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/pekerjaan"
+                    android:id="@+id/no_phone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/pekerjaan"
+                    android:text="@string/no_handphone"
                     android:textColor="@android:color/black"
                     android:textSize="14sp"
                     android:layout_gravity="start"/>

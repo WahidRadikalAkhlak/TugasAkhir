@@ -51,4 +51,6 @@
     <string name="allorder">All Orders</string>
     <string name="Kondisi_Produk">Kondisi Produk</string>
     <string name="Simpan">Simpan Produk</string>
+    <string name="login">Login</string>
+    <string name="email">Email Pengguna</string>
 </resources>

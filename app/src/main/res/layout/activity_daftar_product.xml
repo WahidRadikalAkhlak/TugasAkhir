@@ -3,9 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Account.Penjual.DaftarPenjualActivity">
+    tools:context=".Account.Penjual.DaftarProductActivity">
 
-    <!-- TextView untuk menampilkan judul 'Produk Saya', diposisikan di tengah -->
+    <!-- TextView for 'Produk Saya' title, centered -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_produk_saya"
         android:layout_width="wrap_content"
@@ -17,7 +17,7 @@
         app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="30dp"/>
 
-    <!-- Tombol untuk menambahkan produk -->
+    <!-- Button to add product -->
     <androidx.appcompat.widget.AppCompatImageButton
         android:id="@+id/btn_add_product"
         android:layout_width="wrap_content"
@@ -27,37 +27,27 @@
         app:layout_constraintTop_toBottomOf="@id/tv_produk_saya"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- SearchView untuk pencarian produk -->
+
+    <!-- SearchView for product search -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
         app:iconifiedByDefault="false"
         android:layout_margin="20dp"
         app:layout_constraintTop_toBottomOf="@id/tv_produk_saya"
-        app:layout_constraintStart_toStartOf="parent"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- RecyclerView untuk daftar produk -->
+    <!-- RecyclerView for the list of products -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_product_list"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="20dp"
-        app:layout_constraintTop_toBottomOf="@id/searchView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <!-- Floating Action Button (FAB) untuk menambahkan produk -->
-    <androidx.appcompat.widget.AppCompatImageButton
-        android:id="@+id/fab_add_product"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:src="@android:drawable/ic_input_add"
-        android:contentDescription="Add Product"
-        android:layout_alignParentEnd="true"
-        android:layout_margin="16dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        tools:listitem="@layout/item_product"
+        app:spanCount="4"
+        tools:itemCount="8"
+        android:layout_marginTop="16dp"
+        app:layout_constraintTop_toBottomOf="@id/searchView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

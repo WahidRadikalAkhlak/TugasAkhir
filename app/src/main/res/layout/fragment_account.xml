@@ -86,11 +86,11 @@
 
 
                 <TextView
-                    android:id="@+id/no_phone"
+                    android:id="@+id/email"
                     style="@style/textGreyNeutral"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0812...."
+                    android:text="@string/email"
                     android:textSize="13sp"
                     app:layout_constraintStart_toStartOf="@+id/tvUserName"
                     app:layout_constraintTop_toBottomOf="@id/tvUserName" />
@@ -105,11 +105,11 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
                 android:text="Daftar Akun Bisnis"
-                android:layout_marginLeft="90dp"
                 android:background="@drawable/edit_text_background"
                 app:layout_constraintStart_toStartOf="@id/guideline1"
-                app:layout_constraintTop_toBottomOf="@id/constraintProfile" />
-
+                app:layout_constraintEnd_toEndOf="@id/guideline2"
+                app:layout_constraintTop_toBottomOf="@id/constraintProfile"
+                app:layout_constraintHorizontal_bias="0.5" />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/clbahasa"
@@ -283,7 +283,7 @@
                     android:textSize="17sp"
                     android:fontFamily="@font/poppinsregular"
                     android:layout_marginStart="10dp"
-                    android:text="Login" />
+                    android:text="@string/login" />
 
                 <ImageView
                     android:layout_width="15dp"
@@ -298,7 +298,7 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/clbisnis"
+                android:id="@+id/btnDaftarProduct"
                 app:layout_constraintTop_toBottomOf="@id/clLogout"
                 app:layout_constraintStart_toStartOf="@id/guideline1"
                 app:layout_constraintEnd_toEndOf="@id/guideline2"

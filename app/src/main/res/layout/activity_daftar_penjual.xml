@@ -3,165 +3,123 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/scroll_daftar_penjual"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     android:padding="16dp"
     tools:context=".Account.Penjual.DaftarPenjualActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp">
 
-        <!-- Welcome Text -->
-        <com.google.android.material.textview.MaterialTextView
+        <!-- Judul Halaman -->
+        <TextView
             android:id="@+id/tv_daftar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="20dp"
             android:text="Daftar Akun Bisnis"
-            android:textSize="20sp"
-            android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:layout_marginTop="20dp"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"/>
+            android:textSize="22sp"
+            android:textStyle="bold" />
 
-
-        <!-- Name Text -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_nohp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nomor Telepon Lain"
-            android:textSize="14sp"
-            android:textColor="@android:color/black"
-            android:layout_below="@id/tv_daftar"
-            android:layout_marginTop="20dp"
-            android:layout_alignParentStart="true"/>
-
-        <!-- Name Input Field -->
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_no_hp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Masukkan Nomor HandPhone Anda"
-            android:background="@drawable/edit_text_background"
-            android:layout_below="@id/tv_nohp"
-            android:layout_marginTop="8dp"
-            android:padding="16dp"/>
-
-        <!-- Alamat Toko Text -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_alamat_toko"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alamat Toko Anda"
-            android:textSize="14sp"
-            android:textColor="@android:color/black"
-            android:layout_below="@id/et_no_hp"
-            android:layout_marginTop="20dp"
-            android:layout_alignParentStart="true"/>
-
-        <!-- Alamat Input Field with AutoComplete for Google Places -->
+        <!-- Nomor Telepon -->
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/tl_alamat_toko"
+            android:id="@+id/til_no_hp"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@id/tv_alamat_toko"
-            android:layout_marginTop="8dp">
+            android:layout_marginTop="16dp"
+            android:hint="Nomor Telepon Lain">
 
-            <AutoCompleteTextView
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_no_hp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="phone" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Alamat Toko -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_alamat_toko"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:hint="Alamat Toko Anda">
+
+            <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_alamat_toko"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Masukkan Alamat Toko Anda"
-                android:inputType="text"
-                android:background="@drawable/edit_text_background"/>
+                android:inputType="textPostalAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Button to Launch Map Search -->
-        <Button
-            android:id="@+id/btn_search_location"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="@drawable/chip_background"
-            android:text="Cari Lokasi di Peta"
-            android:layout_below="@id/tl_alamat_toko"
-            android:layout_marginTop="10dp"
-            android:layout_centerHorizontal="true"/>
-
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_no_izin_usaha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="No Izin Usaha"
-            android:textSize="14sp"
-            android:textColor="@android:color/black"
-            android:layout_below="@id/btn_search_location"
-            android:layout_marginTop="10dp"
-            android:layout_alignParentStart="true"/>
-
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_no_izinusaha"
+        <!-- Nomor Izin Usaha -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_no_izin_usaha"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Masukkan Nomor Izin Usaha / Sertifikat "
-            android:background="@drawable/edit_text_background"
-            android:layout_below="@id/tv_no_izin_usaha"
-            android:layout_marginTop="8dp"
-            android:padding="16dp"/>
+            android:layout_marginTop="16dp"
+            android:hint="No Izin Usaha">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_deskripsi_profil"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Deskripsi Profil"
-            android:textSize="14sp"
-            android:textColor="@android:color/black"
-            android:layout_below="@id/et_no_izinusaha"
-            android:layout_marginTop="10dp"
-            android:layout_alignParentStart="true"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_no_izinusaha"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_deskripsi"
+        <!-- Deskripsi Profil -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_deskripsi_profil"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Deskripsi Profil"
-            android:background="@drawable/edit_text_background"
-            android:layout_below="@id/tv_deskripsi_profil"
-            android:layout_marginTop="8dp"
-            android:padding="16dp"/>
+            android:layout_marginTop="16dp"
+            android:hint="Deskripsi Profil">
 
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_sosial_media"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Sosial Media"
-            android:textSize="14sp"
-            android:textColor="@android:color/black"
-            android:layout_below="@id/et_deskripsi"
-            android:layout_marginTop="10dp"
-            android:layout_alignParentStart="true"/>
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_deskripsi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textMultiLine"
+                android:minLines="3" />
+        </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/et_sosial_media"
+        <!-- Sosial Media -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_sosial_media"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Sosial Media Instagram, Facebook, dll"
-            android:background="@drawable/edit_text_background"
-            android:layout_below="@id/tv_sosial_media"
-            android:layout_marginTop="8dp"
-            android:padding="16dp"/>
+            android:layout_marginTop="16dp"
+            android:hint="Sosial Media">
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:layout_width="150dp"
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_sosial_media"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Tombol Daftar -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_daftar"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:layout_marginBottom="16dp"
+            android:padding="12dp"
             android:text="Daftar"
-            android:textStyle="bold"
-            android:layout_marginTop="26dp"
-            android:layout_centerHorizontal="true"
-            android:layout_below="@+id/et_sosial_media"
+            android:textStyle="bold" />
 
-            />
-
-    </RelativeLayout>
+    </LinearLayout>
 </ScrollView>
