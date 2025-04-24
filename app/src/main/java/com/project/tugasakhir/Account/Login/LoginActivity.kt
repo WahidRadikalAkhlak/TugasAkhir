@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.AccountFragment
 import com.project.tugasakhir.Account.Register.RegisterActivity
 import com.project.tugasakhir.Data.User
+import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.ActivityLoginBinding
 import java.nio.charset.StandardCharsets
@@ -29,6 +30,8 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString()
             val password = binding.etPassword.text.toString()
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 loginUser(email, password)

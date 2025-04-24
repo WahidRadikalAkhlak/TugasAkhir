@@ -46,7 +46,7 @@ class AccountFragment : Fragment() {
             logout()
         }
 
-        // Navigate to ActivityDaftarPenjual when the button is clicked
+
         binding.btnDaftarbisnis.setOnClickListener {
             navigateToDaftarPenjual()
         }
@@ -69,7 +69,6 @@ class AccountFragment : Fragment() {
     private fun navigateToLogin() {
         val intent = Intent(requireContext(), LoginActivity::class.java)
         startActivity(intent)
-        activity?.finish()  // Optionally finish the current activity to avoid back navigation
     }
 
     private fun navigateToDaftarPenjual() {

@@ -31,12 +31,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 
     buildFeatures {
@@ -59,22 +59,21 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore:25.1.2")
 
-    // Firebase Messaging (if you need it for notifications)
+    // Firebase Messaging (optional)
     implementation("com.google.firebase:firebase-messaging:24.1.0")
 
-    // Glide (image loading library)
+    // Glide
     implementation("com.github.bumptech.glide:glide:4.12.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.12.0")
 
-    // Circle Image View for profile images
+    // CircleImageView
     implementation("de.hdodenhof:circleimageview:3.1.0")
 
-    // Google Places API (optional if you use it)
+    // Google Places API
     implementation("com.google.android.libraries.places:places:2.7.0")
 
-    // Testing dependencies
+    // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }
-
