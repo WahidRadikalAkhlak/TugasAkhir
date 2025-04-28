@@ -9,7 +9,7 @@
 
     <!-- ImageView for product image upload -->
     <ImageView
-        android:id="@+id/agregarImg"
+        android:id="@+id/productimage"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginTop="15dp"
@@ -27,7 +27,7 @@
         app:layout_constraintBottom_toTopOf="@id/Btn_simpan_produk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/agregarImg">
+        app:layout_constraintTop_toBottomOf="@id/productimage">
 
         <LinearLayout
             android:layout_width="match_parent"

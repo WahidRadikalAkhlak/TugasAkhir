@@ -46,7 +46,6 @@ class AccountFragment : Fragment() {
             logout()
         }
 
-
         binding.btnDaftarbisnis.setOnClickListener {
             navigateToDaftarPenjual()
         }

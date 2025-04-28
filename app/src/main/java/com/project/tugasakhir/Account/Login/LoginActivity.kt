@@ -1,5 +1,6 @@
 package com.project.tugasakhir.Account.Login
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -30,8 +31,6 @@ class LoginActivity : AppCompatActivity() {
         binding.btnLogin.setOnClickListener {
             val email = binding.etEmail.text.toString()
             val password = binding.etPassword.text.toString()
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
 
             if (email.isNotEmpty() && password.isNotEmpty()) {
                 loginUser(email, password)
@@ -68,6 +67,9 @@ class LoginActivity : AppCompatActivity() {
                                 password = document.getString("password") ?: ""
                             )
 
+                            // Menyimpan status login
+                            saveLoginState(user)
+
                             // Kirim data ke AccountFragment
                             val fragment = AccountFragment()
 
@@ -92,6 +94,15 @@ class LoginActivity : AppCompatActivity() {
                     Toast.makeText(this, "Login gagal: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+    }
+
+    private fun saveLoginState(user: User) {
+        val sharedPreferences = getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putString("USER_ID", user.id)
+        editor.putString("USER_EMAIL", user.email)
+        editor.putString("USER_NAME", user.nama)
+        editor.apply()
     }
 
     private fun hashPassword(password: String): String {
