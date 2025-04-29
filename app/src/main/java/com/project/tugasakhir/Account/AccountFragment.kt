@@ -33,9 +33,9 @@ class AccountFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Ambil data user dari Bundle yang diteruskan
-        val userName = arguments?.getString("userName") ?: "Nama tidak ditemukan"
-        val userEmail = arguments?.getString("userEmail") ?: "Email tidak ditemukan"
+        val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
+        val userName = sharedPreferences.getString("USER_NAME", "Nama tidak ditemukan")
+        val userEmail = sharedPreferences.getString("USER_EMAIL", "Email tidak ditemukan")
 
         // Tampilkan data pengguna
         binding.tvUserName.text = userName

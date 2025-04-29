@@ -57,7 +57,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore-ktx:25.1.2")
     implementation(platform("com.google.firebase:firebase-bom:33.10.0"))
     implementation("com.google.firebase:firebase-analytics")
-    implementation("com.google.firebase:firebase-firestore:25.1.2")
+    implementation("com.google.firebase:firebase-firestore:25.1.4")
 
     // Firebase Messaging (optional)
     implementation("com.google.firebase:firebase-messaging:24.1.0")
