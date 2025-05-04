@@ -1,174 +1,163 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.constraintlayout.widget.ConstraintLayout
+xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:app="http://schemas.android.com/apk/res-auto"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+tools:context=".Account.Login.LoginActivity">
+
+<!-- Welcome Text -->
+<com.google.android.material.textview.MaterialTextView
+    android:id="@+id/tv_welcome_back"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Welcome Back"
+    android:textSize="30sp"
+    android:textStyle="bold"
+    android:textColor="@android:color/black"
+    android:layout_marginTop="20dp"
+    app:layout_constraintTop_toTopOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"/>
+
+<!-- User Image -->
+<ImageView
+    android:id="@+id/iv_user_image"
+    android:layout_width="60dp"
+    android:layout_height="60dp"
+    android:clipToOutline="true"
+    android:src="@drawable/logo"
+    app:layout_constraintTop_toBottomOf="@id/tv_welcome_back"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="10dp"/>
+
+<!-- Email Layout -->
+<com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/emailLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="16dp"
-    tools:context=".Account.Login.LoginActivity">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="54dp"
+    android:layout_marginHorizontal="16dp"
+    app:layout_constraintTop_toBottomOf="@id/iv_user_image"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_email"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:hint="Enter your email"
+        android:inputType="textEmailAddress"/>
+</com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Welcome Text -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_welcome_back"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Welcome Back"
-            android:textSize="30sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/black"
-            android:layout_marginTop="20dp"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+<!-- Password Layout -->
+<com.google.android.material.textfield.TextInputLayout
+    android:id="@+id/passwordLayout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="24dp"
+    android:layout_marginHorizontal="16dp"
+    app:layout_constraintTop_toBottomOf="@id/emailLayout"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    app:passwordToggleEnabled="true">
 
-        <!-- User Image -->
-        <ImageView
-            android:id="@+id/iv_user_image"
-            android:layout_width="60dp"
-            android:layout_height="60dp"
-            android:clipToOutline="true"
-            android:src="@drawable/logo"
-            app:layout_constraintTop_toBottomOf="@id/tv_welcome_back"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="10dp"/>
+    <com.google.android.material.textfield.TextInputEditText
+        android:id="@+id/et_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter your password"
+        android:inputType="textPassword"/>
+</com.google.android.material.textfield.TextInputLayout>
 
-        <!-- Email Layout -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/emailLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="54dp"
-            android:layout_marginHorizontal="16dp"
-            app:layout_constraintTop_toBottomOf="@id/iv_user_image"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+<!-- Login Button -->
+<androidx.appcompat.widget.AppCompatButton
+    android:id="@+id/btn_login"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:text="Login"
+    android:layout_marginTop="54dp"
+    android:textColor="@android:color/black"
+    android:textStyle="bold"
+    android:backgroundTint="@color/dark_grey"
+    app:layout_constraintTop_toBottomOf="@id/passwordLayout"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"/>
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_email"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter your email"
-                android:inputType="textEmailAddress"/>
-        </com.google.android.material.textfield.TextInputLayout>
+<!-- Register Link -->
+<com.google.android.material.textview.MaterialTextView
+    android:id="@+id/tv_register"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Are you a new user? Register"
+    android:textSize="14sp"
+    android:textColor="@color/dark_grey"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintEnd_toEndOf="parent"
+    android:layout_marginTop="20dp"
+    app:layout_constraintTop_toBottomOf="@id/btn_login"/>
 
-        <!-- Password Layout -->
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/passwordLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="24dp"
-            android:layout_marginHorizontal="16dp"
-            app:layout_constraintTop_toBottomOf="@id/emailLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:passwordToggleEnabled="true">
+<!-- Removed FragmentContainerView -->
 
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/et_password"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Enter your password"
-                android:inputType="textPassword"/>
-        </com.google.android.material.textfield.TextInputLayout>
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:layout_below="@id/btn_login"
+    android:padding="6dp"
+    android:layout_marginHorizontal="30dp"
+    android:layout_marginTop="16dp"
+    android:id="@+id/rl_google"
+    android:background="@drawable/border_backround"
+    app:layout_constraintTop_toBottomOf="@id/btn_login">
 
-        <!-- Login Button -->
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/btn_login"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginHorizontal="16dp"
-            android:text="Login"
-            android:layout_marginTop="54dp"
-            android:textColor="@android:color/black"
-            android:textStyle="bold"
-            android:backgroundTint="@color/dark_grey"
-            app:layout_constraintTop_toBottomOf="@id/passwordLayout"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+    <ImageView
+        android:id="@+id/img_google"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/icon_google"
+        android:adjustViewBounds="true" />
 
-        <!-- Google Sign In Layout -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_below="@id/btn_login"
-            android:padding="6dp"
-            android:layout_marginTop="16dp"
-            android:id="@+id/rl_google"
-            android:background="@drawable/border_backround"
-            app:layout_constraintTop_toBottomOf="@id/btn_login">
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/txt_google"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="Sign In With Google"
+        android:textStyle="bold" />
+</RelativeLayout>
 
-            <ImageView
-                android:id="@+id/img_google"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/icon_google"
-                android:adjustViewBounds="true" />
+<RelativeLayout
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:layout_below="@id/btn_login"
+    android:padding="6dp"
+    android:layout_marginTop="16dp"
+    android:id="@+id/rl_facebook"
+    android:layout_marginHorizontal="30dp"
+    android:background="@drawable/border_backround"
+    app:layout_constraintTop_toBottomOf="@id/rl_google">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/txt_google"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="Sign In With Google"
-                android:textStyle="bold" />
-        </RelativeLayout>
+    <ImageView
+        android:id="@+id/img_facebook"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_centerVertical="true"
+        android:src="@drawable/icon_facebook"
+        android:adjustViewBounds="true" />
 
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="45dp"
-            android:layout_below="@id/btn_login"
-            android:padding="6dp"
-            android:layout_marginTop="16dp"
-            android:id="@+id/rl_facebook"
-            android:background="@drawable/border_backround"
-            app:layout_constraintTop_toBottomOf="@id/rl_google">
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/txt_facebook"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:text="Sign In With Facebook"
+        android:textStyle="bold" />
+</RelativeLayout>
 
-            <ImageView
-                android:id="@+id/img_facebook"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_centerVertical="true"
-                android:src="@drawable/icon_facebook"
-                android:adjustViewBounds="true" />
+</androidx.constraintlayout.widget.ConstraintLayout>
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/txt_facebook"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_centerInParent="true"
-                android:text="Sign In With Facebook"
-                android:textStyle="bold" />
-        </RelativeLayout>
-
-        <!-- Register Link -->
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/tv_register"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Are you a new user? Register"
-            android:textSize="14sp"
-            android:textColor="@color/dark_grey"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:layout_marginTop="20dp"
-            app:layout_constraintTop_toBottomOf="@id/rl_facebook"/>
-
-        <!-- Fragment Container -->
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/fragment_container"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_register"/>
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-</ScrollView>

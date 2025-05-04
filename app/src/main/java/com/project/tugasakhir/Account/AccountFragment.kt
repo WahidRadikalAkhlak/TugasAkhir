@@ -10,9 +10,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.Login.LoginActivity
-import com.project.tugasakhir.Account.Penjual.DaftarPenjualActivity  // Import activity yang benar
+import com.project.tugasakhir.Account.Penjual.DaftarPenjualActivity
 import com.project.tugasakhir.Account.Penjual.DaftarProductActivity
-import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.FragmentAccountBinding
 
 class AccountFragment : Fragment() {
@@ -20,7 +19,6 @@ class AccountFragment : Fragment() {
     private lateinit var binding: FragmentAccountBinding
     private val db = FirebaseFirestore.getInstance()
 
-    // onCreateView to set up the view binding for this fragment
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -29,51 +27,105 @@ class AccountFragment : Fragment() {
         return binding.root
     }
 
-    // onViewCreated to handle logic after the fragment view is created
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Retrieve the username passed to the fragment
+        val username = arguments?.getString("USERNAME") ?: "Guest" // Default to "Guest" if null
+
+        // Display the username
+        binding.tvUserName.text = username
+
+        // Retrieve email from SharedPreferences to check login status
         val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-        val userName = sharedPreferences.getString("USER_NAME", "Nama tidak ditemukan")
-        val userEmail = sharedPreferences.getString("USER_EMAIL", "Email tidak ditemukan")
+        val userEmail = sharedPreferences.getString("USER_EMAIL", "")
 
-        // Tampilkan data pengguna
-        binding.tvUserName.text = userName
-        binding.email.text = userEmail
+        // If email exists, fetch user data from Firestore
+        if (!userEmail.isNullOrEmpty()) {
+            // Set logout button text if user is logged in
+            binding.tvLogout.text = "Logout"  // Change button text to Logout
+            getUserData(userEmail)
+        } else {
+            // If user is not logged in, display the Login button
+            binding.tvLogout.text = "Login"
+        }
 
-        // Set up the logout button logic
+        // Setup the logout button behavior
         binding.clLogout.setOnClickListener {
-            logout()
+            if (binding.tvLogout.text == "Logout") {
+                logout()
+            } else {
+                navigateToLogin()
+            }
         }
 
+        // Action for business registration (Daftar Bisnis)
         binding.btnDaftarbisnis.setOnClickListener {
-            navigateToDaftarPenjual()
+            if (userEmail.isNullOrEmpty()) {
+                // If the user is not logged in, navigate to the login screen
+                navigateToLogin()
+            } else {
+                // If the user is logged in, navigate to Daftar Bisnis
+                navigateToDaftarPenjual()
+            }
         }
+
+        // Actions for product registration
         binding.btnDaftarProduct.setOnClickListener {
             navigateToDaftarProduct()
         }
     }
 
+    // Fetch user data from Firestore based on email
+    private fun getUserData(email: String) {
+        db.collection("users")
+            .whereEqualTo("email", email)
+            .get()
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful && task.result != null) {
+                    val document = task.result?.documents?.firstOrNull()
+                    if (document != null) {
+                        // Get user data from Firestore and update the UI
+                        val userName = document.getString("nama") ?: "No Name"
+                        val userEmail = document.getString("email") ?: "No Email"
+                        binding.tvUserName.text = userName
+                        binding.email.text = userEmail
+                    }
+                } else {
+                    Toast.makeText(requireContext(), "Failed to fetch user data", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
+    // Logout function to clear user data and navigate to login screen
     private fun logout() {
-        // Perform any logout logic, such as clearing preferences or tokens
         val sharedPreferences = requireActivity().getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
-        editor.clear()
+        editor.clear()  // Clear all data in SharedPreferences
         editor.apply()
 
-        // Navigate to the login screen after logout
+        // Reset UI data after logout
+        binding.tvUserName.text = "Guest"  // Reset user name
+        binding.email.text = "No Email"   // Reset email
+
+        // Navigate back to login screen
         navigateToLogin()
     }
 
+    // Navigate to LoginActivity
     private fun navigateToLogin() {
         val intent = Intent(requireContext(), LoginActivity::class.java)
         startActivity(intent)
+        requireActivity().finish() // Close current fragment/activity
     }
 
+    // Navigate to DaftarPenjualActivity
     private fun navigateToDaftarPenjual() {
         val intent = Intent(requireContext(), DaftarPenjualActivity::class.java)
         startActivity(intent)
     }
+
+    // Navigate to DaftarProductActivity
     private fun navigateToDaftarProduct() {
         val intent = Intent(requireContext(), DaftarProductActivity::class.java)
         startActivity(intent)
