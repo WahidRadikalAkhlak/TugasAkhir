@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    app:cardElevation="0dp"
-    app:cardUseCompatPadding="true">
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true"
+    app:cardCornerRadius="8dp"
+    android:layout_margin="4dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -12,22 +14,25 @@
 
         <ImageView
             android:id="@+id/item_image"
-            android:src="@drawable/image_icon"
-            android:scaleType="centerCrop"
-            android:adjustViewBounds="true"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="150dp"
+        android:scaleType="centerCrop"
+        android:adjustViewBounds="false"
+            android:src="@drawable/image_icon"
+        android:contentDescription="@string/product_image" />
 
         <ImageView
-            android:id="@+id/cerrar_item"
+            android:id="@+id/dellete_item"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_alignParentEnd="true"
-            android:padding="10dp"
+            android:layout_margin="8dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="6dp"
             android:src="@drawable/cerrar"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
+            android:contentDescription="@string/delete_image"
+            android:elevation="4dp" />
 
     </RelativeLayout>
-
 
 </com.google.android.material.card.MaterialCardView>

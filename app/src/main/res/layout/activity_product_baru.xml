@@ -9,11 +9,11 @@
 
     <!-- ImageView for product image upload -->
     <ImageView
-        android:id="@+id/productimage"
+        android:id="@+id/add_img_product"
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_marginTop="15dp"
-        android:src="@drawable/agregar_img"
+        android:src="@drawable/add_img"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -27,23 +27,23 @@
         app:layout_constraintBottom_toTopOf="@id/Btn_simpan_produk"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/productimage">
+        app:layout_constraintTop_toBottomOf="@id/add_img_product">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <!-- Product Name -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/RV_Imagenes"
-                app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
-                tools:listitem="@layout/item_gambar_produk"
-                app:spanCount="4"
-                tools:itemCount="8"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+                android:layout_height="150dp"
+                app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                app:spanCount="3"
+                tools:itemCount="8"
+                tools:listitem="@layout/item_gambar_produk" />
 
-            <!-- Product Name -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_namaproduct"
                 android:layout_width="match_parent"

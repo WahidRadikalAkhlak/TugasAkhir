@@ -53,4 +53,7 @@
     <string name="Simpan">Simpan Produk</string>
     <string name="login">Login</string>
     <string name="email">Email Pengguna</string>
+    <string name="Settings">Settings</string>
+    <string name="product_image">Product Image</string>
+    <string name="delete_image">Delete Image</string>
 </resources>

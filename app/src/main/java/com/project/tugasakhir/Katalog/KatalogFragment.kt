@@ -6,14 +6,14 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.project.tugasakhir.R
-import com.project.tugasakhir.databinding.FragmentKatalogBinding
+import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Data.Product
+import com.project.tugasakhir.databinding.FragmentKatalogBinding
 import com.project.tugasakhir.databinding.ItemProductBinding
+import androidx.recyclerview.widget.RecyclerView
 
-class KatalogFragment : Fragment(R.layout.fragment_katalog) {
+class KatalogFragment : Fragment() {
 
     private var _binding: FragmentKatalogBinding? = null
     private val binding get() = _binding!!
@@ -22,10 +22,16 @@ class KatalogFragment : Fragment(R.layout.fragment_katalog) {
     private lateinit var rekomendasiAdapter: KatalogAdapter
     private lateinit var sukaiAdapter: KatalogAdapter
 
+    private val db = FirebaseFirestore.getInstance()
+
+    private val terdekatList = mutableListOf<Product>()
+    private val rekomendasiList = mutableListOf<Product>()
+    private val sukaiList = mutableListOf<Product>()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = FragmentKatalogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -33,32 +39,47 @@ class KatalogFragment : Fragment(R.layout.fragment_katalog) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set LayoutManager for RecyclerView
+        // Setup LayoutManager horizontal untuk ketiga RecyclerView
         binding.terdekatRecyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.rekomendasiRecyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
         binding.sukaiRecyclerView.layoutManager =
-            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
 
-        // Initialize Adapter with mock data
-        terdekatAdapter = KatalogAdapter(getMockData())
-        rekomendasiAdapter = KatalogAdapter(getMockData())
-        sukaiAdapter = KatalogAdapter(getMockData())
+        // Setup adapter dengan list mutable
+        terdekatAdapter = KatalogAdapter(terdekatList)
+        rekomendasiAdapter = KatalogAdapter(rekomendasiList)
+        sukaiAdapter = KatalogAdapter(sukaiList)
 
-        // Set the adapters to RecyclerView
         binding.terdekatRecyclerView.adapter = terdekatAdapter
         binding.rekomendasiRecyclerView.adapter = rekomendasiAdapter
         binding.sukaiRecyclerView.adapter = sukaiAdapter
+
+        loadProductsFromFirestore()
     }
 
-    // Provide mock data for the RecyclerView
-    private fun getMockData(): List<Product> {
-        return listOf(
-            Product("Product 1", "Rp 100.000", "product_image_1"),
-            Product("Product 2", "Rp 150.000", "product_image_2"),
-            Product("Product 3", "Rp 200.000", "product_image_3")
-        )
+    private fun loadProductsFromFirestore() {
+        db.collection("products")
+            .get()
+            .addOnSuccessListener { documents ->
+                val allProducts = documents.map { it.toObject(Product::class.java) }
+
+                terdekatList.clear()
+                rekomendasiList.clear()
+                sukaiList.clear()
+
+                terdekatList.addAll(allProducts.filter { it.distance <= 5.0 })  // radius 5 km
+                rekomendasiList.addAll(allProducts.filter { it.isRecommended })
+                sukaiList.addAll(allProducts.filter { it.isLiked })
+
+                terdekatAdapter.notifyDataSetChanged()
+                rekomendasiAdapter.notifyDataSetChanged()
+                sukaiAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener {
+                // Tangani error, misal tampilkan Toast
+            }
     }
 
     override fun onDestroyView() {
@@ -67,8 +88,8 @@ class KatalogFragment : Fragment(R.layout.fragment_katalog) {
     }
 }
 
-// Adapter for RecyclerView
-class KatalogAdapter(private val productList: List<Product>) :
+// Adapter untuk menampilkan list produk
+class KatalogAdapter(private val productList: MutableList<Product>) :
     RecyclerView.Adapter<KatalogAdapter.KatalogViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): KatalogViewHolder {
@@ -77,8 +98,7 @@ class KatalogAdapter(private val productList: List<Product>) :
     }
 
     override fun onBindViewHolder(holder: KatalogViewHolder, position: Int) {
-        val product = productList[position]
-        holder.bind(product)
+        holder.bind(productList[position])
     }
 
     override fun getItemCount(): Int = productList.size
@@ -86,13 +106,12 @@ class KatalogAdapter(private val productList: List<Product>) :
     inner class KatalogViewHolder(private val binding: ItemProductBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
-        // Bind data to views
         fun bind(product: Product) {
-            binding.titleProduct.text = product.name
-            binding.harga.text = product.price
-            // Example for loading images using Glide (You can use Picasso as well)
+            binding.tvProductName.text = product.productName
+            binding.HargaBarang.text = product.pricePerUnit.toString()
+
             Glide.with(binding.imgProduct.context)
-                .load(product.imageResId) // Assuming imageResId is a URL or drawable name
+                .load(product.imageUrl)
                 .into(binding.imgProduct)
         }
     }
