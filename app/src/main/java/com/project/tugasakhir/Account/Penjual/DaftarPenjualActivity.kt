@@ -1,10 +1,13 @@
 package com.project.tugasakhir.Account.Penjual
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.TextUtils
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.AccountFragment
 import com.project.tugasakhir.databinding.ActivityDaftarPenjualBinding  // Import View Binding
@@ -14,80 +17,121 @@ class DaftarPenjualActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDaftarPenjualBinding
     private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
 
-    private lateinit var userEmail: String
-    private lateinit var username: String
+    private var isRegistering = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // Inisialisasi View Binding
         binding = ActivityDaftarPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Ambil data dari Intent
-        userEmail = intent.getStringExtra("EMAIL") ?: ""
-        username = intent.getStringExtra("USERNAME") ?: ""
-
-        // Set listener untuk tombol Daftar
+        binding.btnDaftar.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
         binding.btnDaftar.setOnClickListener {
-            registerSeller()
+            if (!isRegistering) {
+                registerSeller()
+            }
         }
     }
 
     private fun registerSeller() {
+        showLoadingState(true)
+
         val noHp = binding.etNoHp.text.toString().trim()
         val alamatToko = binding.etAlamatToko.text.toString().trim()
         val noIzinUsaha = binding.etNoIzinusaha.text.toString().trim()
         val deskripsi = binding.etDeskripsi.text.toString().trim()
         val sosialMedia = binding.etSosialMedia.text.toString().trim()
 
-        // Validasi input
         if (noHp.isEmpty() || alamatToko.isEmpty() || noIzinUsaha.isEmpty() || deskripsi.isEmpty() || sosialMedia.isEmpty()) {
             Toast.makeText(this, "Harap isi semua kolom!", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
             return
         }
 
-        // Menyiapkan data untuk disimpan ke Firestore
+        if (!TextUtils.isDigitsOnly(noHp)) {
+            Toast.makeText(this, "Nomor HP hanya boleh angka!", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
+            return
+        }
+
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User belum login, silakan login terlebih dahulu", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
+            return
+        }
+
+        val email = currentUser.email ?: ""
+        if (email.isBlank()) {
+            Toast.makeText(this, "Email user tidak tersedia", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
+            return
+        }
+
+        val username = currentUser.displayName ?: ""
+
         val sellerData = hashMapOf(
             "noHp" to noHp,
             "alamatToko" to alamatToko,
             "noIzinUsaha" to noIzinUsaha,
             "deskripsi" to deskripsi,
             "sosialMedia" to sosialMedia,
-            "email" to userEmail,
+            "email" to email,
             "username" to username,
             "isBusinessAccount" to true
         )
 
-        // Menyimpan data penjual ke Firestore
+        // Gunakan email sebagai ID dokumen, tapi ganti karakter '.' supaya valid di Firestore
+        val docId = email.replace(".", "_")
+
         db.collection("penjual")
-            .add(sellerData)
-            .addOnSuccessListener { documentReference ->
-                // Setelah berhasil mendaftar sebagai akun bisnis, update status akun
-                updateUserStatus()
+            .document(docId)
+            .set(sellerData)
+            .addOnSuccessListener {
+                updateUserStatus(email)
 
-                // Beri tahu pengguna bahwa pendaftaran berhasil
                 Toast.makeText(this, "Akun bisnis berhasil dibuat!", Toast.LENGTH_SHORT).show()
-
-                // Kembali ke FragmentAccount dan sembunyikan tombol Daftar Bisnis
-                val intent = Intent(this, AccountFragment::class.java) // Asumsi MainActivity adalah tempat AccountFragment
-                intent.putExtra("IS_BUSINESS_ACCOUNT", true)
-                startActivity(intent)
-                finish()  // Menutup activity DaftarPenjualActivity
+                clearInputFields()
+                finish()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal membuat akun bisnis: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal membuat akun bisnis: ${e.message}", Toast.LENGTH_LONG).show()
+                e.printStackTrace()
+                showLoadingState(false)
             }
     }
 
-    private fun updateUserStatus() {
-        // Update status akun pengguna di koleksi "users" untuk menandai sebagai akun bisnis
-        val userRef = db.collection("users").whereEqualTo("email", userEmail).get()
-        userRef.addOnSuccessListener { documents ->
-            for (document in documents) {
-                document.reference.update("isBusinessAccount", true) // Update status sebagai akun bisnis
+    private fun updateUserStatus(email: String) {
+        val userRef = db.collection("users")
+        val docId = email.replace(".", "_")
+
+        // Coba update dokumen berdasarkan email sebagai ID dokumen
+        userRef.document(docId).update("isBusinessAccount", true)
+            .addOnSuccessListener {
+                // update sukses
             }
-        }
+            .addOnFailureListener {
+                // Kalau gagal update (mungkin dokumen belum ada), buat dokumen baru
+                userRef.document(docId).set(mapOf("email" to email, "isBusinessAccount" to true))
+                    .addOnSuccessListener { /* sukses buat baru */ }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Gagal update data user: ${e.message}", Toast.LENGTH_SHORT).show()
+                        showLoadingState(false)
+                    }
+            }
+    }
+
+    private fun showLoadingState(isLoading: Boolean) {
+        isRegistering = isLoading
+        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        binding.btnDaftar.isEnabled = !isLoading
+    }
+
+    private fun clearInputFields() {
+        binding.etNoHp.text?.clear()
+        binding.etAlamatToko.text?.clear()
+        binding.etNoIzinusaha.text?.clear()
+        binding.etDeskripsi.text?.clear()
+        binding.etSosialMedia.text?.clear()
     }
 }

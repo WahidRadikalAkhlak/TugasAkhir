@@ -57,7 +57,7 @@
                 style="@style/Widget.MaterialComponents.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
+                android:layout_marginHorizontal="17dp"
                 android:text="Semua"
                 android:textColor="@color/fontColor"/>
 
@@ -66,7 +66,7 @@
                 style="@style/Widget.MaterialComponents.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
+                android:layout_marginHorizontal="17dp"
                 android:text="Membeli"
                 android:textColor="@color/fontColor"
                 app:chipBackgroundColor="@color/chip_bg_states" />
@@ -76,7 +76,7 @@
                 style="@style/Widget.MaterialComponents.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginHorizontal="20dp"
+                android:layout_marginHorizontal="17dp"
                 android:text="Menjual"
                 android:textColor="@color/fontColor"
                 app:chipBackgroundColor="@color/chip_bg_states" />
@@ -113,7 +113,7 @@
             app:chipBackgroundColor="@color/chip_bg_states"
             android:id="@+id/chip4"
             style="@style/Widget.MaterialComponents.Chip.Filter"
-            android:layout_marginHorizontal="25dp"
+            android:layout_marginHorizontal="20dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Semua"
@@ -124,7 +124,7 @@
             style="@style/Widget.MaterialComponents.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="25dp"
+            android:layout_marginHorizontal="20dp"
             android:text="Terkonfirmasi"
             android:textColor="@color/fontColor"
             app:chipBackgroundColor="@color/chip_bg_states" />
@@ -134,7 +134,7 @@
             style="@style/Widget.MaterialComponents.Chip.Filter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginHorizontal="25dp"
+            android:layout_marginHorizontal="20dp"
             android:text="Arsip"
             android:textColor="@color/fontColor"
             app:chipBackgroundColor="@color/chip_bg_states" />
@@ -142,13 +142,15 @@
 </HorizontalScrollView>
 
     <!-- RecyclerView -->
-<androidx.recyclerview.widget.RecyclerView
-android:id="@+id/rv_pesan"
-android:layout_width="match_parent"
-android:layout_height="wrap_content"
-tools:listitem="@layout/item_keranjang"
-app:layout_constraintStart_toStartOf="parent"
-app:layout_constraintTop_toBottomOf="@+id/scroll2" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_pesan"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/scroll2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:listitem="@layout/item_keranjang" />
+
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -19,6 +19,9 @@
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
         <activity
+            android:name=".Cart.BottomSheetPesanActivity"
+            android:exported="false" />
+        <activity
             android:name=".Account.Profile.SettingsActivity"
             android:exported="false" />
         <activity
@@ -52,9 +55,6 @@
             android:exported="false" />
         <activity
             android:name=".Cart.KeranjangPesananActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Katalog.Product.InfoPesanProdukActivity"
             android:exported="false" />
         <activity
             android:name=".Chat.pesan.PesanActivity"

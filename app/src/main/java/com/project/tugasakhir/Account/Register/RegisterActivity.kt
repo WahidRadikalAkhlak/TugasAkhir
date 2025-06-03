@@ -1,100 +1,94 @@
 package com.project.tugasakhir.Account.Register
 
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.UserProfileChangeRequest
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.Login.LoginActivity
-import com.project.tugasakhir.Data.User
+import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.ActivityRegisterBinding
-import java.nio.charset.StandardCharsets
-import java.security.MessageDigest
 
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
+    private lateinit var auth: FirebaseAuth
     private val db = FirebaseFirestore.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Handle the registration button click
+        auth = FirebaseAuth.getInstance()
+        binding.btnRegister.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
+        binding.btnRegister.setTextColor(resources.getColor(R.color.black, null))
         binding.btnRegister.setOnClickListener {
-            val email = binding.etEmail.text.toString()
+            val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString()
-            val name = binding.etName.text.toString()
-            val phone = binding.etPhone.text.toString()
+            val name = binding.etName.text.toString().trim()
+            val phone = binding.etPhone.text.toString().trim()
 
-            // Validate that all fields are filled
             if (email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty()) {
                 registerUser(email, password, name, phone)
             } else {
-                Toast.makeText(this, "Please fill all fields correctly", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }
         }
 
-        // Navigate to the login screen if the user already has an account
         binding.tvLogin.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 
     private fun registerUser(email: String, password: String, name: String, phone: String) {
-        val hashedPassword = hashPassword(password)
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val firebaseUser = auth.currentUser
+                    if (firebaseUser != null) {
+                        // Update displayName di FirebaseAuth profile user
+                        val profileUpdates = UserProfileChangeRequest.Builder()
+                            .setDisplayName(name)
+                            .build()
 
-        // Membuat objek User
-        val user = User(id = "", email = email, nama = name, password = hashedPassword)
-
-        // Periksa apakah email sudah ada di Firestore
-        val usersRef = db.collection("users")
-        usersRef.whereEqualTo("email", email).get()
-            .addOnCompleteListener(this) { task ->
-                if (task.isSuccessful && task.result != null && task.result?.isEmpty == false) {
-                    // Email sudah terdaftar
-                    Toast.makeText(this, "Email sudah terdaftar", Toast.LENGTH_SHORT).show()
+                        firebaseUser.updateProfile(profileUpdates)
+                            .addOnCompleteListener { profileUpdateTask ->
+                                if (profileUpdateTask.isSuccessful) {
+                                    // Setelah displayName berhasil disimpan, simpan data user ke Firestore
+                                    val uid = firebaseUser.uid
+                                    val userData = hashMapOf(
+                                        "nama" to name,
+                                        "email" to email,
+                                        "phone" to phone
+                                    )
+                                    db.collection("users").document(uid)
+                                        .set(userData)
+                                        .addOnSuccessListener {
+                                            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
+                                            navigateToLogin()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(this, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()
+                                        }
+                                } else {
+                                    Toast.makeText(this, "Failed to update profile: ${profileUpdateTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                    } else {
+                        Toast.makeText(this, "User registration failed: User is null", Toast.LENGTH_SHORT).show()
+                    }
                 } else {
-                    // Simpan data user ke Firestore
-                    val userData = hashMapOf(
-                        "email" to user.email,
-                        "nama" to user.nama,
-                        "password" to user.password
-                    )
-
-                    db.collection("users").add(userData)
-                        .addOnSuccessListener {
-                            // Pendaftaran berhasil
-                            Toast.makeText(this, "Pendaftaran berhasil", Toast.LENGTH_SHORT).show()
-                            navigateToLogin() // Navigasi ke layar login setelah pendaftaran
-                        }
-                        .addOnFailureListener {
-                            // Gagal menyimpan data user
-                            Toast.makeText(this, "Gagal menyimpan data user", Toast.LENGTH_SHORT).show()
-                        }
+                    Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
                 }
             }
     }
 
-    // Function to hash the password
-    private fun hashPassword(password: String): String {
-        val digest = MessageDigest.getInstance("SHA-256")
-        val hashBytes = digest.digest(password.toByteArray(StandardCharsets.UTF_8))
-        val sb = StringBuilder()
-        for (b in hashBytes) {
-            sb.append(String.format("%02x", b))
-        }
-        return sb.toString() // Return the hashed password
-    }
-
-
-    // Navigate to the login screen
     private fun navigateToLogin() {
-        val intent = Intent(this, LoginActivity::class.java)
-        startActivity(intent)
-        finish() // Close RegisterActivity
+        startActivity(Intent(this, LoginActivity::class.java))
+        finish()
     }
 }

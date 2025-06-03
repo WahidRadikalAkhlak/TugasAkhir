@@ -2,67 +2,87 @@ package com.project.tugasakhir.Account.Penjual
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Data.Product
+import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.databinding.ActivityDaftarProductBinding
 import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity
 
 class DaftarProductActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityDaftarProductBinding
-    private val db = FirebaseFirestore.getInstance()
+
+    companion object {
+        const val EXTRA_EMAIL = "EMAIL"
+        const val EXTRA_USERNAME = "USERNAME"
+        const val EXTRA_PRODUCT = "product"
+    }
+
+    private val binding: ActivityDaftarProductBinding by lazy {
+        ActivityDaftarProductBinding.inflate(layoutInflater)
+    }
+    private val db: FirebaseFirestore by lazy { FirebaseFirestore.getInstance() }
 
     private val productList = mutableListOf<Product>()
     private lateinit var adapter: ProductImageAdapter
 
+    private var userEmail: String? = null
+    private var userName: String? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityDaftarProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Inisialisasi adapter dan RecyclerView dengan GridLayout 2 kolom
-        adapter = ProductImageAdapter(productList)
-        binding.rvProductList.layoutManager = GridLayoutManager(this, 2)
-        binding.rvProductList.adapter = adapter
+        userEmail = intent.getStringExtra(EXTRA_EMAIL)
+        userName = intent.getStringExtra(EXTRA_USERNAME)
 
-        // Tombol tambah produk
-        binding.btnAddProduct.setOnClickListener {
-            val intent = Intent(this, ProductBaruActivity::class.java)
-            startActivity(intent)
+        if (userEmail.isNullOrEmpty()) {
+            Toast.makeText(this, "Email user tidak tersedia. Harap login ulang.", Toast.LENGTH_LONG).show()
+            finish()
+            return
         }
+        val displayName = userName ?: "User"
+        Toast.makeText(this, "Name: $displayName", Toast.LENGTH_SHORT).show()
 
-        // Load data awal dari Firestore
-        fetchProductData()
 
-        // Setup searchView untuk filter produk
-        setupSearch()
+        setupRecyclerView()
+        setupAddProductButton()
+        setupSearchView()
     }
 
     override fun onResume() {
         super.onResume()
-        fetchProductData()  // Refresh data setiap kali activity muncul kembali
+        fetchProductData()
     }
 
-    private fun fetchProductData() {
-        db.collection("products")
-            .get()
-            .addOnSuccessListener { documents ->
-                val firestoreProductList = documents.map { it.toObject(Product::class.java) }
+    private fun setupRecyclerView() {
+        // DaftarProductActivity.kt
 
-                productList.clear()
-                productList.addAll(firestoreProductList)
-
-                adapter.notifyDataSetChanged()
+        adapter = ProductImageAdapter(productList) { product ->
+            val intent = Intent(this, InfoProductActivity::class.java).apply {
+                putExtra("product", product)      // Kirim objek produk
+                putExtra("source", "seller")      // Tandai asalnya dari daftar produk penjual (edit/hapus)
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to load products: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+            startActivity(intent)
+        }
+        binding.rvProductList.layoutManager = GridLayoutManager(this, 2)
+        binding.rvProductList.adapter = adapter
     }
 
-    private fun setupSearch() {
+    private fun setupAddProductButton() {
+        binding.btnAddProduct.setOnClickListener {
+            val intent = Intent(this, ProductBaruActivity::class.java).apply {
+                putExtra(EXTRA_EMAIL, userEmail)
+                putExtra(EXTRA_USERNAME, userName)
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
 
@@ -73,14 +93,41 @@ class DaftarProductActivity : AppCompatActivity() {
         })
     }
 
-    private fun filterProductList(query: String?) {
-        val filteredList = if (query.isNullOrEmpty()) {
-            productList
-        } else {
-            productList.filter {
-                it.productName.contains(query, ignoreCase = true) ||
-                        it.productType.contains(query, ignoreCase = true)
+    private fun fetchProductData() {
+        val email = userEmail ?: run {
+            Toast.makeText(this, "Email user tidak valid", Toast.LENGTH_SHORT).show()
+            return
+        }
+        db.collection("products")
+            .whereEqualTo("email", email)  // Ganti userId dengan email
+            .get()
+            .addOnSuccessListener { documents ->
+                val productsFromFirestore = documents.mapNotNull { doc ->
+                    doc.toObject(Product::class.java)
+                }
+                productList.clear()
+                productList.addAll(productsFromFirestore)
+                adapter.notifyDataSetChanged()
+
+                if (productList.isEmpty()) {
+                    Toast.makeText(this, "Belum ada produk tersedia.", Toast.LENGTH_SHORT).show()
+                }
             }
+            .addOnFailureListener { e ->
+                Log.e("DaftarProductActivity", "Gagal mengambil data produk", e)
+                Toast.makeText(this, "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun filterProductList(query: String?) {
+        if (query.isNullOrBlank()) {
+            adapter.updateData(productList)
+            return
+        }
+
+        val filteredList = productList.filter { product ->
+            product.productName.contains(query, ignoreCase = true) ||
+                    product.productType.contains(query, ignoreCase = true)
         }
         adapter.updateData(filteredList)
     }

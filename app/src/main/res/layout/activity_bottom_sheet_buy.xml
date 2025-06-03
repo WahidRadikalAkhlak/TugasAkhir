@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Katalog.Product.InfoPesanProdukActivity">
+    tools:context=".Katalog.Product.BottomSheetBuyActivity">
 
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
@@ -105,10 +105,10 @@
                     android:orientation="horizontal"
                     android:gravity="center">
 
-                    <Button
-                        android:layout_width="50dp"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/kurang"
+                        android:layout_width="40dp"
                         android:layout_height="wrap_content"
-                        android:background="@color/black"
                         android:text="-"
                         android:textColor="@color/white" />
 
@@ -121,10 +121,10 @@
                         android:inputType="number"
                         android:text="0" />
 
-                    <Button
-                        android:layout_width="50dp"
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/tambah"
+                        android:layout_width="40dp"
                         android:layout_height="wrap_content"
-                        android:background="#E5E7EB"
                         android:text="+"
                         android:textColor="@color/white" />
                 </LinearLayout>
@@ -152,22 +152,23 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_keranjang"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:background="#6B7280"
+                android:backgroundTint="@color/btn_color"
                 android:text="Tambah ke Keranjang"
-                android:textColor="#FFFFFF" />
+                app:cornerRadius="16dp"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_tawar_harga"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:background="#FFFFFF"
-                android:backgroundTint="#6B7280"
+                android:backgroundTint="@color/btn_color"
                 android:text="Tawar Harga"
-                android:textColor="@color/white" />
+                app:cornerRadius="16dp" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 

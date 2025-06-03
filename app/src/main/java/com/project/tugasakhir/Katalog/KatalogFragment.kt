@@ -1,37 +1,36 @@
 package com.project.tugasakhir.Katalog
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.bumptech.glide.Glide
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.databinding.FragmentKatalogBinding
-import com.project.tugasakhir.databinding.ItemProductBinding
-import androidx.recyclerview.widget.RecyclerView
+import com.project.tugasakhir.Adapter.KatalogAdapter
+import com.project.tugasakhir.Adapter.ProductImageAdapter
+import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 
 class KatalogFragment : Fragment() {
-
     private var _binding: FragmentKatalogBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var terdekatAdapter: KatalogAdapter
+    private val allProducts = mutableListOf<Product>()
+    private val filteredProducts = mutableListOf<Product>()
+
+    private lateinit var produkAdapter: ProductImageAdapter
     private lateinit var rekomendasiAdapter: KatalogAdapter
-    private lateinit var sukaiAdapter: KatalogAdapter
+    private val produkList = mutableListOf<Product>()
 
     private val db = FirebaseFirestore.getInstance()
 
-    private val terdekatList = mutableListOf<Product>()
-    private val rekomendasiList = mutableListOf<Product>()
-    private val sukaiList = mutableListOf<Product>()
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentKatalogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -39,80 +38,96 @@ class KatalogFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Setup LayoutManager horizontal untuk ketiga RecyclerView
-        binding.terdekatRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        binding.rekomendasiRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
-        binding.sukaiRecyclerView.layoutManager =
-            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        produkAdapter = ProductImageAdapter(produkList) { product ->
+            val intent = Intent(context, InfoProductActivity::class.java).apply {
+                putExtra("product", product)      // Kirim objek produk
+                putExtra("source", "catalog")     // Tandai asalnya dari katalog (beli produk)
+            }
+            context?.startActivity(intent)
+        }
+        binding.rvProdukList.adapter = produkAdapter
+        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        // Setup adapter dengan list mutable
-        terdekatAdapter = KatalogAdapter(terdekatList)
-        rekomendasiAdapter = KatalogAdapter(rekomendasiList)
-        sukaiAdapter = KatalogAdapter(sukaiList)
-
-        binding.terdekatRecyclerView.adapter = terdekatAdapter
+        rekomendasiAdapter = KatalogAdapter()
+        binding.rekomendasiRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2, LinearLayoutManager.HORIZONTAL, false)
         binding.rekomendasiRecyclerView.adapter = rekomendasiAdapter
-        binding.sukaiRecyclerView.adapter = sukaiAdapter
 
+        setupSearch()
         loadProductsFromFirestore()
     }
 
     private fun loadProductsFromFirestore() {
         db.collection("products")
-            .get()
-            .addOnSuccessListener { documents ->
-                val allProducts = documents.map { it.toObject(Product::class.java) }
+            .addSnapshotListener { snapshots, e ->
+                if (e != null) {
+                    Log.e("KatalogFragment", "Error listening products", e)
+                    return@addSnapshotListener
+                }
+                snapshots?.let {
+                    val productsFromFirestore = it.map { doc -> doc.toObject(Product::class.java) }
+                        .filter { product -> product.isAvailable }
 
-                terdekatList.clear()
-                rekomendasiList.clear()
-                sukaiList.clear()
+                    allProducts.clear()
+                    allProducts.addAll(productsFromFirestore)
 
-                terdekatList.addAll(allProducts.filter { it.distance <= 5.0 })  // radius 5 km
-                rekomendasiList.addAll(allProducts.filter { it.isRecommended })
-                sukaiList.addAll(allProducts.filter { it.isLiked })
+                    filteredProducts.clear()
+                    filteredProducts.addAll(productsFromFirestore)
 
-                terdekatAdapter.notifyDataSetChanged()
-                rekomendasiAdapter.notifyDataSetChanged()
-                sukaiAdapter.notifyDataSetChanged()
-            }
-            .addOnFailureListener {
-                // Tangani error, misal tampilkan Toast
+                    produkList.clear()              // **Tambah ini**
+                    produkList.addAll(productsFromFirestore)  // **Tambah ini**
+
+                    produkAdapter.notifyDataSetChanged()
+
+
+                    val userLikedProducts = allProducts.filter { it.isLiked }
+                    val rekomendasiList = getItemBasedRecommendations(allProducts, userLikedProducts)
+                    rekomendasiAdapter.updateData(rekomendasiList)
+                }
             }
     }
+
+    private fun getItemBasedRecommendations(
+        allProducts: List<Product>,
+        userLikedProducts: List<Product>
+    ): List<Product> {
+        if (userLikedProducts.isEmpty()) return emptyList()
+
+        val likedTypes = userLikedProducts.map { it.productType }.toSet()
+
+        return allProducts.filter {
+            it.productType in likedTypes &&
+                    userLikedProducts.none { liked -> liked.productName == it.productName }
+        }.take(10)
+    }
+
+
+    private fun setupSearch() {
+        binding.searchEditText.addTextChangedListener { editable ->
+            val query = editable.toString().trim()
+            filterProductList(query)
+        }
+    }
+
+    private fun filterProductList(query: String) {
+        filteredProducts.clear()
+        if (query.isEmpty()) {
+            filteredProducts.addAll(allProducts)
+        } else {
+            filteredProducts.addAll(
+                allProducts.filter {
+                    it.productName.contains(query, ignoreCase = true) ||
+                            it.productType.contains(query, ignoreCase = true)
+                }
+            )
+        }
+        produkList.clear()               // Tambah ini
+        produkList.addAll(filteredProducts)   // Tambah ini
+        produkAdapter.notifyDataSetChanged()
+    }
+
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-}
-
-// Adapter untuk menampilkan list produk
-class KatalogAdapter(private val productList: MutableList<Product>) :
-    RecyclerView.Adapter<KatalogAdapter.KatalogViewHolder>() {
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): KatalogViewHolder {
-        val binding = ItemProductBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return KatalogViewHolder(binding)
-    }
-
-    override fun onBindViewHolder(holder: KatalogViewHolder, position: Int) {
-        holder.bind(productList[position])
-    }
-
-    override fun getItemCount(): Int = productList.size
-
-    inner class KatalogViewHolder(private val binding: ItemProductBinding) :
-        RecyclerView.ViewHolder(binding.root) {
-
-        fun bind(product: Product) {
-            binding.tvProductName.text = product.productName
-            binding.HargaBarang.text = product.pricePerUnit.toString()
-
-            Glide.with(binding.imgProduct.context)
-                .load(product.imageUrl)
-                .into(binding.imgProduct)
-        }
     }
 }

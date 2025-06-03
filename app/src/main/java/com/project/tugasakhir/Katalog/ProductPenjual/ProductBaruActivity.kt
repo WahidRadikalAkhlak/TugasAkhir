@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ImageAdapter
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.databinding.ActivityProductBaruBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,10 +28,19 @@ class ProductBaruActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private lateinit var adapter: ImageAdapter
 
+    private var userEmail: String = ""
+    private var userName: String = ""
+
+    private var editingProduct: Product? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityProductBaruBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        userEmail = intent.getStringExtra("EMAIL") ?: ""
+        userName = intent.getStringExtra("USERNAME") ?: ""
+
 
         adapter = ImageAdapter(selectedImages, this)
         binding.RVImagenes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -38,13 +48,29 @@ class ProductBaruActivity : AppCompatActivity() {
 
         binding.addImgProduct.setOnClickListener { openGallery() }
 
+        // Jika edit, ambil objek Product langsung dari intent (tidak lagi pakai id)
+        editingProduct = intent.getParcelableExtra<Product>("product")
+        editingProduct?.let { populateForm(it) }
+
         binding.BtnSimpanProduk.setOnClickListener {
-            if (selectedImages.isEmpty()) {
+            if (selectedImages.isEmpty() && editingProduct == null) {
                 Toast.makeText(this, "Silakan tambahkan minimal satu foto produk", Toast.LENGTH_SHORT).show()
             } else {
-                saveProductToFirestore()
+                saveOrUpdateProduct()
             }
         }
+    }
+
+    private fun populateForm(product: Product) {
+        binding.namaProduct.setText(product.productName)
+        binding.jenisProduk.setText(product.productType)
+        binding.deskripsi.setText(product.description)
+        binding.stokTersedia.setText(product.stockAvailable.toString())
+        binding.hargaPerUnit.setText(product.pricePerUnit.toString())
+        binding.switchTampilkanproduk.isChecked = product.isAvailable
+
+        // TODO: Jika ingin tampilkan gambar lama dari base64 di recyclerView,
+        // convert base64 ke URI/custom handling
     }
 
     private fun openGallery() {
@@ -75,16 +101,7 @@ class ProductBaruActivity : AppCompatActivity() {
         }
     }
 
-    private fun uriToBase64(uri: Uri): String? {
-        val inputStream = contentResolver.openInputStream(uri) ?: return null
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)  // Kompres jpeg 80%
-        val byteArray = outputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
-    private fun saveProductToFirestore() {
+    private fun saveOrUpdateProduct() {
         val namaProduct = binding.namaProduct.text.toString().trim()
         val jenisProduk = binding.jenisProduk.text.toString().trim()
         val deskripsi = binding.deskripsi.text.toString().trim()
@@ -111,9 +128,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 val base64Images = mutableListOf<String>()
                 for (uri in selectedImages) {
                     val base64 = uriToBase64(uri)
-                    if (base64 != null) {
-                        base64Images.add(base64)
-                    }
+                    if (base64 != null) base64Images.add(base64)
                 }
 
                 val productData = hashMapOf(
@@ -123,15 +138,35 @@ class ProductBaruActivity : AppCompatActivity() {
                     "stockAvailable" to stokTersedia,
                     "pricePerUnit" to hargaPerUnit,
                     "isAvailable" to tampilkanProduk,
-                    "imageBase64List" to base64Images
+                    "imageBase64List" to base64Images,
+                    "email" to userEmail,
+                    "userName" to userName
                 )
 
-                db.collection("products").add(productData).await()
+                if (editingProduct != null) {
+                    // Cari dokumen berdasarkan kombinasi unik productName + userId
+                    val querySnapshot = db.collection("products")
+                        .whereEqualTo("productName", editingProduct!!.productName)
+                        .whereEqualTo("email", userEmail)
+                        .get()
+                        .await()
+
+                    if (!querySnapshot.isEmpty) {
+                        // Update semua dokumen yang cocok (biasanya hanya 1)
+                        for (doc in querySnapshot.documents) {
+                            db.collection("products").document(doc.id).set(productData).await()
+                        }
+                    } else {
+                        // Kalau tidak ketemu, buat dokumen baru (ini cadangan)
+                        db.collection("products").add(productData).await()
+                    }
+                } else {
+                    // Produk baru, langsung tambah
+                    db.collection("products").add(productData).await()
+                }
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
-                    selectedImages.clear()
-                    adapter.notifyDataSetChanged()
                     finish()
                 }
             } catch (e: Exception) {
@@ -140,5 +175,14 @@ class ProductBaruActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun uriToBase64(uri: Uri): String? {
+        val inputStream = contentResolver.openInputStream(uri) ?: return null
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        val outputStream = ByteArrayOutputStream()
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        val byteArray = outputStream.toByteArray()
+        return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
 }

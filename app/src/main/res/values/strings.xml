@@ -18,7 +18,7 @@
     <string name="txt_nilai">Nilai:</string>
     <string name="pemesanan">Pemesanan:</string>
     <string name="Banyak_pemesanan">Pemesanan</string>
-    <string name="tambah_keranjang">Tambah Ke Keranjang</string>
+    <string name="buy">Beli Barang</string>
     <string name="kirim_pesan">Kirim Pesan</string>
     <string name="image">image</string>
     <string name="ubah_produk">Ubah Produk</string>
@@ -56,4 +56,5 @@
     <string name="Settings">Settings</string>
     <string name="product_image">Product Image</string>
     <string name="delete_image">Delete Image</string>
+    <string name="like_product">Like Product</string>
 </resources>
