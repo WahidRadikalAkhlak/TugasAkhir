@@ -56,6 +56,15 @@
                         android:textColor="@android:color/black"
                         android:textSize="16sp"
                         android:textStyle="bold" />
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/email"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/email"
+                        android:textColor="@android:color/black"
+                        android:textSize="16sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </LinearLayout>
 
@@ -101,7 +110,7 @@
                     android:textStyle="bold" />
 
                 <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/nomor_order"
+                    android:id="@+id/orderNumber"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="3dp"
@@ -186,7 +195,7 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_produk_keranjang"
                 android:layout_width="match_parent"
-                android:layout_height="250dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 tools:listitem="@layout/item_keranjang_produk" />
 
@@ -317,7 +326,7 @@
             android:layout_marginEnd="4dp" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/HargaBarang"
+            android:id="@+id/totalPrice"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/harga_barang"

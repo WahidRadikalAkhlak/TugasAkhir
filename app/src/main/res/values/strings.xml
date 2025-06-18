@@ -31,10 +31,10 @@
     <string name="status_order">Status Order :</string>
     <string name="Tanggal">Tanggal :</string>
     <string name="Nomor">Nomor Orderan :</string>
-    <string name="no_orderan">1329012930</string>
+    <string name="no_orderan">No Order Available</string>
     <string name="statusorder">Selesai</string>
-    <string name="tanggal_order">01-April-2025</string>
-    <string name="waktu">19.00 WITA</string>
+    <string name="tanggal_order">Date Order Available</string>
+    <string name="waktu">Time Order Available</string>
     <string name="waktu_order">Waktu :</string>
     <string name="tambah_produk_baru">Tambah Produk Baru</string>
     <string name="pesan_kepada_penjual">Pesan Kepada Penjual :</string>
@@ -57,4 +57,5 @@
     <string name="product_image">Product Image</string>
     <string name="delete_image">Delete Image</string>
     <string name="like_product">Like Product</string>
+    <string name="hapus_pesanan">Hapus Pesanan</string>
 </resources>

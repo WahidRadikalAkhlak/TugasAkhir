@@ -31,9 +31,10 @@ class RegisterActivity : AppCompatActivity() {
             val password = binding.etPassword.text.toString()
             val name = binding.etName.text.toString().trim()
             val phone = binding.etPhone.text.toString().trim()
+            val userAddress = binding.etAddress.text.toString().trim()
 
-            if (email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty()) {
-                registerUser(email, password, name, phone)
+            if (email.isNotEmpty() && password.isNotEmpty() && name.isNotEmpty() && phone.isNotEmpty() && userAddress.isNotEmpty()) {
+                registerUser(email, password, name, phone, userAddress)
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }
@@ -44,7 +45,7 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerUser(email: String, password: String, name: String, phone: String) {
+    private fun registerUser(email: String, password: String, name: String, phone: String, userAddress: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -63,7 +64,8 @@ class RegisterActivity : AppCompatActivity() {
                                     val userData = hashMapOf(
                                         "nama" to name,
                                         "email" to email,
-                                        "phone" to phone
+                                        "phone" to phone,
+                                        "userAddress" to userAddress  // Menambahkan alamat ke Firestore
                                     )
                                     db.collection("users").document(uid)
                                         .set(userData)
@@ -86,6 +88,7 @@ class RegisterActivity : AppCompatActivity() {
                 }
             }
     }
+
 
     private fun navigateToLogin() {
         startActivity(Intent(this, LoginActivity::class.java))

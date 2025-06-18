@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Data.Product
@@ -59,8 +60,7 @@ class DaftarProductActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // DaftarProductActivity.kt
-
+        // Mengubah RecyclerView untuk menampilkan item secara horizontal
         adapter = ProductImageAdapter(productList) { product ->
             val intent = Intent(this, InfoProductActivity::class.java).apply {
                 putExtra("product", product)      // Kirim objek produk
@@ -68,7 +68,9 @@ class DaftarProductActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
-        binding.rvProductList.layoutManager = GridLayoutManager(this, 2)
+
+        // Ubah GridLayoutManager menjadi LinearLayoutManager dengan orientasi horizontal
+        binding.rvProductList.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProductList.adapter = adapter
     }
 

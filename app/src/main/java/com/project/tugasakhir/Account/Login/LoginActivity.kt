@@ -54,12 +54,15 @@ class LoginActivity : AppCompatActivity() {
                     val firebaseUser = auth.currentUser
                     val uid = firebaseUser?.uid ?: ""
 
+                    // Mengambil data pengguna dari Firestore
                     db.collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
                             val username = doc.getString("nama") ?: "User"
-                            // Start MainActivity dengan kirim username
+                            val userAddress = doc.getString("userAddress") ?: "Alamat Tidak Tersedia"
+
                             val intent = Intent(this, MainActivity::class.java)
                             intent.putExtra("USERNAME", username)
+                            intent.putExtra("userAddress", userAddress)
                             startActivity(intent)
                             finish()
                         }
@@ -74,6 +77,7 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
+
     private fun navigateToAccountFragment(username: String) {
         val accountFragment = AccountFragment()
 
@@ -82,8 +86,10 @@ class LoginActivity : AppCompatActivity() {
         }
         accountFragment.arguments = bundle
 
+        // Pastikan Anda menggunakan fragment transaction dengan benar
         supportFragmentManager.beginTransaction()
-            .replace(R.id.framelayoutt, accountFragment) // R.id.framelayoutt harus sesuai dengan layout di MainActivity
+            .replace(R.id.framelayoutt, accountFragment) // Gantilah `R.id.fragment_container` sesuai dengan ID fragment container di MainActivity
+            .addToBackStack(null)  // Jika ingin menambahkan ke back stack
             .commit()
     }
 }

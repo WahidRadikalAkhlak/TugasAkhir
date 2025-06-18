@@ -48,7 +48,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             else
                 "Harga belum tersedia"
             stock.text = "Stok: ${p.stockAvailable} kg"
-            deskripsi1.text = p.description
+            deskripsiProduk.text = p.description
             userName.text = "Added by: ${p.userName}"
 
             if (p.imageUrls.isNotEmpty()) {
@@ -135,19 +135,48 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             return
         }
 
+        // Cek apakah produk sudah ada di keranjang
+        firestore.collection("carts").document(userId).collection("items")
+            .whereEqualTo("productName", p.productName)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    // Produk belum ada di keranjang, tambahkan ke keranjang
+                    addProductToCart(p, quantity, userId)
+                } else {
+                    // Produk sudah ada, perbarui quantity
+                    for (doc in documents) {
+                        val docRef = firestore.collection("carts")
+                            .document(userId)
+                            .collection("items")
+                            .document(doc.id)
+
+                        // Update quantity jika produk sudah ada
+                        val newQuantity = doc.getLong("quantity")?.toInt() ?: 0 + quantity
+                        docRef.update("quantity", newQuantity, "totalPrice", p.pricePerUnit * newQuantity)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Jumlah produk diperbarui", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(this, "Gagal memperbarui keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memeriksa keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Fungsi untuk menambahkan produk baru ke keranjang
+    private fun addProductToCart(p: Product, quantity: Int, userId: String) {
         val cartItem = hashMapOf(
             "productName" to p.productName,
             "productType" to p.productType,
             "quantity" to quantity,
             "pricePerUnit" to p.pricePerUnit,
             "totalPrice" to p.pricePerUnit * quantity,
-            "imageUrl" to if (p.imageUrls.isNotEmpty()) p.imageUrls[0] else "",
             "userName" to p.userName,
-            "userAddress" to "", // Bisa diisi alamat penjual jika ada
-            "orderNumber" to "", // Kosong dulu, bisa di-generate saat checkout final
-            "status" to "Memesan",
-            "orderDate" to "",  // Isi saat checkout
-            "orderTime" to "",  // Isi saat checkout
             "timestamp" to FieldValue.serverTimestamp()
         )
 

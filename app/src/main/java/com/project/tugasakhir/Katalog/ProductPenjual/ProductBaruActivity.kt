@@ -41,14 +41,13 @@ class ProductBaruActivity : AppCompatActivity() {
         userEmail = intent.getStringExtra("EMAIL") ?: ""
         userName = intent.getStringExtra("USERNAME") ?: ""
 
-
         adapter = ImageAdapter(selectedImages, this)
         binding.RVImagenes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.RVImagenes.adapter = adapter
 
         binding.addImgProduct.setOnClickListener { openGallery() }
 
-        // Jika edit, ambil objek Product langsung dari intent (tidak lagi pakai id)
+        // If editing, get the product directly from intent
         editingProduct = intent.getParcelableExtra<Product>("product")
         editingProduct?.let { populateForm(it) }
 
@@ -144,7 +143,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 )
 
                 if (editingProduct != null) {
-                    // Cari dokumen berdasarkan kombinasi unik productName + userId
+                    // Find product by productName + userId to update
                     val querySnapshot = db.collection("products")
                         .whereEqualTo("productName", editingProduct!!.productName)
                         .whereEqualTo("email", userEmail)
@@ -152,16 +151,16 @@ class ProductBaruActivity : AppCompatActivity() {
                         .await()
 
                     if (!querySnapshot.isEmpty) {
-                        // Update semua dokumen yang cocok (biasanya hanya 1)
+                        // Update the matching document (usually only one)
                         for (doc in querySnapshot.documents) {
                             db.collection("products").document(doc.id).set(productData).await()
                         }
                     } else {
-                        // Kalau tidak ketemu, buat dokumen baru (ini cadangan)
+                        // If not found, create a new document
                         db.collection("products").add(productData).await()
                     }
                 } else {
-                    // Produk baru, langsung tambah
+                    // New product, add it directly
                     db.collection("products").add(productData).await()
                 }
 

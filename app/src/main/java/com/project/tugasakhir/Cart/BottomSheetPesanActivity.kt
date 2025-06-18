@@ -62,7 +62,7 @@ class BottomSheetPesanActivity : BottomSheetDialogFragment() {
             if (itemCount <= 0) {
                 Toast.makeText(requireContext(), "Tidak ada item untuk diproses", Toast.LENGTH_SHORT).show()
             } else {
-                listener?.onConfirmOrder(itemCount, totalPrice)
+                listener?.onConfirmOrder(itemCount, totalPrice)  // Pastikan ini hanya dipanggil sekali
                 dismiss()
             }
         }
