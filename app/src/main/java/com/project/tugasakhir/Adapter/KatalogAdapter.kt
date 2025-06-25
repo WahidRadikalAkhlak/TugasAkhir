@@ -1,6 +1,6 @@
 package com.project.tugasakhir.Adapter
 
-import android.util.Log
+import android.graphics.Bitmap
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,28 +18,54 @@ class KatalogAdapter(
 
     inner class KatalogViewHolder(private val binding: ItemProductBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(product: Product) {
-            binding.tvProductName.text = product.productName
-            binding.tvProductType.text = product.productType
+            binding.tvProductName.text = product.productName ?: "Nama produk tidak tersedia"
+            binding.tvProductType.text = product.productType ?: "Tipe produk tidak tersedia"
+            binding.deskripsiProduk.text = product.description ?: "Deskripsi tidak tersedia"
+            binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
 
-            // Set likes count
-            binding.likesCount.text = "${product.likesCount} Likes"
-            binding.likesCount.visibility = View.VISIBLE
-
-            // Set product image
-            val imageUrl = product.imageUrls.firstOrNull()
-            if (!imageUrl.isNullOrBlank()) {
-                Glide.with(binding.imgProduct.context)
-                    .load(imageUrl)
-                    .placeholder(R.drawable.image_icon)
-                    .into(binding.imgProduct)
+            // Set likes count for recommendations
+            if (isRecommendation) {
+                binding.likesCount.text = "${product.likesCount} Likes"
+                binding.likesCount.visibility = View.VISIBLE
             } else {
-                binding.imgProduct.setImageResource(R.drawable.image_icon)
+                binding.likesCount.visibility = View.GONE
             }
 
+            // Load product image
+            loadProductImage(product)
+
             // Handle item click to open product details
-            itemView.setOnClickListener {
-                onItemClick(product)
+            binding.root.setOnClickListener { onItemClick(product) }
+        }
+
+        // Load product image based on imageUrls or imageBase64List
+        private fun loadProductImage(product: Product) {
+            // First, check if imageUrls is not empty
+            if (!product.imageUrls.isNullOrEmpty()) {
+                Glide.with(binding.imgProduct.context)
+                    .load(product.imageUrls[0]) // Use the first image URL from the list
+                    .placeholder(R.drawable.image_icon) // Placeholder image
+                    .error(R.drawable.image_icon) // Error image
+                    .into(binding.imgProduct)
+            } else if (!product.imageBase64List.isNullOrEmpty()) {
+                // If imageUrls is empty, use base64 images
+                base64ToBitmap(product.imageBase64List[0])?.let {
+                    binding.imgProduct.setImageBitmap(it)
+                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
+            } else {
+                binding.imgProduct.setImageResource(R.drawable.image_icon) // Default placeholder
+            }
+        }
+
+        // Convert base64 string to Bitmap if needed
+        private fun base64ToBitmap(base64Str: String): Bitmap? {
+            return try {
+                val decodedBytes = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
+                android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+            } catch (e: Exception) {
+                android.util.Log.e("KatalogAdapter", "Failed to decode base64 image", e)
+                null
             }
         }
     }
@@ -56,7 +82,7 @@ class KatalogAdapter(
 
     override fun getItemCount(): Int = productList.size
 
-    // Update the data in the adapter
+    // Method to update data when filtering or when new data is available
     fun updateData(newList: List<Product>) {
         productList.clear()
         productList.addAll(newList)

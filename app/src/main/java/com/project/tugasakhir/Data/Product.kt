@@ -16,7 +16,7 @@ data class Product(
     var isAvailable: Boolean = true,
     var isRecommended: Boolean = false,
     var isLiked: Boolean = false,
-    var likesCount: Int = 0,
+    var likesCount: Int = 0, // Likes count for the product
     val distance: Double = Double.MAX_VALUE,
     val userName: String = "",
     val email: String = ""

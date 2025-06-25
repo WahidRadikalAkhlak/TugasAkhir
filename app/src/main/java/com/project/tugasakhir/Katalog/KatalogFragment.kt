@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
@@ -25,8 +26,8 @@ class KatalogFragment : Fragment() {
     private val filteredProducts = mutableListOf<Product>()
     private val produkList = mutableListOf<Product>()
 
-    private lateinit var produkAdapter: ProductImageAdapter
-    private lateinit var rekomendasiAdapter: KatalogAdapter
+    private lateinit var produkAdapter: ProductImageAdapter // Adapter for product list
+    private lateinit var rekomendasiAdapter: KatalogAdapter // Adapter for recommendations
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -49,65 +50,66 @@ class KatalogFragment : Fragment() {
         binding.rvProdukList.adapter = produkAdapter
         binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        rekomendasiAdapter = KatalogAdapter(produkList, { product ->
+        // Adapter for recommendations (with likes count)
+        rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
                 putExtra("source", "catalog")
             }
             context?.startActivity(intent)
         }, true) // Display likes count in recommendations
-        binding.rvRekomendasi.adapter = rekomendasiAdapter
-        binding.rvRekomendasi.adapter = produkAdapter
-        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 1, LinearLayoutManager.HORIZONTAL, false) // Horizontal Layout
+
+        binding.rvRekomendasi.adapter = rekomendasiAdapter // Set rekomendasiAdapter to rvRekomendasi
+        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 1, GridLayoutManager.HORIZONTAL, false) // Horizontal Layout
 
         setupSearch()
-        loadProductsFromFirestore()
+        loadProductsFromFirestore() // Load products from Firestore
     }
+
     private fun loadProductsFromFirestore() {
         db.collection("products")
-            .addSnapshotListener { snapshots, e ->
-                if (e != null) {
-                    Log.e("KatalogFragment", "Error listening products", e)
-                    return@addSnapshotListener
-                }
+            .get()
+            .addOnSuccessListener { snapshots ->
+                val productsFromFirestore = snapshots.map { doc -> doc.toObject(Product::class.java) }
+                    .filter { product -> product.isAvailable }
 
-                snapshots?.let {
-                    val productsFromFirestore = it.map { doc -> doc.toObject(Product::class.java) }
-                        .filter { product -> product.isAvailable }
+                allProducts.clear()
+                allProducts.addAll(productsFromFirestore)
 
-                    allProducts.clear()
-                    allProducts.addAll(productsFromFirestore)
+                filteredProducts.clear()
+                filteredProducts.addAll(productsFromFirestore)
 
-                    filteredProducts.clear()
-                    filteredProducts.addAll(productsFromFirestore)
+                produkList.clear()
+                produkList.addAll(productsFromFirestore)
 
-                    produkList.clear()
-                    produkList.addAll(productsFromFirestore)
+                // Fetch likes count for each product and update UI
+                val likesCountFetched = mutableListOf<Int>()
+                for (product in produkList) {
+                    getLikesCountForProduct(product) { likesCount ->
+                        product.likesCount = likesCount // Update likesCount on the product object
 
-                    // Fetch likes count for each product and update UI
-                    val likesCountFetched = mutableListOf<Int>()
-                    for (product in produkList) {
-                        getLikesCountForProduct(product) { likesCount ->
-                            likesCountFetched.add(likesCount)
-                            if (likesCountFetched.size == produkList.size) {
-                                // All likes have been fetched, now refresh the RecyclerView
-                                produkAdapter.notifyDataSetChanged()
-                                recommendProductsBasedOnLikes() // Update recommendations after likes are fetched
-                            }
+                        likesCountFetched.add(likesCount)
+                        if (likesCountFetched.size == produkList.size) {
+                            // All likes have been fetched, now refresh the RecyclerView
+                            produkAdapter.notifyDataSetChanged()
+                            recommendProductsBasedOnLikes() // Update recommendations after likes are fetched
                         }
                     }
                 }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int) -> Unit) {
         db.collection("productLikes")
-            .document(product.productName)
+            .document(product.productName) // Access the product by its name
             .collection("users")
             .get()
             .addOnSuccessListener { result ->
-                val likesCount = result.size() // Count the likes
-                product.likesCount = likesCount // Update likesCount in the product object
+                val likesCount = result.size() // Count the likes (documents in the "users" collection)
+                product.likesCount = likesCount // Set likesCount on the product object
                 onLikesCountFetched(likesCount) // Pass the likes count back to the caller
             }
             .addOnFailureListener { e ->
@@ -116,20 +118,13 @@ class KatalogFragment : Fragment() {
             }
     }
 
-    private fun updateProductLikeCountInUI(product: Product, likesCount: Int) {
-        val index = produkList.indexOf(product)
-        if (index != -1) {
-            produkList[index].likesCount = likesCount // Update likesCount in the product object
-            produkAdapter.notifyItemChanged(index)
-        }
-    }
-
     private fun recommendProductsBasedOnLikes() {
-        val filteredProducts = allProducts.filter { it.likesCount > 0 }
+        // Filter products where likesCount > 2 and sort by likesCount in descending order
+        val recommendedProducts = allProducts.filter { it.likesCount > 2 }
             .sortedByDescending { it.likesCount }
 
-        rekomendasiAdapter.updateData(filteredProducts)
-        rekomendasiAdapter.notifyDataSetChanged()
+        rekomendasiAdapter.updateData(recommendedProducts) // Update the recommendation list
+        rekomendasiAdapter.notifyDataSetChanged() // Notify adapter to refresh the view
     }
 
     private fun setupSearch() {
@@ -161,4 +156,3 @@ class KatalogFragment : Fragment() {
         _binding = null
     }
 }
-

@@ -46,9 +46,10 @@ class ProductImageAdapter(
         }
         // Pemisahan fungsi untuk memuat gambar dengan lebih jelas
         private fun loadProductImage(product: Product) {
+            // Pastikan imageUrls bukan null dan tidak kosong
             if (!product.imageUrls.isNullOrEmpty()) {
                 Glide.with(binding.imgProduct.context)
-                    .load(product.imageUrls[0]) // Mengambil URL gambar pertama
+                    .load(product.imageUrls[0])  // Ambil gambar pertama dari imageUrls
                     .placeholder(R.drawable.image_icon)
                     .error(R.drawable.image_icon)
                     .into(binding.imgProduct)
@@ -57,7 +58,7 @@ class ProductImageAdapter(
                     binding.imgProduct.setImageBitmap(it)
                 } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
             } else {
-                binding.imgProduct.setImageResource(R.drawable.image_icon)
+                binding.imgProduct.setImageResource(R.drawable.image_icon)  // Placeholder jika tidak ada gambar
             }
         }
 

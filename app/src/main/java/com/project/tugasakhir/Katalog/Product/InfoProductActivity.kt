@@ -166,43 +166,35 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
     private fun toggleLikeStatusForUser(product: Product) {
         val currentUserId = auth.currentUser?.uid ?: return
-        val currentUserName = auth.currentUser?.displayName ?: "Unknown" // Mendapatkan username pengguna
+        val currentUserName = auth.currentUser?.displayName ?: "Unknown"
 
         firestore.collection("productLikes")
-            .document(product.productName)  // Gunakan nama produk sebagai ID dokumen
+            .document(product.productName)  // Produk yang di-like
             .collection("users")
-            .document(currentUserName)  // Gunakan username pengguna sebagai ID dokumen
+            .document(currentUserName)  // Menggunakan username untuk dokumentasi user
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
-                    // Jika produk sudah disukai, lakukan un-like
+                    // Un-like
                     firestore.collection("productLikes")
                         .document(product.productName)
                         .collection("users")
                         .document(currentUserName)
                         .delete()
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Product Disliked", Toast.LENGTH_SHORT).show()
                             updateLikeButtonStatus(false)
-                            getLikesCount(product)
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, "Gagal menghapus like: ${e.message}", Toast.LENGTH_SHORT).show()
+                            getLikesCount(product)  // Update likes count after un-liking
                         }
                 } else {
-                    // Jika produk belum disukai, lakukan like
+                    // Like
                     firestore.collection("productLikes")
                         .document(product.productName)
                         .collection("users")
                         .document(currentUserName)
                         .set(mapOf("likedAt" to FieldValue.serverTimestamp()))
                         .addOnSuccessListener {
-                            Toast.makeText(this, "Product Liked", Toast.LENGTH_SHORT).show()
                             updateLikeButtonStatus(true)
-                            getLikesCount(product) // Update jumlah like setelah disukai
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, "Gagal menambahkan like: ${e.message}", Toast.LENGTH_SHORT).show()
+                            getLikesCount(product)  // Update likes count after liking
                         }
                 }
             }
@@ -210,6 +202,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 Toast.makeText(this, "Gagal memeriksa like: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
     private fun updateLikeButtonStatus(isLiked: Boolean) {
         if (isLiked) {
             binding.btnLike.setImageResource(R.drawable.liked)
@@ -224,12 +217,23 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             .get()
             .addOnSuccessListener { result ->
                 val likesCount = result.size()
-                binding.likesCount.text = "$likesCount Likes"
+                // Update likes count di Firestore pada dokumen produk
+                firestore.collection("products")
+                    .document(product.productName)
+                    .update("likesCount", likesCount)
+                    .addOnSuccessListener {
+                        // Setelah likesCount berhasil diperbarui, kita perbarui UI
+                        binding.likesCount.text = "$likesCount Likes"
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Gagal memperbarui likes count: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal mengambil data like: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
     private fun base64ToBitmap(base64Str: String): Bitmap? {
         return try {
             val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
