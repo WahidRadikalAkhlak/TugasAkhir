@@ -146,14 +146,13 @@
                     android:text="@string/Settings" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"
-                    app:tint="@color/dark_grey" />
+                    android:src="@drawable/ic_arrow"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -192,14 +191,13 @@
                     android:text="@string/Bahasa" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"
-                    app:tint="@color/dark_grey" />
+                    android:src="@drawable/ic_arrow"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -239,14 +237,13 @@
                     android:text="@string/tema" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"
-                    app:tint="@color/dark_grey" />
+                    android:src="@drawable/ic_arrow"/>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -287,14 +284,13 @@
                     android:text="@string/login" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"
-                    app:tint="@color/dark_grey" />
+                    android:src="@drawable/ic_arrow" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -333,14 +329,13 @@
                     android:text="Mulai Berbisnis" />
 
                 <ImageView
-                    android:layout_width="15dp"
-                    android:layout_height="15dp"
+                    android:layout_width="25dp"
+                    android:layout_height="25dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"
-                    app:tint="@color/dark_grey" />
+                    android:src="@drawable/ic_arrow" />
 
 
 

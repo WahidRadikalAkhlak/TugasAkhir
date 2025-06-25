@@ -20,37 +20,47 @@ class ProductImageAdapter(
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(product: Product) {
-            binding.tvProductName.text = product.productName
-            binding.tvProductType.text = product.productType
-            binding.deskripsiProduk.text = product.description
+            binding.tvProductName.text = product.productName ?: "Nama produk tidak tersedia"
+            binding.tvProductType.text = product.productType ?: "Tipe produk tidak tersedia"
+            binding.deskripsiProduk.text = product.description ?: "Deskripsi tidak tersedia"
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
-            binding.HargaBarang.text = if (product.pricePerUnit > 0) {
-                "Rp ${String.format("%,.0f", product.pricePerUnit)}"
+            binding.HargaBarang.text = setPriceText(product.pricePerUnit)
+
+            // Safely load images, checking for null/empty lists
+            if (product.imageUrls.isNotEmpty()) {
+                Glide.with(binding.imgProduct.context)
+                    .load(product.imageUrls[0])
+                    .placeholder(R.drawable.image_icon)
+                    .error(R.drawable.image_icon)
+                    .into(binding.imgProduct)
+            } else if (product.imageBase64List.isNotEmpty()) {
+                base64ToBitmap(product.imageBase64List[0])?.let {
+                    binding.imgProduct.setImageBitmap(it)
+                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
             } else {
-                "Harga belum tersedia"
+                binding.imgProduct.setImageResource(R.drawable.image_icon)
             }
-
-            // Tampilkan gambar dari URL atau Base64, fallback ke placeholder
-            when {
-                product.imageUrls.isNotEmpty() -> {
-                    Glide.with(binding.imgProduct.context)
-                        .load(product.imageUrls[0])
-                        .placeholder(R.drawable.image_icon)
-                        .error(R.drawable.image_icon)
-                        .into(binding.imgProduct)
-                }
-                product.imageBase64List.isNotEmpty() -> {
-                    base64ToBitmap(product.imageBase64List[0])?.let {
-                        binding.imgProduct.setImageBitmap(it)
-                    } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
-                }
-                else -> {
-                    binding.imgProduct.setImageResource(R.drawable.image_icon)
-                }
-            }
-
+            loadProductImage(product)
+            // Handle click event for the product
             binding.root.setOnClickListener { onItemClick(product) }
         }
+        // Pemisahan fungsi untuk memuat gambar dengan lebih jelas
+        private fun loadProductImage(product: Product) {
+            if (!product.imageUrls.isNullOrEmpty()) {
+                Glide.with(binding.imgProduct.context)
+                    .load(product.imageUrls[0]) // Mengambil URL gambar pertama
+                    .placeholder(R.drawable.image_icon)
+                    .error(R.drawable.image_icon)
+                    .into(binding.imgProduct)
+            } else if (!product.imageBase64List.isNullOrEmpty()) {
+                base64ToBitmap(product.imageBase64List[0])?.let {
+                    binding.imgProduct.setImageBitmap(it)
+                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
+            } else {
+                binding.imgProduct.setImageResource(R.drawable.image_icon)
+            }
+        }
+
 
         private fun base64ToBitmap(base64Str: String): Bitmap? {
             return try {
@@ -62,7 +72,6 @@ class ProductImageAdapter(
             }
         }
     }
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProductViewHolder(binding)
@@ -74,9 +83,17 @@ class ProductImageAdapter(
         holder.bind(products[position])
     }
 
+    // Method to update data when filtering or when new data is available
     fun updateData(newList: List<Product>) {
         products.clear()
         products.addAll(newList)
         notifyDataSetChanged()
+    }
+    private fun setPriceText(pricePerUnit: Double?): String {
+        return if (pricePerUnit != null && pricePerUnit > 0) {
+            "Rp ${String.format("%,.0f", pricePerUnit)}"
+        } else {
+            "Harga belum tersedia"
+        }
     }
 }

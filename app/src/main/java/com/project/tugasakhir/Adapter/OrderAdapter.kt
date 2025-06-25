@@ -27,6 +27,17 @@ class OrderAdapter(
         const val ITEM_TYPE_ORDER_DETAIL = 1
     }
 
+    // This function can now be accessed by both view holders
+    private fun base64ToBitmap(base64Str: String): Bitmap? {
+        return try {
+            val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+            android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
     inner class CartViewHolder(val binding: ItemKeranjangBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -46,20 +57,30 @@ class OrderAdapter(
         }
 
         fun bind(order: Order) {
-            Log.d("OrderAdapter", "Username: ${order.userName}, email: ${order.email}")
-            binding.userName.text = order.userName
-            binding.orderNumber.text = order.orderNumber
+            // Bind order details to the view
             binding.email.text = order.email
-            binding.statusOrder.text = order.statusOrder
-            binding.tanggalOrder.text = order.orderDate
-            binding.orderTime.text = order.orderTime
+            binding.userName.text = order.userName  // Display buyer's username
+            binding.orderNumber.text = order.orderNumber  // Order number
+            binding.statusOrder.text = order.statusOrder  // Order status
+            binding.tanggalOrder.text = order.orderDate  // Order date
+            binding.orderTime.text = order.orderTime  // Order time
 
-            val base64Image = order.imageBase64List.firstOrNull()
-            if (!base64Image.isNullOrEmpty()) {
-                val bitmap = base64ToBitmap(base64Image)
-                binding.imageView.setImageBitmap(bitmap)
+            // Load image from either imageUrl or imageBase64List
+            if (order.imageUrls.isNotEmpty()) {
+                Glide.with(binding.imageView.context)
+                    .load(order.imageUrls[0])
+                    .placeholder(R.drawable.image_icon)
+                    .error(R.drawable.image_icon)
+                    .into(binding.imageView)
+            } else if (order.imageBase64List.isNotEmpty()) {
+                val bitmap = base64ToBitmap(order.imageBase64List[0])
+                if (bitmap != null) {
+                    binding.imageView.setImageBitmap(bitmap)
+                } else {
+                    binding.imageView.setImageResource(R.drawable.image_icon)
+                }
             } else {
-                binding.imageView.setImageResource(android.R.drawable.ic_menu_report_image)  // Default image
+                binding.imageView.setImageResource(R.drawable.image_icon)
             }
         }
     }
@@ -109,19 +130,28 @@ class OrderAdapter(
             binding.productType.text = order.productType
             binding.description.text = order.description
             binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
+            binding.banyakProduk.text = order.quantity.toString()
 
-            val base64Image = order.imageBase64List.firstOrNull()
-            if (!base64Image.isNullOrEmpty()) {
-                val bitmap = base64ToBitmap(base64Image)
+            // Load image from either imageUrl or imageBase64List
+            if (order.imageUrls.isNotEmpty()) {
+                // Load image using Glide from URL
+                Glide.with(binding.imageView.context)
+                    .load(order.imageUrls[0])  // Assuming the first image URL is the correct image
+                    .placeholder(R.drawable.image_icon)  // Placeholder image while loading
+                    .error(R.drawable.image_icon)  // Error image if loading fails
+                    .into(binding.imageView)  // Bind image to the ImageView
+            } else if (order.imageBase64List.isNotEmpty()) {
+                // Convert base64 image data to Bitmap and display
+                val bitmap = base64ToBitmap(order.imageBase64List[0])
                 if (bitmap != null) {
-                    binding.imageView.setImageBitmap(bitmap)
+                    binding.imageView.setImageBitmap(bitmap)  // Set image if valid bitmap
                 } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)
+                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image
                 }
             } else {
+                // No image available, set default image
                 binding.imageView.setImageResource(R.drawable.image_icon)
             }
-            binding.banyakProduk.text = order.quantity.toString()
         }
     }
 
@@ -147,11 +177,11 @@ class OrderAdapter(
     }
 
     private fun updateOrderInFirestore(order: Order) {
-        val currentUser  = FirebaseAuth.getInstance().currentUser
-        if (currentUser  != null) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
             val orderRef = FirebaseFirestore.getInstance()
                 .collection("carts")
-                .document(currentUser .uid)
+                .document(currentUser.uid)
                 .collection("items")
                 .document(order.docId)
 
@@ -192,22 +222,6 @@ class OrderAdapter(
     }
 
     override fun getItemCount(): Int = orders.size
-
-    private fun base64ToBitmap(base64Str: String): Bitmap? {
-        return try {
-            val base64Data = if (base64Str.startsWith("data:image")) {
-                base64Str.substring(base64Str.indexOf(",") + 1)
-            } else {
-                base64Str
-            }
-
-            val decodedBytes = Base64.decode(base64Data, Base64.DEFAULT)
-            android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
 
     fun setOrders(newOrders: List<Order>) {
         orders.clear()

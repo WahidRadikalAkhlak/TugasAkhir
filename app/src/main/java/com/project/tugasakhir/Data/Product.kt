@@ -16,6 +16,19 @@ data class Product(
     var isAvailable: Boolean = true,
     var isRecommended: Boolean = false,
     var isLiked: Boolean = false,
+    var likesCount: Int = 0,
     val distance: Double = Double.MAX_VALUE,
-    val userName: String = ""    // tetap dipertahankan
-) : Parcelable
+    val userName: String = "",
+    val email: String = ""
+) : Parcelable {
+
+    // Menghitung total harga berdasarkan kuantitas
+    fun calculateTotalPrice(quantity: Int): Double {
+        return pricePerUnit * quantity
+    }
+
+    // Memeriksa apakah stok tersedia
+    fun isStockAvailable(quantity: Int): Boolean {
+        return quantity <= stockAvailable
+    }
+}

@@ -14,16 +14,18 @@ data class Order(
     var totalPrice: Double = 0.0,
     var userId: String = "",
     var email: String = "",
-    val imageUrl: String = "",
+    var imageUrls: List<String> = emptyList(),
     val description: String = "",
-    val imageBase64List: List<String> = emptyList(),
+    var imageBase64List: List<String> = emptyList(),
     var userName: String = "",
     var userAddress: String = "",
-    var orderNumber: String = "",              // for readable order display only
+    var orderNumber: String = "",
+    var metodePembayaran: String = "",
+    var pesanKepadaPenjual: String = "",
     var statusOrder: String = "",
     var orderDate: String = "",
     var timestamp: Timestamp? = null,
     var orderTime: String = "",
-    @get:Exclude var docId: String = "",      // Firestore document ID, unique key
+    @get:Exclude var docId: String = "",
     var pricePerKg: Double = 0.0
 ) : Parcelable

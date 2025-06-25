@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Cart.CartFragment">
+    tools:context=".Cart.KeranjangPenjualActivity">
 
     <ProgressBar
         android:id="@+id/progressbarSettings"
@@ -90,7 +90,7 @@
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 
-    <!-- RecyclerView -->
+        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_pesan"
             android:layout_width="match_parent"
@@ -103,4 +103,4 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </FrameLayout>
+</FrameLayout>

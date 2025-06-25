@@ -39,15 +39,27 @@
         android:id="@+id/btnLike"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/img_product"
+        android:layout_alignParentEnd="true"
         android:layout_marginTop="8dp"
+        android:layout_marginRight="15dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/like_product"
         android:src="@drawable/like"
-        app:tint="#E91E63"
-        android:layout_marginRight="15dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:tint="#E91E63" />
+    <TextView
+        android:id="@+id/likesCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 Likes"
+        android:textSize="16sp"
+        android:layout_marginRight="8dp"
+        android:layout_below="@id/btnLike"
+        android:layout_marginTop="8dp"
         android:layout_alignParentEnd="true"
-        android:layout_below="@id/img_product"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        android:textColor="@android:color/darker_gray"/>
+
 
     <RelativeLayout
         android:id="@+id/layout_jenis_tipe"
@@ -205,7 +217,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="20dp"
         app:cornerRadius="16dp"
-        android:backgroundTint="@color/dark_grey"
-        android:textColor="@color/black"/>
+        android:textColor="@color/fontColor"
+        android:backgroundTint="@color/btn_color"/>
 
 </RelativeLayout>

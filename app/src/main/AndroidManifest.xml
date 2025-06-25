@@ -12,12 +12,18 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/ic_app"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/ic_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Cart.KeranjangPenjualActivity"
+            android:exported="false" />
         <activity
             android:name=".Cart.BottomSheetPesanActivity"
             android:exported="false" />
@@ -48,9 +54,6 @@
             android:name=".Cart.Penjual.PenawaranPenjualActivity"
             android:exported="false" />
         <activity
-            android:name=".Cart.Penjual.KeranjangPenjualActivity"
-            android:exported="false" />
-        <activity
             android:name=".Ulasan.UlasanActivity"
             android:exported="false" />
         <activity
@@ -66,11 +69,10 @@
             android:name=".Katalog.Product.InfoProductActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".SplashActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

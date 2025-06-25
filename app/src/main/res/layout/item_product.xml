@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,20 +7,20 @@
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp">
 
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:padding="8dp"
-    android:background="@drawable/border_backround">
-
-    <ImageView
-        android:id="@+id/img_product"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:scaleType="centerCrop"
-        android:contentDescription="Product Image"
-        android:background="@android:color/darker_gray" />
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="@drawable/border_backround">
+
+        <ImageView
+            android:id="@+id/img_product"
+            android:layout_width="match_parent"
+            android:layout_height="120dp"
+            android:scaleType="centerCrop"
+            android:contentDescription="Product Image"
+            android:background="@android:color/darker_gray" />
 
         <TextView
             android:id="@+id/tvProductName"
@@ -90,5 +89,18 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="6dp"/>
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/likesCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0 Likes"
+            android:textSize="11sp"
+            android:layout_marginRight="8dp"
+            android:layout_below="@id/btnLike"
+            android:layout_marginTop="8dp"
+            android:layout_alignParentEnd="true"
+            android:textColor="@android:color/darker_gray"/>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

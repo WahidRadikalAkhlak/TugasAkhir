@@ -73,19 +73,19 @@
             app:layout_constraintTop_toBottomOf="@id/CVSearch"
             app:layout_constraintStart_toStartOf="parent" />
 
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_produk_list"
             android:layout_width="match_parent"
-            android:layout_height="460dp"
+            android:layout_height="wrap_content"
+            android:nestedScrollingEnabled="false"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            app:layout_constraintTop_toBottomOf="@id/tv_produk_list"
-            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:itemCount="6"
-            android:nestedScrollingEnabled="false"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tv_produk_list"
             tools:listitem="@layout/item_product" />
-
 
         <TextView
             android:id="@+id/rekomendasiText"
@@ -100,16 +100,15 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rekomendasiRecyclerView"
+            android:id="@+id/rv_rekomendasi"
             android:layout_width="match_parent"
-            android:layout_height="320dp"
+            android:layout_height="wrap_content"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@id/rekomendasiText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            tools:itemCount="4"
+            android:nestedScrollingEnabled="false"
             tools:listitem="@layout/item_product" />
 
 

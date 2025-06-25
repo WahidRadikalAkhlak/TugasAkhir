@@ -142,26 +142,15 @@ class ProductBaruActivity : AppCompatActivity() {
                     "userName" to userName
                 )
 
-                if (editingProduct != null) {
-                    // Find product by productName + userId to update
-                    val querySnapshot = db.collection("products")
-                        .whereEqualTo("productName", editingProduct!!.productName)
-                        .whereEqualTo("email", userEmail)
-                        .get()
-                        .await()
+                // Gantilah nama produk sebagai ID dokumen di Firestore
+                val productRef = db.collection("products").document(namaProduct)  // Gunakan nama produk sebagai ID dokumen
 
-                    if (!querySnapshot.isEmpty) {
-                        // Update the matching document (usually only one)
-                        for (doc in querySnapshot.documents) {
-                            db.collection("products").document(doc.id).set(productData).await()
-                        }
-                    } else {
-                        // If not found, create a new document
-                        db.collection("products").add(productData).await()
-                    }
+                if (editingProduct != null) {
+                    // Jika produk sedang diedit, perbarui dokumen dengan nama produk sebagai ID
+                    productRef.set(productData).await()
                 } else {
-                    // New product, add it directly
-                    db.collection("products").add(productData).await()
+                    // Jika produk baru, buat dokumen baru dengan ID produk sebagai nama
+                    productRef.set(productData).await()
                 }
 
                 withContext(Dispatchers.Main) {

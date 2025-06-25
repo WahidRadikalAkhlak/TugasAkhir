@@ -1,60 +1,108 @@
 package com.project.tugasakhir.Chat
 
+import android.content.Intent
 import android.os.Bundle
-import androidx.fragment.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.project.tugasakhir.R
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.project.tugasakhir.Adapter.ChatAdapter
+import com.project.tugasakhir.Chat.pesan.PesanActivity
+import com.project.tugasakhir.Data.Message
+import com.project.tugasakhir.databinding.FragmentChatBinding
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [ChatFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ChatFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private var _binding: FragmentChatBinding? = null
+    private val binding get() = _binding ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
+
+    private val db = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
+    private lateinit var adapter: ChatAdapter
+    private val chatMessages = mutableListOf<Message>()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?,
+        savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_chat, container, false)
+        _binding = FragmentChatBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ChatFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ChatFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Initialize RecyclerView with ChatAdapter
+        binding.rvPesan.layoutManager = LinearLayoutManager(requireContext())
+        adapter = ChatAdapter(chatMessages) { message -> openChatDetail(message) }
+        binding.rvPesan.adapter = adapter
+
+        // Load chat messages from Firestore
+        loadChatMessages()
+    }
+
+    private fun loadChatMessages() {
+        val currentUserId = auth.currentUser?.uid ?: return
+
+        // Debugging: Check if the currentUserId is being fetched correctly
+        Log.d("ChatFragment", "Current User ID: $currentUserId")
+
+        db.collection("chats")
+            .whereArrayContains("participants", currentUserId)  // Look for chats where the current user is a participant
+            .get()  // Using .get() instead of .addSnapshotListener for a one-time query
+            .addOnSuccessListener { querySnapshot ->
+                if (querySnapshot.isEmpty) {
+                    Toast.makeText(requireContext(), "No chats found", Toast.LENGTH_SHORT).show()
+                } else {
+                    // Process the documents in the snapshot
+                    querySnapshot.documents.forEach { document ->
+                        val chatId = document.id
+                        Log.d("ChatFragment", "Chat ID found: $chatId")
+                        loadMessagesForChat(chatId)  // Load messages for this chat
+                    }
                 }
             }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Failed to load chats: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun loadMessagesForChat(chatId: String) {
+        db.collection("chats").document(chatId)
+            .collection("messages")
+            .orderBy("timestamp")  // Sort by timestamp to get messages in order
+            .get()  // Using .get() for a one-time fetch
+            .addOnSuccessListener { snapshot ->
+                chatMessages.clear()
+                snapshot.documents.forEach { document ->
+                    val message = document.toObject(Message::class.java)
+                    message?.let {  // Use let to ensure message is not null
+                        chatMessages.add(it)
+                    }
+                }
+                adapter.notifyDataSetChanged()  // Notify adapter that data has changed
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Error loading messages: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+
+    // Open chat details when a chat item is clicked
+    private fun openChatDetail(message: Message) {
+        val intent = Intent(requireContext(), PesanActivity::class.java)
+        intent.putExtra("message_data", message)
+        startActivity(intent)
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

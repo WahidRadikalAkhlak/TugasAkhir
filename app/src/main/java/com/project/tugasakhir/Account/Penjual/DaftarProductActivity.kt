@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ProductImageAdapter
+import com.project.tugasakhir.Cart.KeranjangPenjualActivity
+import com.project.tugasakhir.Cart.KeranjangPesananActivity
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.databinding.ActivityDaftarProductBinding
@@ -51,6 +53,7 @@ class DaftarProductActivity : AppCompatActivity() {
 
         setupRecyclerView()
         setupAddProductButton()
+        setupAcceptOrder()
         setupSearchView()
     }
 
@@ -77,6 +80,16 @@ class DaftarProductActivity : AppCompatActivity() {
     private fun setupAddProductButton() {
         binding.btnAddProduct.setOnClickListener {
             val intent = Intent(this, ProductBaruActivity::class.java).apply {
+                putExtra(EXTRA_EMAIL, userEmail)
+                putExtra(EXTRA_USERNAME, userName)
+            }
+            startActivity(intent)
+        }
+    }
+
+    private fun setupAcceptOrder() {
+        binding.btnAcceptOrder.setOnClickListener {
+            val intent = Intent(this, KeranjangPenjualActivity::class.java).apply {
                 putExtra(EXTRA_EMAIL, userEmail)
                 putExtra(EXTRA_USERNAME, userName)
             }
@@ -123,14 +136,13 @@ class DaftarProductActivity : AppCompatActivity() {
 
     private fun filterProductList(query: String?) {
         if (query.isNullOrBlank()) {
-            adapter.updateData(productList)
-            return
+            adapter.updateData(productList)  // If the query is empty, show all products
+        } else {
+            val filteredList = productList.filter { product ->
+                product.productName.contains(query, ignoreCase = true) ||  // Filter by product name
+                        product.productType.contains(query, ignoreCase = true)    // Filter by product type
+            }
+            adapter.updateData(filteredList)  // Update the adapter with the filtered list
         }
-
-        val filteredList = productList.filter { product ->
-            product.productName.contains(query, ignoreCase = true) ||
-                    product.productType.contains(query, ignoreCase = true)
-        }
-        adapter.updateData(filteredList)
     }
 }

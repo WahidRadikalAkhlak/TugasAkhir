@@ -23,10 +23,10 @@ class KatalogFragment : Fragment() {
 
     private val allProducts = mutableListOf<Product>()
     private val filteredProducts = mutableListOf<Product>()
+    private val produkList = mutableListOf<Product>()
 
     private lateinit var produkAdapter: ProductImageAdapter
     private lateinit var rekomendasiAdapter: KatalogAdapter
-    private val produkList = mutableListOf<Product>()
 
     private val db = FirebaseFirestore.getInstance()
 
@@ -38,24 +38,31 @@ class KatalogFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Adapter for the product list (without likes count)
         produkAdapter = ProductImageAdapter(produkList) { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
-                putExtra("product", product)      // Kirim objek produk
-                putExtra("source", "catalog")     // Tandai asalnya dari katalog (beli produk)
+                putExtra("product", product)
+                putExtra("source", "catalog")
             }
             context?.startActivity(intent)
         }
         binding.rvProdukList.adapter = produkAdapter
         binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2)
 
-        rekomendasiAdapter = KatalogAdapter()
-        binding.rekomendasiRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2, LinearLayoutManager.HORIZONTAL, false)
-        binding.rekomendasiRecyclerView.adapter = rekomendasiAdapter
+        rekomendasiAdapter = KatalogAdapter(produkList, { product ->
+            val intent = Intent(context, InfoProductActivity::class.java).apply {
+                putExtra("product", product)
+                putExtra("source", "catalog")
+            }
+            context?.startActivity(intent)
+        }, true) // Display likes count in recommendations
+        binding.rvRekomendasi.adapter = rekomendasiAdapter
+        binding.rvRekomendasi.adapter = produkAdapter
+        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 1, LinearLayoutManager.HORIZONTAL, false) // Horizontal Layout
 
         setupSearch()
         loadProductsFromFirestore()
     }
-
     private fun loadProductsFromFirestore() {
         db.collection("products")
             .addSnapshotListener { snapshots, e ->
@@ -63,6 +70,7 @@ class KatalogFragment : Fragment() {
                     Log.e("KatalogFragment", "Error listening products", e)
                     return@addSnapshotListener
                 }
+
                 snapshots?.let {
                     val productsFromFirestore = it.map { doc -> doc.toObject(Product::class.java) }
                         .filter { product -> product.isAvailable }
@@ -73,33 +81,56 @@ class KatalogFragment : Fragment() {
                     filteredProducts.clear()
                     filteredProducts.addAll(productsFromFirestore)
 
-                    produkList.clear()              // **Tambah ini**
-                    produkList.addAll(productsFromFirestore)  // **Tambah ini**
+                    produkList.clear()
+                    produkList.addAll(productsFromFirestore)
 
-                    produkAdapter.notifyDataSetChanged()
-
-
-                    val userLikedProducts = allProducts.filter { it.isLiked }
-                    val rekomendasiList = getItemBasedRecommendations(allProducts, userLikedProducts)
-                    rekomendasiAdapter.updateData(rekomendasiList)
+                    // Fetch likes count for each product and update UI
+                    val likesCountFetched = mutableListOf<Int>()
+                    for (product in produkList) {
+                        getLikesCountForProduct(product) { likesCount ->
+                            likesCountFetched.add(likesCount)
+                            if (likesCountFetched.size == produkList.size) {
+                                // All likes have been fetched, now refresh the RecyclerView
+                                produkAdapter.notifyDataSetChanged()
+                                recommendProductsBasedOnLikes() // Update recommendations after likes are fetched
+                            }
+                        }
+                    }
                 }
             }
     }
 
-    private fun getItemBasedRecommendations(
-        allProducts: List<Product>,
-        userLikedProducts: List<Product>
-    ): List<Product> {
-        if (userLikedProducts.isEmpty()) return emptyList()
-
-        val likedTypes = userLikedProducts.map { it.productType }.toSet()
-
-        return allProducts.filter {
-            it.productType in likedTypes &&
-                    userLikedProducts.none { liked -> liked.productName == it.productName }
-        }.take(10)
+    private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int) -> Unit) {
+        db.collection("productLikes")
+            .document(product.productName)
+            .collection("users")
+            .get()
+            .addOnSuccessListener { result ->
+                val likesCount = result.size() // Count the likes
+                product.likesCount = likesCount // Update likesCount in the product object
+                onLikesCountFetched(likesCount) // Pass the likes count back to the caller
+            }
+            .addOnFailureListener { e ->
+                Log.e("KatalogFragment", "Failed to fetch likes count: ${e.message}")
+                onLikesCountFetched(0) // If failed, assume 0 likes
+            }
     }
 
+    private fun updateProductLikeCountInUI(product: Product, likesCount: Int) {
+        val index = produkList.indexOf(product)
+        if (index != -1) {
+            produkList[index].likesCount = likesCount // Update likesCount in the product object
+            produkAdapter.notifyItemChanged(index)
+        }
+    }
+
+    private fun recommendProductsBasedOnLikes() {
+        val filteredProducts = allProducts.filter { it.likesCount > 0 }
+            .sortedByDescending { it.likesCount }
+
+        rekomendasiAdapter.updateData(filteredProducts)
+        rekomendasiAdapter.notifyDataSetChanged()
+    }
 
     private fun setupSearch() {
         binding.searchEditText.addTextChangedListener { editable ->
@@ -120,14 +151,14 @@ class KatalogFragment : Fragment() {
                 }
             )
         }
-        produkList.clear()               // Tambah ini
-        produkList.addAll(filteredProducts)   // Tambah ini
+        produkList.clear()
+        produkList.addAll(filteredProducts)
         produkAdapter.notifyDataSetChanged()
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
 }
+
