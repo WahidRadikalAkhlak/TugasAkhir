@@ -5,12 +5,10 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Cart.KeranjangPenjualActivity
-import com.project.tugasakhir.Cart.KeranjangPesananActivity
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.databinding.ActivityDaftarProductBinding

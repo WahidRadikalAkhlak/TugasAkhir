@@ -11,12 +11,14 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Data.Order
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.ItemKeranjangBinding
 import com.project.tugasakhir.databinding.ItemKeranjangProdukBinding
 
 class OrderAdapter(
     private val orders: MutableList<Order>,
+    private val products: List<Product>,  // List of products to match orders with
     private val onItemClick: (Order) -> Unit,
     private val onDeleteClick: (Order) -> Unit,
     private val isForKeranjangPesanan: Boolean
@@ -27,17 +29,11 @@ class OrderAdapter(
         const val ITEM_TYPE_ORDER_DETAIL = 1
     }
 
-    // This function can now be accessed by both view holders
-    private fun base64ToBitmap(base64Str: String): Bitmap? {
-        return try {
-            val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
-            android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+    private fun getProductForOrder(order: Order): Product? {
+        return products.find { it.productName == order.productName }  // Find matching product
     }
 
+    // CartViewHolder for displaying order info along with product image
     inner class CartViewHolder(val binding: ItemKeranjangBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -57,34 +53,31 @@ class OrderAdapter(
         }
 
         fun bind(order: Order) {
-            // Bind order details to the view
-            binding.email.text = order.email
-            binding.userName.text = order.userName  // Display buyer's username
-            binding.orderNumber.text = order.orderNumber  // Order number
-            binding.statusOrder.text = order.statusOrder  // Order status
-            binding.tanggalOrder.text = order.orderDate  // Order date
-            binding.orderTime.text = order.orderTime  // Order time
+            val product = getProductForOrder(order)
 
-            // Load image from either imageUrl or imageBase64List
-            if (order.imageUrls.isNotEmpty()) {
-                Glide.with(binding.imageView.context)
-                    .load(order.imageUrls[0])
-                    .placeholder(R.drawable.image_icon)
-                    .error(R.drawable.image_icon)
-                    .into(binding.imageView)
-            } else if (order.imageBase64List.isNotEmpty()) {
-                val bitmap = base64ToBitmap(order.imageBase64List[0])
-                if (bitmap != null) {
-                    binding.imageView.setImageBitmap(bitmap)
+            if (product != null) {
+                // Display order and product info
+                binding.userName.text = product.userName  // Use product's userName (seller's name)
+                binding.orderNumber.text = order.orderNumber
+                binding.statusOrder.text = order.statusOrder
+                binding.tanggalOrder.text = order.orderDate
+                binding.orderTime.text = order.orderTime
+
+                // Load product image from the corresponding Product object
+                if (product.imageUrls.isNotEmpty()) {
+                    Glide.with(binding.imageView.context)
+                        .load(product.imageUrls[0])  // Display product image
+                        .placeholder(R.drawable.image_icon)
+                        .error(R.drawable.image_icon)
+                        .into(binding.imageView)
                 } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)
+                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if no product image
                 }
-            } else {
-                binding.imageView.setImageResource(R.drawable.image_icon)
             }
         }
     }
 
+    // OrderDetailViewHolder for displaying detailed order and product info
     inner class OrderDetailViewHolder(val binding: ItemKeranjangProdukBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -126,31 +119,25 @@ class OrderAdapter(
         }
 
         fun bind(order: Order) {
-            binding.productName.text = order.productName
-            binding.productType.text = order.productType
-            binding.description.text = order.description
-            binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
-            binding.banyakProduk.text = order.quantity.toString()
+            val product = getProductForOrder(order)
 
-            // Load image from either imageUrl or imageBase64List
-            if (order.imageUrls.isNotEmpty()) {
-                // Load image using Glide from URL
-                Glide.with(binding.imageView.context)
-                    .load(order.imageUrls[0])  // Assuming the first image URL is the correct image
-                    .placeholder(R.drawable.image_icon)  // Placeholder image while loading
-                    .error(R.drawable.image_icon)  // Error image if loading fails
-                    .into(binding.imageView)  // Bind image to the ImageView
-            } else if (order.imageBase64List.isNotEmpty()) {
-                // Convert base64 image data to Bitmap and display
-                val bitmap = base64ToBitmap(order.imageBase64List[0])
-                if (bitmap != null) {
-                    binding.imageView.setImageBitmap(bitmap)  // Set image if valid bitmap
+            if (product != null) {
+                binding.productName.text = order.productName
+                binding.productType.text = order.productType
+                binding.description.text = order.description
+                binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
+                binding.banyakProduk.text = order.quantity.toString()
+
+                // Load product image from the corresponding Product object
+                if (product.imageUrls.isNotEmpty()) {
+                    Glide.with(binding.imageView.context)
+                        .load(product.imageUrls[0])  // Display product image
+                        .placeholder(R.drawable.image_icon)
+                        .error(R.drawable.image_icon)
+                        .into(binding.imageView)
                 } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image
+                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if no product image
                 }
-            } else {
-                // No image available, set default image
-                binding.imageView.setImageResource(R.drawable.image_icon)
             }
         }
     }
@@ -168,7 +155,6 @@ class OrderAdapter(
                     Log.d("OrderAdapter", "Order deleted successfully")
                     orders.removeAt(position) // Remove from local list
                     notifyItemRemoved(position) // Notify adapter of item removal
-                    // Update itemCount and totalPrice if necessary
                 }
                 .addOnFailureListener { e ->
                     Log.e("OrderAdapter", "Error deleting order: ${e.message}")
@@ -216,8 +202,8 @@ class OrderAdapter(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val order = orders[position]
         when (holder) {
-            is CartViewHolder -> holder.bind(order)
-            is OrderDetailViewHolder -> holder.bind(order)
+            is CartViewHolder -> holder.bind(order)  // Pass order to the view holder
+            is OrderDetailViewHolder -> holder.bind(order)  // Same for order details
         }
     }
 

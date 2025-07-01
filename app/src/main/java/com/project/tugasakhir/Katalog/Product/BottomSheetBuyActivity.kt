@@ -1,7 +1,5 @@
 package com.project.tugasakhir.Katalog.Product
 
-import android.content.Intent
-import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -45,19 +43,10 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
     }
 
     companion object {
-        private const val ARG_PRICE = "price_per_kg"
-        private const val ARG_STOCK = "stock_available"
-        private const val ARG_PRODUCT_NAME = "product_name"
-        private const val ARG_PRODUCT_TYPE = "product_type"
-        private const val ARG_PRICE_PER_UNIT = "price_per_unit"
-
-        fun newInstance(price: Double, stock: Int, productName: String, productType: String, pricePerUnit: Double): BottomSheetBuyActivity {
+        private const val ARG_PRODUCT = "product"
+        fun newInstance(product: Product): BottomSheetBuyActivity {
             val args = Bundle()
-            args.putDouble(ARG_PRICE, price)
-            args.putInt(ARG_STOCK, stock)
-            args.putString(ARG_PRODUCT_NAME, productName)
-            args.putString(ARG_PRODUCT_TYPE, productType)
-            args.putDouble(ARG_PRICE_PER_UNIT, pricePerUnit)
+            args.putParcelable(ARG_PRODUCT, product) // Menyimpan produk lengkap
             val fragment = BottomSheetBuyActivity()
             fragment.arguments = args
             return fragment
@@ -67,13 +56,17 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
-            pricePerKg = it.getDouble(ARG_PRICE)
-            stockAvailable = it.getInt(ARG_STOCK)
-            productName = it.getString(ARG_PRODUCT_NAME) ?: ""
-            productType = it.getString(ARG_PRODUCT_TYPE) ?: ""
-            pricePerUnit = it.getDouble(ARG_PRICE_PER_UNIT)
+            product = it.getParcelable(ARG_PRODUCT) // Ambil seluruh objek Product
+            product?.let {
+                pricePerKg = it.pricePerUnit // Set data dari objek Product
+                stockAvailable = it.stockAvailable
+                productName = it.productName
+                productType = it.productType
+                pricePerUnit = it.pricePerUnit
+            }
         }
     }
+
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         _binding = ActivityBottomSheetBuyBinding.inflate(inflater, container, false)
@@ -105,7 +98,6 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             // Menyembunyikan tombol "Tawar Harga" setelah ditekan
             binding.btnTawarHarga.visibility = View.GONE
         }
-
 
         binding.hargaTawaran.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -198,10 +190,14 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         }
 
         val currentUser = FirebaseAuth.getInstance().currentUser ?: run {
-            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
             return
         }
 
+        val productId = product?.productId ?: run {
+            Toast.makeText(requireContext(), "Produk tidak valid", Toast.LENGTH_SHORT).show()
+            return
+        }
         val currentDate = getCurrentDateString()
         val currentTime = getCurrentTimeString()
         val email = currentUser.email ?: "Alamat tidak tersedia"
@@ -225,21 +221,18 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "userName" to (currentUser.displayName ?: "User")
         )
 
+        // Save the order to Firestore
         val db = FirebaseFirestore.getInstance()
-
-        // Save the order to the 'carts' collection under the user's UID
         db.collection("carts")
             .document(currentUser.uid)
             .collection("items")
-            .document(orderNumber)
+            .document("ORD${System.currentTimeMillis()}")
             .set(orderData)
             .addOnSuccessListener {
-                // After adding the order to the cart, decrease the product stock
-                updateProductStock(productName, quantity)
+                // Update product stock after adding order to cart
+                updateProductStock(productId, quantity)
 
-                Log.d("BottomSheetBuyActivity", "Order added with ID: $orderNumber")
                 Toast.makeText(requireContext(), "Order berhasil ditambahkan", Toast.LENGTH_SHORT).show()
-                listener?.onAddToCart(quantity)
                 dismiss()
             }
             .addOnFailureListener { e ->
@@ -247,58 +240,43 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             }
     }
 
-    private fun updateProductStock(productName: String, orderedQuantity: Int) {
+    private fun updateProductStock(productId: String, orderedQuantity: Int) {
         val db = FirebaseFirestore.getInstance()
+        val productRef = db.collection("products").document(productId)
 
-        // Ensure safe transaction for stock update
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val productQuery = db.collection("products")
-                    .whereEqualTo("productName", productName)
-                    .limit(1)
-                    .get()
-                    .await()
+                val productDoc = productRef.get().await()
+                val currentStock = productDoc.getLong("stockAvailable")?.toInt() ?: 0
+                val newStock = currentStock - orderedQuantity
 
-                val productDoc = productQuery.documents.firstOrNull()
-
-                if (productDoc != null) {
-                    val productRef = db.collection("products").document(productDoc.id)
-
-                    val currentStock = productDoc.getLong("stockAvailable")?.toInt() ?: 0
-                    val newStock = currentStock - orderedQuantity
-
-                    if (newStock < 0) {
-                        throw Exception("Stok tidak cukup untuk produk ini")
-                    }
-
-                    db.runTransaction { transaction ->
-                        transaction.update(productRef, "stockAvailable", newStock)
-                    }.await()
-
-                    // After stock is updated, send updated product data
+                if (newStock < 0) {
                     withContext(Dispatchers.Main) {
-                        updateProductInInfoActivity(orderedQuantity)
+                        // Pastikan fragment masih terhubung ke konteks
+                        if (isAdded) {
+                            Toast.makeText(requireContext(), "Stok tidak cukup", Toast.LENGTH_SHORT).show()
+                        }
                     }
-                } else {
-                    throw Exception("Produk tidak ditemukan di Firestore")
+                    return@launch
+                }
+
+                productRef.update("stockAvailable", newStock).await()
+
+                withContext(Dispatchers.Main) {
+                    // Pastikan fragment masih terhubung ke konteks
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "Stok produk berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("BottomSheetBuyActivity", "Gagal memperbarui stok", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(requireContext(), "Gagal memperbarui stok: ${e.message}", Toast.LENGTH_SHORT).show()
+                    // Pastikan fragment masih terhubung ke konteks
+                    if (isAdded) {
+                        Toast.makeText(requireContext(), "Gagal memperbarui stok: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-        }
-    }
-
-    private fun updateProductInInfoActivity(quantity: Int) {
-        val updatedProduct = product?.copy(stockAvailable = stockAvailable - quantity)
-
-        // Check if fragment is attached before updating UI
-        if (isAdded && context != null) {
-            val intent = Intent(requireContext(), InfoProductActivity::class.java)
-            intent.putExtra("product", updatedProduct)  // Passing updated product
-            startActivity(intent)
         }
     }
 
@@ -311,6 +289,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         val sdf = java.text.SimpleDateFormat("HH:mm:ss")
         return sdf.format(java.util.Date())
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

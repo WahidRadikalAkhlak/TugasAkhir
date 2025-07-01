@@ -12,6 +12,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.ActivityKeranjangPesananBinding
 
@@ -20,6 +21,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
     private lateinit var binding: ActivityKeranjangPesananBinding
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private val products = mutableListOf<Product>() // Add the products list
 
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
@@ -33,9 +35,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // Initialize RecyclerView and Adapter
-        adapter = OrderAdapter(orders, { selectedOrder ->
-            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT)
-                .show()
+        adapter = OrderAdapter(orders, products, { selectedOrder ->
+            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT).show()
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = true)
@@ -45,6 +46,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
         loadUserName()
         loadCartItems()
+        loadProducts() // Load products as well
 
         // Buttons configuration
         binding.confirmButton.backgroundTintList =
@@ -117,20 +119,22 @@ class KeranjangPesananActivity : AppCompatActivity() {
                         imageBase64List = (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                     }
 
-                    // Only add items that are not yet confirmed or canceled
+                    // Only add items that are not confirmed, canceled, or already canceled
                     if (order.productName.isNotEmpty() && order.productType.isNotEmpty() &&
-                        order.statusOrder != "Menunggu Konfirmasi Pembelian Anda" && order.statusOrder != "Pesanan Dibatalkan") {
+                        order.statusOrder != "Pesanan Dibatalkan") { // Don't include canceled orders
                         orders.add(order)
                         itemCount += order.quantity
                         totalPrice += order.totalPrice
                     }
                 }
+
                 // Display the data for the first order in the text fields
                 binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
                 binding.orderNumber.text = orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
                 binding.statusOrder.text = orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
                 binding.tanggalOrder.text = orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
                 binding.orderTime.text = orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
+
                 // Notify the adapter that the data has changed
                 adapter.notifyDataSetChanged()
                 updateBottomLayout(itemCount, totalPrice)
@@ -140,6 +144,22 @@ class KeranjangPesananActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun loadProducts() {
+        db.collection("products")
+            .get()
+            .addOnSuccessListener { documents ->
+                products.clear() // Clear the previous products
+                for (doc in documents) {
+                    val product = doc.toObject(Product::class.java)
+                    products.add(product)
+                }
+                adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -163,8 +183,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
             updateOrderStatus(order, "Menunggu Konfirmasi Pembelian Anda", metodePembayaran, pesanKepadaPenjual)
         }
 
-        binding.confirmButton.visibility = View.GONE
-        binding.cancelButton.visibility = View.VISIBLE
+        binding.confirmButton.visibility = View.GONE // Hanya menyembunyikan tombol konfirmasi pesanan
+        binding.cancelButton.visibility = View.VISIBLE // Tombol batal tetap ditampilkan
 
         // Update UI untuk mencerminkan perubahan setelah konfirmasi
         updateUIWithOrderData()
@@ -176,7 +196,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun onCancelOrder() {
-        val metodePembayaran = "Bayar Ditempat"
+        val metodePembayaran = "Bayar Ditempat" // Metode pembayaran tetap jika dibatalkan
         val pesanKepadaPenjual = binding.edittextPesan.text.toString().trim()
 
         if (pesanKepadaPenjual.isEmpty()) {
@@ -184,28 +204,34 @@ class KeranjangPesananActivity : AppCompatActivity() {
             return
         }
 
+        // Pastikan status pesanan diubah tanpa menghapus data produk
         orders.forEach { order ->
-            // Update status pesanan dan data lainnya, termasuk pesan kepada penjual
+            // Update status pesanan menjadi "Pesanan Dibatalkan"
             order.statusOrder = "Pesanan Dibatalkan"
-            order.metodePembayaran = metodePembayaran
-            order.pesanKepadaPenjual = pesanKepadaPenjual
+            order.metodePembayaran = metodePembayaran // Jangan mengubah metode pembayaran
+            order.pesanKepadaPenjual = pesanKepadaPenjual // Pesan tetap, bisa dikosongkan jika perlu
 
-            // Update data pesanan ke Firestore
+            // Update status pesanan di Firestore tanpa merubah data produk
             updateOrderStatus(order, "Pesanan Dibatalkan", metodePembayaran, pesanKepadaPenjual)
         }
 
-        // Menyembunyikan tombol pembatalan setelah pesanan dibatalkan
+        // Tombol konfirmasi pesanan disembunyikan
         binding.confirmButton.visibility = View.GONE
-        binding.cancelButton.visibility = View.VISIBLE
+        // Tombol batalkan pesanan disembunyikan setelah dibatalkan
+        binding.cancelButton.visibility = View.GONE
 
-        // Update UI untuk mencerminkan perubahan setelah pembatalan
-        updateUIWithOrderData()
+        // Pastikan data yang ditampilkan adalah data yang terbaru dari Firestore
+        loadCartItems() // Memuat ulang data setelah pembatalan
 
-        // Update UI untuk mencerminkan perubahan
+        // Notify the adapter to refresh the list after the status change
         adapter.notifyDataSetChanged()
+
+        // Update tampilan tombol dan informasi lain setelah pembatalan
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
+
+
 
     private fun updateButtonVisibility() {
         // Check if all orders are confirmed or canceled
@@ -213,10 +239,9 @@ class KeranjangPesananActivity : AppCompatActivity() {
             it.statusOrder == "Menunggu Konfirmasi Pembelian Anda" || it.statusOrder == "Pesanan Dibatalkan"
         }
 
-        // If all orders are confirmed or canceled, hide both buttons
+        // If all orders are confirmed or canceled, hide the confirm button
         if (allConfirmedOrCancelled) {
-            binding.confirmButton.visibility = View.GONE
-            binding.cancelButton.visibility = View.GONE
+            binding.confirmButton.visibility = View.GONE // Hanya sembunyikan konfirmasi pesanan
         } else {
             // Otherwise, show the confirm and cancel buttons
             binding.confirmButton.visibility = View.VISIBLE
@@ -225,16 +250,16 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun updateUIWithOrderData() {
-        // Pastikan Anda memperbarui data yang sesuai dengan item yang pertama dalam daftar orders
+        // Pastikan UI menampilkan data yang benar setelah pembatalan
         val firstOrder = orders.firstOrNull()
         if (firstOrder != null) {
-            binding.email.text = firstOrder.email
-            binding.orderNumber.text = firstOrder.orderNumber
-            binding.statusOrder.text = firstOrder.statusOrder
-            binding.tanggalOrder.text = firstOrder.orderDate
-            binding.orderTime.text = firstOrder.orderTime
+            binding.email.text = firstOrder.email ?: "Email tidak tersedia"
+            binding.orderNumber.text = firstOrder.orderNumber ?: "Order Number tidak tersedia"
+            binding.statusOrder.text = firstOrder.statusOrder ?: "Status Order tidak tersedia"
+            binding.tanggalOrder.text = firstOrder.orderDate ?: "Order Date tidak tersedia"
+            binding.orderTime.text = firstOrder.orderTime ?: "Order Time tidak tersedia"
         } else {
-            // In case orders are empty or not updated properly, set default text
+            // Jika data order tidak ditemukan atau tidak ada yang sesuai, setel nilai default
             binding.email.text = "Email tidak tersedia"
             binding.orderNumber.text = "Order Number tidak tersedia"
             binding.statusOrder.text = "Status Order tidak tersedia"
@@ -242,7 +267,6 @@ class KeranjangPesananActivity : AppCompatActivity() {
             binding.orderTime.text = "Order Time tidak tersedia"
         }
     }
-
 
     private fun updateBottomLayout(itemCount: Int, totalPrice: Double) {
         binding.itemCount.text = "Item: $itemCount"

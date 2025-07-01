@@ -2,9 +2,11 @@ package com.project.tugasakhir.Data
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
+import java.util.UUID
 
 @Parcelize
 data class Product(
+    val productId: String = UUID.randomUUID().toString(), // Unique product ID
     val productName: String = "",
     val imageUrls: List<String> = emptyList(),
     val imageBase64List: List<String> = emptyList(),
@@ -13,22 +15,21 @@ data class Product(
     val stockAvailable: Int = 0,
     val pricePerUnit: Double = 0.0,
     val address: String = "",
-    var isAvailable: Boolean = true,
+    var isAvailable: Boolean = false,
     var isRecommended: Boolean = false,
     var isLiked: Boolean = false,
     var likesCount: Int = 0, // Likes count for the product
     val distance: Double = Double.MAX_VALUE,
     val userName: String = "",
+    var likes: Map<String, Int> = emptyMap(),
     val email: String = ""
 ) : Parcelable {
 
-    // Menghitung total harga berdasarkan kuantitas
-    fun calculateTotalPrice(quantity: Int): Double {
-        return pricePerUnit * quantity
+    fun getIsAvailable(): Boolean {
+        return isAvailable
     }
 
-    // Memeriksa apakah stok tersedia
-    fun isStockAvailable(quantity: Int): Boolean {
-        return quantity <= stockAvailable
+    fun setIsAvailable(value: Boolean) {
+        isAvailable = value
     }
 }

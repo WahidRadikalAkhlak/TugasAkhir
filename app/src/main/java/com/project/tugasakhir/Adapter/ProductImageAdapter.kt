@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -25,6 +26,14 @@ class ProductImageAdapter(
             binding.deskripsiProduk.text = product.description ?: "Deskripsi tidak tersedia"
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
+
+            binding.likesCount.visibility = View.GONE
+
+            // Muat gambar produk
+            loadProductImage(product)
+
+            // Tangani klik item untuk membuka detail produk
+            binding.root.setOnClickListener { onItemClick(product) }
 
             // Safely load images, checking for null/empty lists
             if (product.imageUrls.isNotEmpty()) {

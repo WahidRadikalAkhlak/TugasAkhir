@@ -24,7 +24,6 @@ class KatalogAdapter(
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
 
-            // Set likes count for recommendations
             if (isRecommendation) {
                 binding.likesCount.text = "${product.likesCount} Likes"
                 binding.likesCount.visibility = View.VISIBLE
@@ -32,33 +31,29 @@ class KatalogAdapter(
                 binding.likesCount.visibility = View.GONE
             }
 
-            // Load product image
+            // Muat gambar produk
             loadProductImage(product)
 
-            // Handle item click to open product details
+            // Tangani klik item untuk membuka detail produk
             binding.root.setOnClickListener { onItemClick(product) }
         }
 
-        // Load product image based on imageUrls or imageBase64List
         private fun loadProductImage(product: Product) {
-            // First, check if imageUrls is not empty
             if (!product.imageUrls.isNullOrEmpty()) {
                 Glide.with(binding.imgProduct.context)
-                    .load(product.imageUrls[0]) // Use the first image URL from the list
-                    .placeholder(R.drawable.image_icon) // Placeholder image
-                    .error(R.drawable.image_icon) // Error image
+                    .load(product.imageUrls[0])
+                    .placeholder(R.drawable.image_icon)
+                    .error(R.drawable.image_icon)
                     .into(binding.imgProduct)
             } else if (!product.imageBase64List.isNullOrEmpty()) {
-                // If imageUrls is empty, use base64 images
                 base64ToBitmap(product.imageBase64List[0])?.let {
                     binding.imgProduct.setImageBitmap(it)
                 } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
             } else {
-                binding.imgProduct.setImageResource(R.drawable.image_icon) // Default placeholder
+                binding.imgProduct.setImageResource(R.drawable.image_icon) // Placeholder
             }
         }
 
-        // Convert base64 string to Bitmap if needed
         private fun base64ToBitmap(base64Str: String): Bitmap? {
             return try {
                 val decodedBytes = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)

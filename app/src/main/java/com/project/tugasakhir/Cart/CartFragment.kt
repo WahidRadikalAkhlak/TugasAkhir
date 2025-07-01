@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.databinding.FragmentCartBinding
 
 class CartFragment : Fragment() {
@@ -22,6 +23,7 @@ class CartFragment : Fragment() {
 
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
+    private val products = mutableListOf<Product>()  // Declare the products list to hold product data
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -38,14 +40,14 @@ class CartFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.rvPesan.layoutManager = LinearLayoutManager(requireContext())
-        adapter = OrderAdapter(orders, { selectedOrder ->
+        adapter = OrderAdapter(orders, products, { selectedOrder ->
             openOrderDetail(selectedOrder)
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = false)
         binding.rvPesan.adapter = adapter
-
         loadUserOrders()
+        loadProducts() // Load products as well
     }
 
     private fun loadUserOrders() {
@@ -84,13 +86,28 @@ class CartFragment : Fragment() {
                     }
                     adapter.notifyDataSetChanged()
                 }
-                binding.progressbarSettings.visibility = View.GONE
             }
             .addOnFailureListener { e ->
                 if (isAdded) {
                     binding.progressbarSettings.visibility = View.GONE
                     Toast.makeText(requireContext(), "Gagal memuat data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
+            }
+    }
+
+    private fun loadProducts() {
+        db.collection("products")
+            .get()
+            .addOnSuccessListener { documents ->
+                products.clear() // Clear the previous products
+                for (doc in documents) {
+                    val product = doc.toObject(Product::class.java)
+                    products.add(product)
+                }
+                adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

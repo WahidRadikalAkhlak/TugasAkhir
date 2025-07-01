@@ -22,6 +22,7 @@ data class Order(
     var orderNumber: String = "",
     var metodePembayaran: String = "",
     var pesanKepadaPenjual: String = "",
+    val sellerUserName: String = "",
     var statusOrder: String = "",
     var orderDate: String = "",
     var timestamp: Timestamp? = null,

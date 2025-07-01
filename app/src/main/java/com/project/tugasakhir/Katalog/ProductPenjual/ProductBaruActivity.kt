@@ -142,16 +142,10 @@ class ProductBaruActivity : AppCompatActivity() {
                     "userName" to userName
                 )
 
-                // Gantilah nama produk sebagai ID dokumen di Firestore
-                val productRef = db.collection("products").document(namaProduct)  // Gunakan nama produk sebagai ID dokumen
-
-                if (editingProduct != null) {
-                    // Jika produk sedang diedit, perbarui dokumen dengan nama produk sebagai ID
-                    productRef.set(productData).await()
-                } else {
-                    // Jika produk baru, buat dokumen baru dengan ID produk sebagai nama
-                    productRef.set(productData).await()
-                }
+                // Gunakan ID otomatis untuk produk baru
+                val newProductRef = db.collection("products").document()  // Firestore menghasilkan ID unik secara otomatis
+                productData["productId"] = newProductRef.id  // Menambahkan ID unik produk baru
+                newProductRef.set(productData).await()  // Simpan data produk baru dengan ID unik
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
