@@ -65,7 +65,7 @@ class TerimaPesananActivity : AppCompatActivity() {
 
     private fun loadSellerOrders() {
         val currentUser = auth.currentUser ?: run {
-            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "User belum login", Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -74,7 +74,7 @@ class TerimaPesananActivity : AppCompatActivity() {
         // Fetch orders made by buyers where the product was sold by the current seller
         db.collection("carts")
             .whereEqualTo("userName", currentUser.displayName)  // Use seller's username to fetch orders
-            .whereEqualTo("statusOrder", "Menunggu Konfirmasi Pembelian Anda") // Only get confirmed orders
+            .whereEqualTo("statusOrder", "Menunggu Konfirmasi Pembelian Anda") // Only get unconfirmed orders
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -125,21 +125,40 @@ class TerimaPesananActivity : AppCompatActivity() {
     }
 
     private fun confirmOrder() {
-        // Confirm the order and update status
         orders.forEach { order ->
-            order.statusOrder = "Proses Pesanan"
-            // Update the order status in Firestore
-            updateOrderStatus(order)
+            if (order.statusOrder == "Menunggu Konfirmasi Pembelian Anda") {
+                order.statusOrder = "Proses Pesanan"
+                updateOrderStatus(order)
+            }
         }
 
-        // Hide the confirm button after confirmation
         binding.confirmButton.visibility = View.GONE
         binding.cancelButton.visibility = View.VISIBLE
-
-        // Notify adapter and update the UI
         adapter.notifyDataSetChanged()
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
+    }
+
+    // Fungsi untuk memperbarui status pesanan di Firestore
+    private fun updateOrderStatus(order: Order) {
+        val currentUser = auth.currentUser ?: return
+        if (order.docId.isEmpty()) {
+            Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val docRef = db.collection("carts")
+            .document(currentUser.uid)
+            .collection("items")
+            .document(order.docId)
+
+        docRef.update("statusOrder", order.statusOrder)
+            .addOnSuccessListener {
+                Log.d("FirestoreUpdate", "Order successfully updated with status: ${order.statusOrder}")
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to update order", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun cancelOrder() {
@@ -161,27 +180,6 @@ class TerimaPesananActivity : AppCompatActivity() {
         adapter.notifyDataSetChanged()
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
-    }
-
-    private fun updateOrderStatus(order: Order) {
-        val currentUser = auth.currentUser ?: return
-        if (order.docId.isEmpty()) {
-            Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val docRef = db.collection("carts")
-            .document(currentUser.uid)
-            .collection("items")
-            .document(order.docId)
-
-        docRef.update("statusOrder", order.statusOrder)
-            .addOnSuccessListener {
-                Log.d("FirestoreUpdate", "Order successfully updated with status: ${order.statusOrder}")
-            }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to update order", Toast.LENGTH_SHORT).show()
-            }
     }
 
     private fun updateBottomLayout(itemCount: Int, totalPrice: Double) {

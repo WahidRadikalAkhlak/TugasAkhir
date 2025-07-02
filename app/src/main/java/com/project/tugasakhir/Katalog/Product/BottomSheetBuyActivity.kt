@@ -82,10 +82,23 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             override fun afterTextChanged(s: Editable?) {
                 val qty = s.toString().toIntOrNull() ?: 0
                 val total = qty * pricePerKg
-                binding.totalHarga.text = "Rp ${String.format("%,.0f", total)}"
+
+                // Diskon berdasarkan jumlah pembelian
+                val discount = when {
+                    qty in 5..10 -> 0.03 // Diskon 3% untuk 5-10 kg
+                    qty in 10..15 -> 0.05 // Diskon 5% untuk 10-15 kg
+                    qty in 15..20 -> 0.07 // Diskon 7% untuk 15-20 kg
+                    qty > 40 -> 0.10 // Diskon 10% untuk lebih dari 40 kg
+                    else -> 0.0 // Tidak ada diskon untuk kurang dari 5 kg
+                }
+
+                // Hitung total harga setelah diskon
+                val totalAfterDiscount = total * (1 - discount)
+                binding.totalHarga.text = "Rp ${String.format("%,.0f", totalAfterDiscount)}"
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
@@ -118,16 +131,30 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             val tawaranHarga = binding.hargaTawaran.text.toString().toDoubleOrNull() ?: 0.0
             val batasTawaran = pricePerKg * 1.2  // Batas tawaran adalah 120% dari harga per Kg
 
+            // Validasi tawaran harga
             if (tawaranHarga in 0.0..batasTawaran) {
-                // Handle Ajukan Tawaran (misalnya, simpan tawaran harga di Firestore)
+                // Menyimpan tawaran harga ke Firestore
                 val db = FirebaseFirestore.getInstance()
                 val currentUser = FirebaseAuth.getInstance().currentUser ?: return@setOnClickListener
+
+                // Menghitung diskon berdasarkan jumlah pembelian
+                val qty = binding.banyakPesanan.text.toString().toIntOrNull() ?: 0
+                val discount = when {
+                    qty in 5..10 -> 0.05
+                    qty in 10..15 -> 0.07
+                    qty in 15..40 -> 0.10
+                    qty > 40 -> 0.15
+                    else -> 0.0
+                }
+
+                val totalPrice = qty * pricePerKg * (1 - discount) // Total harga setelah diskon
 
                 val tawaranData = hashMapOf(
                     "userId" to currentUser.uid,
                     "tawaranHarga" to tawaranHarga,
-                    "status" to "Menunggu Konfirmasi",
-                    "timestamp" to FieldValue.serverTimestamp()
+                    "status" to "Menunggu Konfirmasi",  // Status tawaran masih menunggu konfirmasi
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "totalPrice" to totalPrice // Menyimpan total harga setelah diskon
                 )
 
                 db.collection("tawaran_harga")

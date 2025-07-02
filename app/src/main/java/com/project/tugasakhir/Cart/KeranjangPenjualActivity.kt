@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.project.tugasakhir.Account.Penjual.TerimaPesananActivity
 import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product
@@ -29,8 +30,6 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityKeranjangPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        // Setup RecyclerView
         binding.rvPesan.layoutManager = LinearLayoutManager(this)
         adapter = OrderAdapter(orders, products, { selectedOrder ->
             openOrderDetail(selectedOrder)
@@ -52,9 +51,9 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        // Get the list of products sold by the current seller
+        // Ambil daftar produk yang dijual oleh penjual saat ini berdasarkan userName
         db.collection("products")
-            .whereEqualTo("userName", currentUser.displayName)  // Filter products by seller's username
+            .whereEqualTo("userName", currentUser.displayName)  // Filter produk berdasarkan username penjual
             .get()
             .addOnSuccessListener { productDocuments ->
                 if (productDocuments.isEmpty) {
@@ -62,26 +61,26 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                     return@addOnSuccessListener
                 }
 
-                // Extract product IDs from the seller's products
+                // Ambil ID produk dari produk yang dijual oleh penjual
                 val productIds = productDocuments.map { it.id }
 
-                // Query orders related to the seller's products by productId
+                // Ambil pesanan terkait produk yang dijual oleh penjual
                 db.collection("carts")
-                    .whereIn("productId", productIds)  // Make sure the productId field is included in the order
+                    .whereIn("productId", productIds)  // Memastikan pesanan terkait produk yang dimiliki oleh penjual
                     .get()
                     .addOnSuccessListener { documents ->
                         binding.progressbarSettings.visibility = View.GONE
                         if (documents.isEmpty) {
                             Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
                         } else {
-                            orders.clear()  // Clear the previous orders
+                            orders.clear()  // Bersihkan daftar pesanan sebelumnya
                             for (doc in documents) {
                                 val order = doc.toObject(Order::class.java).apply {
                                     docId = doc.id
                                 }
                                 orders.add(order)
                             }
-                            adapter.notifyDataSetChanged()
+                            adapter.notifyDataSetChanged()  // Memberitahu adapter agar menampilkan pesanan yang baru
                         }
                     }
                     .addOnFailureListener { e ->
@@ -94,6 +93,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                 Toast.makeText(this, "Failed to load products: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
+
 
     private fun loadProducts() {
         db.collection("products")
@@ -117,7 +117,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        if (order.docId.isEmpty()) {
+        if (order.docId.isEmpty()) { // Periksa apakah docId valid
             Toast.makeText(this, "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
@@ -127,7 +127,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         docRef.delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-                loadUserOrders()  // Reload the orders after deletion
+                loadUserOrders()  // Reload pesanan setelah penghapusan
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -135,8 +135,8 @@ class KeranjangPenjualActivity : AppCompatActivity() {
     }
 
     private fun openOrderDetail(order: Order) {
-        val intent = Intent(this, KeranjangPesananActivity::class.java)
-        intent.putExtra("order_data", order)  // Pass selected order to the next activity
+        val intent = Intent(this, TerimaPesananActivity::class.java)
+        intent.putExtra("order_data", order)  // Pass the selected order to the next activity
         startActivity(intent)
     }
 }

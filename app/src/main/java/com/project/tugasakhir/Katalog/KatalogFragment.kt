@@ -17,6 +17,7 @@ import com.project.tugasakhir.databinding.FragmentKatalogBinding
 import com.project.tugasakhir.Adapter.KatalogAdapter
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
+import com.project.tugasakhir.R
 
 class KatalogFragment : Fragment() {
     private var _binding: FragmentKatalogBinding? = null
@@ -25,7 +26,7 @@ class KatalogFragment : Fragment() {
     private val allProducts = mutableListOf<Product>()
     private val filteredProducts = mutableListOf<Product>()
     private val produkList = mutableListOf<Product>()
-
+    private var selectedChipType: String = ""
     private lateinit var produkAdapter: ProductImageAdapter // Adapter for product list
     private lateinit var rekomendasiAdapter: KatalogAdapter // Adapter for recommendations
 
@@ -63,6 +64,7 @@ class KatalogFragment : Fragment() {
         binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 1, GridLayoutManager.HORIZONTAL, false) // Horizontal Layout
 
         setupSearch()
+        setupChipFilter()
         loadProductsFromFirestore() // Load products from Firestore
     }
 
@@ -101,57 +103,61 @@ class KatalogFragment : Fragment() {
                 Toast.makeText(requireContext(), "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
     private fun applyCollaborativeFiltering() {
-        // Check if there are enough products to apply collaborative filtering
         if (allProducts.isEmpty()) {
             Log.e("KatalogFragment", "No products available for collaborative filtering")
-            return // If no products, do not proceed with collaborative filtering
+            return
         }
 
-        // If there are no likes or products with likes, use fallback recommendations
         if (allProducts.all { it.likesCount == 0 }) {
             Log.e("KatalogFragment", "No likes available, applying fallback recommendations")
             applyFallbackRecommendations()
-        } else {
-            // Apply cosine similarity when likes are available
-            val productLikesMatrix = mutableListOf<MutableList<Double>>()
-
-            for (i in allProducts.indices) {
-                val likesForProduct = mutableListOf<Double>()
-                for (j in allProducts.indices) {
-                    if (i != j) {
-                        val similarity = computeCosineSimilarity(allProducts[i], allProducts[j])
-                        likesForProduct.add(similarity)
-                    }
-                }
-                productLikesMatrix.add(likesForProduct)
-            }
-
-            val filteredProducts = allProducts.filter { it.likesCount > 3 }
-
-            // Ensure there are products with more than 3 likes
-            if (filteredProducts.isEmpty()) {
-                Log.e("KatalogFragment", "No products with more than 3 likes")
-                applyFallbackRecommendations()
-                return // If no products with more than 3 likes, use fallback recommendations
-            }
-
-            // Get recommendations based on cosine similarity
-            val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts)
-
-            // Update adapter to display recommendations
-            rekomendasiAdapter.updateData(recommendedProducts)
+            return
         }
+
+        val productLikesMatrix = mutableListOf<MutableList<Double>>()
+        for (i in allProducts.indices) {
+            val likesForProduct = mutableListOf<Double>()
+            for (j in allProducts.indices) {
+                if (i != j) {
+                    val similarity = computeCosineSimilarity(allProducts[i], allProducts[j])
+                    likesForProduct.add(similarity)
+                }
+            }
+            productLikesMatrix.add(likesForProduct)
+        }
+
+        val filteredProducts = allProducts.filter { it.likesCount > 3 }
+
+        if (filteredProducts.isEmpty()) {
+            Log.e("KatalogFragment", "No products with more than 3 likes")
+            applyFallbackRecommendations()
+            return
+        }
+
+        val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts)
+        rekomendasiAdapter.updateData(recommendedProducts)
     }
 
-    // Fallback function for when there is no enough data for collaborative filtering
-    private fun applyFallbackRecommendations() {
-        // Use the category or random selection for fallback recommendations
-        val recommendedProducts = allProducts.take(3) // Take the first 3 products (or randomly if there are more)
+    private fun applyFallbackRecommendations(filteredSource: List<Product> = allProducts) {
+        val groupedProducts = filteredSource.groupBy { it.productName }
 
-        // Update the adapter with fallback recommendations
-        rekomendasiAdapter.updateData(recommendedProducts)
+        val recommendedProducts = groupedProducts.mapNotNull { (_, productList) ->
+            productList.minByOrNull { it.pricePerUnit }
+        }.sortedBy { it.pricePerUnit }
+
+        rekomendasiAdapter.updateData(recommendedProducts.take(3))
+    }
+
+    private fun setupChipFilter() {
+        binding.chipgrp2.setOnCheckedChangeListener { _, checkedId ->
+            selectedChipType = when (checkedId) {
+                R.id.chip2 -> "Sayur"
+                R.id.chip3 -> "Buah"
+                else -> "" // Semua
+            }
+            applyCombinedFilters()
+        }
     }
 
     private fun computeCosineSimilarity(productA: Product, productB: Product): Double {
@@ -196,22 +202,26 @@ class KatalogFragment : Fragment() {
         for (i in matrix.indices) {
             val similarities = matrix[i]
 
-            val sortedSimilarities = similarities.withIndex()
-                .sortedByDescending { it.value }
-                .take(3)
+            // Cek apakah filteredProducts cukup besar untuk diakses
+            if (filteredProducts.size <= similarities.size) {
+                val sortedSimilarities = similarities.withIndex()
+                    .sortedByDescending { it.value }
+                    .take(3) // Ambil 3 produk teratas yang mirip
 
-            for (similarity in sortedSimilarities) {
-                if (similarity.value > 0) {
-                    val recommendedProduct = filteredProducts[similarity.index]
-                    if (!recommendedProducts.contains(recommendedProduct)) {
-                        recommendedProducts.add(recommendedProduct)
+                for (similarity in sortedSimilarities) {
+                    if (similarity.value > 0) {
+                        val recommendedProduct = filteredProducts.getOrNull(similarity.index)
+                        if (recommendedProduct != null && !recommendedProducts.contains(recommendedProduct)) {
+                            recommendedProducts.add(recommendedProduct)
+                        }
                     }
                 }
+            } else {
+                Log.e("KatalogFragment", "Mismatch in size between similarity matrix and filtered products list.")
             }
         }
         return recommendedProducts
     }
-
 
     private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int) -> Unit) {
         db.collection("productLikes")
@@ -241,43 +251,29 @@ class KatalogFragment : Fragment() {
     private fun setupSearch() {
         binding.searchEditText.addTextChangedListener { editable ->
             val query = editable.toString().trim()
-            filterProductList(query)
+            applyCombinedFilters(query)
         }
     }
 
-    private fun filterProductList(query: String) {
-        filteredProducts.clear()
-        if (query.isEmpty()) {
-            filteredProducts.addAll(allProducts)
-        } else {
-            filteredProducts.addAll(
-                allProducts.filter {
-                    it.productName.contains(query, ignoreCase = true) ||
-                            it.productType.contains(query, ignoreCase = true)
-                }
-            )
+    private fun applyCombinedFilters(searchQuery: String = "") {
+        val filtered = allProducts.filter {
+            (selectedChipType.isEmpty() || it.productType.equals(selectedChipType, ignoreCase = true)) &&
+                    (searchQuery.isEmpty() || it.productName.contains(searchQuery, ignoreCase = true))
         }
+
+        // Update produk list
         produkList.clear()
-        produkList.addAll(filteredProducts)
+        produkList.addAll(filtered)
         produkAdapter.notifyDataSetChanged()
 
-        filterRecommendationList(query)
-    }
+        // Update rekomendasi
+        val recommended = filtered.filter { it.likesCount > 3 }
 
-    private fun filterRecommendationList(query: String) {
-        val recommendedProducts = allProducts.filter { it.likesCount > 2 }
-        filteredProducts.clear()
-        if (query.isEmpty()) {
-            filteredProducts.addAll(recommendedProducts)
+        if (recommended.isNotEmpty()) {
+            rekomendasiAdapter.updateData(recommended)
         } else {
-            filteredProducts.addAll(
-                recommendedProducts.filter {
-                    it.productName.contains(query, ignoreCase = true) ||
-                            it.productType.contains(query, ignoreCase = true)
-                }
-            )
+            applyFallbackRecommendations(filtered)
         }
-        rekomendasiAdapter.updateData(filteredProducts) // Update rvRekomendasi
     }
     override fun onDestroyView() {
         super.onDestroyView()

@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -26,7 +27,7 @@ class ProductBaruActivity : AppCompatActivity() {
     private lateinit var binding: ActivityProductBaruBinding
     private val selectedImages = mutableListOf<Uri>()
     private val db = FirebaseFirestore.getInstance()
-    private lateinit var adapter: ImageAdapter
+    private lateinit var imageAdapter: ImageAdapter
 
     private var userEmail: String = ""
     private var userName: String = ""
@@ -38,16 +39,22 @@ class ProductBaruActivity : AppCompatActivity() {
         binding = ActivityProductBaruBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // AutoCompleteTextView for product type
+        val jenisProdukArray = arrayOf("Buah", "Sayur")
+        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
+        binding.jenisProduk.setAdapter(adapter)
+
         userEmail = intent.getStringExtra("EMAIL") ?: ""
         userName = intent.getStringExtra("USERNAME") ?: ""
 
-        adapter = ImageAdapter(selectedImages, this)
+        // Initialize the image adapter for RecyclerView
+        imageAdapter = ImageAdapter(selectedImages, this)
         binding.RVImagenes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        binding.RVImagenes.adapter = adapter
+        binding.RVImagenes.adapter = imageAdapter
 
         binding.addImgProduct.setOnClickListener { openGallery() }
 
-        // If editing, get the product directly from intent
+        // If editing, populate the form with the existing product data
         editingProduct = intent.getParcelableExtra<Product>("product")
         editingProduct?.let { populateForm(it) }
 
@@ -62,14 +69,14 @@ class ProductBaruActivity : AppCompatActivity() {
 
     private fun populateForm(product: Product) {
         binding.namaProduct.setText(product.productName)
-        binding.jenisProduk.setText(product.productType)
+        binding.jenisProduk.setText(product.productType) // Populate with the product type
         binding.deskripsi.setText(product.description)
         binding.stokTersedia.setText(product.stockAvailable.toString())
         binding.hargaPerUnit.setText(product.pricePerUnit.toString())
         binding.switchTampilkanproduk.isChecked = product.isAvailable
 
-        // TODO: Jika ingin tampilkan gambar lama dari base64 di recyclerView,
-        // convert base64 ke URI/custom handling
+        // You may want to display the product's image (if any) as well
+        // Convert base64 to Uri or handle it in RecyclerView if needed
     }
 
     private fun openGallery() {
@@ -93,7 +100,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 } else {
                     data.data?.let { selectedImages.add(it) }
                 }
-                adapter.notifyDataSetChanged()
+                imageAdapter.notifyDataSetChanged()
             }
         } else {
             Toast.makeText(this, "Gagal memilih gambar", Toast.LENGTH_SHORT).show()
@@ -142,10 +149,10 @@ class ProductBaruActivity : AppCompatActivity() {
                     "userName" to userName
                 )
 
-                // Gunakan ID otomatis untuk produk baru
-                val newProductRef = db.collection("products").document()  // Firestore menghasilkan ID unik secara otomatis
-                productData["productId"] = newProductRef.id  // Menambahkan ID unik produk baru
-                newProductRef.set(productData).await()  // Simpan data produk baru dengan ID unik
+                // Check if we are updating or saving new product
+                val newProductRef = db.collection("products").document()  // Firestore generates a unique ID automatically
+                productData["productId"] = newProductRef.id  // Add unique product ID
+                newProductRef.set(productData).await()  // Save the product data
 
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
