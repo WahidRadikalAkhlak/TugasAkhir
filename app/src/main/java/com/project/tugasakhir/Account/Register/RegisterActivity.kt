@@ -59,15 +59,15 @@ class RegisterActivity : AppCompatActivity() {
                         firebaseUser.updateProfile(profileUpdates)
                             .addOnCompleteListener { profileUpdateTask ->
                                 if (profileUpdateTask.isSuccessful) {
-                                    // Setelah displayName berhasil disimpan, simpan data user ke Firestore
+                                    // Menyimpan data pengguna ke Firestore
                                     val uid = firebaseUser.uid
                                     val userData = hashMapOf(
                                         "nama" to name,
                                         "email" to email,
                                         "phone" to phone,
-                                        "userAddress" to userAddress  // Menambahkan alamat ke Firestore
+                                        "userAddress" to userAddress
                                     )
-                                    db.collection("users").document(uid)
+                                    db.collection("users").document(uid) // UID dari Firebase Auth
                                         .set(userData)
                                         .addOnSuccessListener {
                                             Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()

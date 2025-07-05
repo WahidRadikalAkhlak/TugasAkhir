@@ -11,31 +11,31 @@ import java.util.Locale
 import java.util.Date
 
 class ChatHistoryAdapter(
-    private val chats: List<Message>,  // Daftar chat yang akan ditampilkan
+    private val chats: List<Message>,  // List of chats to display
     private val currentUserId: String,
-    private val onItemClickListener: (Message) -> Unit  // Listener untuk chat yang diklik
+    private val onItemClickListener: (Message) -> Unit  // Listener for chat click
 ) : RecyclerView.Adapter<ChatHistoryAdapter.MessageViewHolder>() {
 
     inner class MessageViewHolder(private val binding: ItemChatBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(chat: Message) {
-            // Menentukan siapa yang mengirim pesan berdasarkan senderId dan receiverId
+            // Set the sender's or receiver's name
             if (chat.senderId == currentUserId) {
-                binding.pengguna.text = chat.receiverName // Jika pesan berasal dari user, tampilkan receiverName
+                binding.pengguna.text = chat.receiverName  // If the message is from the current user, show receiver's name
             } else {
-                binding.pengguna.text = chat.senderName // Jika pesan dari penerima, tampilkan senderName
+                binding.pengguna.text = chat.senderName  // If the message is from the other user, show sender's name
             }
 
-            // Tampilkan isi pesan atau ringkasan pesan
+            // Show the message content
             binding.isiPesan.text = chat.message
 
-            // Set gambar profil (placeholder)
+            // Set profile image (you can replace it with actual user profile images)
             binding.iconProfil.setImageResource(R.drawable.account_circle)
 
-            // Format waktu pesan
+            // Format the timestamp
             val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(chat.timestamp))
             binding.timestamp.text = formattedTime
 
-            // Klik item untuk membuka chat detail
+            // Handle item click to open chat detail
             itemView.setOnClickListener {
                 onItemClickListener(chat)
             }

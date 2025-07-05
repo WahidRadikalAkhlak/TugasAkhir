@@ -31,15 +31,15 @@ class PesanActivity : AppCompatActivity() {
         binding = ActivityPesanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Retrieve chatId, senderName, and receiverName from Intent
+        // Retrieve chatId, receiverId, and receiverName from Intent
         chatId = intent.getStringExtra("chat_id")
         receiverId = intent.getStringExtra("receiver_id") // Receiver's ID
         receiverName = intent.getStringExtra("receiver_name") // Receiver's Name
 
-        // Retrieve product info if available
+        // Retrieve product info if available (i.e., product seller's username)
         product = intent.getParcelableExtra("product") // Ensure Product is passed
 
-        // If the product is available, set the receiverName to the product's userName
+        // If product is available, set the receiverName to the product's userName (seller's name)
         if (product != null) {
             receiverName = product?.userName // Use the product's userName as receiverName
         }
@@ -61,7 +61,7 @@ class PesanActivity : AppCompatActivity() {
         // Load messages from Firestore
         loadMessages()
 
-        // Send message when user clicks send button
+        // Send message when user clicks the send button
         binding.btnSend.setOnClickListener {
             val messageText = binding.etMessage.text.toString().trim()
             if (messageText.isNotEmpty()) {
@@ -89,6 +89,10 @@ class PesanActivity : AppCompatActivity() {
                     for (document in snapshot.documents) {
                         val message = document.toObject(Message::class.java)
                         message?.let {
+                            // Ensure receiverName is loaded correctly
+                            if (it.receiverName.isEmpty()) {
+                                it.receiverName = "Receiver"
+                            }
                             messageList.add(it)
                         }
                     }
@@ -99,29 +103,75 @@ class PesanActivity : AppCompatActivity() {
             }
     }
 
+
     private fun sendMessage(messageText: String, receiverId: String?, receiverName: String?) {
         val senderId = auth.currentUser?.uid ?: return
+        val senderName = auth.currentUser?.displayName ?: "Unknown"
+
+        // Pastikan receiverName sudah diterima dengan benar dari produk atau intent
+        val actualReceiverName = receiverName ?: "Receiver"  // Gunakan receiverName dari Intent atau fallback ke "Receiver"
+
+        // Pastikan receiverId valid
+        val actualReceiverId = receiverId ?: ""
+
+        // Membuat objek pesan dengan informasi pengirim dan penerima
         val message = Message(
             senderId = senderId,
-            senderName = auth.currentUser?.displayName ?: "Unknown",
+            senderName = senderName,  // Nama pengirim
             message = messageText,
             timestamp = System.currentTimeMillis(),
-            receiverId = receiverId ?: "",  // Receiver's ID
-            receiverName = receiverName ?: "Receiver"  // Receiver's name (from Product if available)
+            receiverId = actualReceiverId,  // ID penerima (dari produk atau yang disediakan)
+            receiverName = actualReceiverName,  // Nama penerima
+            chatId = chatId ?: "chat_${senderId}_${actualReceiverId}" // Menyusun chatId jika belum ada
         )
 
-        // Send message to Firestore under the existing chatId
-        firestore.collection("chats")
-            .document(chatId ?: "")
-            .collection("messages")
-            .add(message)
-            .addOnSuccessListener {
-                Log.d("PesanActivity", "Message sent successfully")
-                // After sending, clear the input field
-                binding.etMessage.text.clear()
+        // Menggunakan chatId yang valid atau membuatnya jika belum ada
+        val currentChatId = chatId ?: "chat_${senderId}_${actualReceiverId}"
+
+        // Cek apakah chat sudah ada di Firestore
+        firestore.collection("chats").document(currentChatId).get()
+
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    // Jika chat belum ada, buat chat baru dan simpan peserta serta receiverName
+                    firestore.collection("chats").document(currentChatId).set(
+
+                        hashMapOf(
+                            "participants" to listOf(senderId, actualReceiverId),
+                            "timestamp" to System.currentTimeMillis(),
+                            "receiverName" to actualReceiverName  // Simpan receiverName pada dokumen chat
+                        )
+                    ).addOnSuccessListener {
+                        // Setelah chat dibuat, tambahkan pesan pertama
+                        firestore.collection("chats")
+                            .document(currentChatId)
+                            .collection("messages")
+                            .add(message)  // Menambahkan pesan dengan chatId
+                            .addOnSuccessListener {
+                                Log.d("PesanActivity", "Message sent successfully")
+                                binding.etMessage.text.clear()  // Bersihkan input setelah mengirim pesan
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("PesanActivity", "Failed to send message: $e")
+                            }
+                    }
+                } else {
+                    // Jika chat sudah ada, langsung tambahkan pesan baru ke chat yang ada
+                    firestore.collection("chats")
+                        .document(currentChatId)
+                        .collection("messages")
+                        .add(message)  // Menambahkan pesan dengan chatId
+                        .addOnSuccessListener {
+                            Log.d("PesanActivity", "Message sent successfully")
+                            binding.etMessage.text.clear()  // Bersihkan input setelah mengirim pesan
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("PesanActivity", "Failed to send message: $e")
+                        }
+                }
             }
             .addOnFailureListener { e ->
-                Log.e("PesanActivity", "Failed to send message: $e")
+                Log.e("PesanActivity", "Failed to check chat existence: $e")
             }
     }
 }

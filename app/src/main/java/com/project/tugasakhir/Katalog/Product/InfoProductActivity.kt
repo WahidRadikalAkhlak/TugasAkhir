@@ -94,62 +94,82 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     private fun sendMessageToSeller(recipientUserId: String, product: Product) {
         val messageText = "Tanya tentang produk: ${product.productName}"
 
-        val message = Message(
-            senderId = auth.currentUser?.uid ?: "",
-            senderName = auth.currentUser?.displayName ?: "Unknown",
-            message = messageText,
-            timestamp = System.currentTimeMillis(),
-            receiverId = recipientUserId,
-            receiverName = product.userName // Nama penjual diambil dari Product
-        )
+        // Ambil UID penjual berdasarkan userName penjual di Firestore
+        firestore.collection("users")
+            .whereEqualTo("nama", product.userName)  // Asumsi product.userName adalah nama penjual
+            .get()
+            .addOnSuccessListener { result ->
+                if (!result.isEmpty) {
+                    // Ambil UID penjual dari dokumen yang ditemukan
+                    val sellerDoc = result.documents.first()
+                    val sellerUid = sellerDoc.id  // UID penjual ada di ID dokumen Firestore
 
-        val chatId = "chat_${auth.currentUser?.uid}_${recipientUserId}" // ChatId berdasarkan senderId dan receiverId
+                    // Membuat objek pesan
+                    val message = Message(
+                        senderId = auth.currentUser?.uid ?: "",  // UID pengguna yang sedang login
+                        senderName = auth.currentUser?.displayName ?: "Unknown",
+                        message = messageText,
+                        timestamp = System.currentTimeMillis(),
+                        receiverId = sellerUid,  // Menggunakan UID penjual yang diambil dari Firestore
+                        receiverName = product.userName,  // Nama penjual diambil dari Product
+                        chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // Menambahkan chatId
+                    )
 
-        firestore.collection("chats").document(chatId).get()
-            .addOnSuccessListener { document ->
-                if (!document.exists()) {
-                    // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
-                    firestore.collection("chats").document(chatId).set(
-                        hashMapOf(
-                            "participants" to listOf(auth.currentUser?.uid, recipientUserId),
-                            "timestamp" to System.currentTimeMillis(),
-                            "receiverName" to product.userName // Nama penerima (penjual)
-                        )
-                    ).addOnSuccessListener {
-                        // Tambahkan pesan pertama ke subcollection messages
-                        firestore.collection("chats")
-                            .document(chatId)
-                            .collection("messages")
-                            .add(message)
-                            .addOnSuccessListener {
-                                Log.d("PesanActivity", "Message sent successfully")
-                                val intent = Intent(this, PesanActivity::class.java)
-                                intent.putExtra("chat_id", chatId)
-                                startActivity(intent)
+                    val chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
+
+                    firestore.collection("chats").document(chatId).get()
+                        .addOnSuccessListener { document ->
+                            if (!document.exists()) {
+                                // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
+                                firestore.collection("chats").document(chatId).set(
+                                    hashMapOf(
+                                        "participants" to listOf(auth.currentUser?.uid, sellerUid),
+                                        "timestamp" to System.currentTimeMillis(),
+                                        "receiverName" to product.userName // Nama penerima (penjual)
+                                    )
+                                ).addOnSuccessListener {
+                                    // Tambahkan pesan pertama ke subcollection messages
+                                    firestore.collection("chats")
+                                        .document(chatId)
+                                        .collection("messages")
+                                        .add(message)  // Menambahkan chatId ke pesan
+                                        .addOnSuccessListener {
+                                            Log.d("PesanActivity", "Message sent successfully")
+                                            val intent = Intent(this, PesanActivity::class.java)
+                                            intent.putExtra("chat_id", chatId)
+                                            startActivity(intent)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("PesanActivity", "Failed to send message: $e")
+                                        }
+                                }
+                            } else {
+                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
+                                firestore.collection("chats")
+                                    .document(chatId)
+                                    .collection("messages")
+                                    .add(message)  // Menambahkan chatId ke pesan
+                                    .addOnSuccessListener {
+                                        Log.d("PesanActivity", "Message sent successfully")
+                                        val intent = Intent(this, PesanActivity::class.java)
+                                        intent.putExtra("chat_id", chatId)
+                                        startActivity(intent)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("PesanActivity", "Failed to send message: $e")
+                                    }
                             }
-                            .addOnFailureListener { e ->
-                                Log.e("PesanActivity", "Failed to send message: $e")
-                            }
-                    }
-                } else {
-                    // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
-                    firestore.collection("chats")
-                        .document(chatId)
-                        .collection("messages")
-                        .add(message)
-                        .addOnSuccessListener {
-                            Log.d("PesanActivity", "Message sent successfully")
-                            val intent = Intent(this, PesanActivity::class.java)
-                            intent.putExtra("chat_id", chatId)
-                            startActivity(intent)
                         }
                         .addOnFailureListener { e ->
-                            Log.e("PesanActivity", "Failed to send message: $e")
+                            Log.e("PesanActivity", "Error checking chat existence: $e")
                         }
+                } else {
+                    Toast.makeText(this, "Penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("PesanActivity", "Error checking chat existence: $e")
+                Log.e("PesanActivity", "Error fetching seller UID: $e")
+                Toast.makeText(this, "Error fetching seller UID: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
