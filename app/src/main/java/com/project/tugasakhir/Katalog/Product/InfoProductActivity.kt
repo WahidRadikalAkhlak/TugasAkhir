@@ -39,25 +39,33 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             finish()
             return
         }
+
+        source = intent.getStringExtra("source")
+
         displayProductData(product!!)
 
-        // Ambil jumlah like untuk produk dan tampilkan
+        // Get like count and check if liked
         getLikesCount(product!!)
-
-        // Cek apakah produk disukai oleh pengguna dan update tombol like
         checkIfLiked(product!!)
 
-        // Kirim pesan ke penjual
+        // Handle message button click
+        // In your InfoProductActivity's onCreate or displayProductData method:
         binding.btnKirimPesan.setOnClickListener {
-            val recipientUserId = product?.userName
-            if (recipientUserId != null) {
-                sendMessageToSeller(recipientUserId, product!!)
+            if (source == "seller") {
+                // When the "Edit Produk" button is clicked, navigate to ProductBaruActivity
+                openEditProduct(product!!)
             } else {
-                Toast.makeText(this, "Penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
+                // Handle sending message to seller for buyers
+                val recipientUserId = product?.userName
+                if (recipientUserId != null) {
+                    sendMessageToSeller(recipientUserId, product!!)
+                } else {
+                    Toast.makeText(this, "Penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
-        // Tombol like diklik
+        // Handle like button click
         binding.btnLike.setOnClickListener {
             toggleLikeStatusForUser(product!!)
         }
@@ -90,23 +98,88 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             senderId = auth.currentUser?.uid ?: "",
             senderName = auth.currentUser?.displayName ?: "Unknown",
             message = messageText,
-            timestamp = System.currentTimeMillis()
+            timestamp = System.currentTimeMillis(),
+            receiverId = recipientUserId,
+            receiverName = product.userName // Nama penjual diambil dari Product
         )
 
-        val chatId = "chat_${auth.currentUser?.uid}_${recipientUserId}"
+        val chatId = "chat_${auth.currentUser?.uid}_${recipientUserId}" // ChatId berdasarkan senderId dan receiverId
 
-        firestore.collection("chats")
-            .document(chatId)
-            .collection("messages")
-            .add(message)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Pesan berhasil dikirim", Toast.LENGTH_SHORT).show()
-                val intent = Intent(this, PesanActivity::class.java)
-                intent.putExtra("chat_id", chatId)
-                startActivity(intent)
+        firestore.collection("chats").document(chatId).get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
+                    firestore.collection("chats").document(chatId).set(
+                        hashMapOf(
+                            "participants" to listOf(auth.currentUser?.uid, recipientUserId),
+                            "timestamp" to System.currentTimeMillis(),
+                            "receiverName" to product.userName // Nama penerima (penjual)
+                        )
+                    ).addOnSuccessListener {
+                        // Tambahkan pesan pertama ke subcollection messages
+                        firestore.collection("chats")
+                            .document(chatId)
+                            .collection("messages")
+                            .add(message)
+                            .addOnSuccessListener {
+                                Log.d("PesanActivity", "Message sent successfully")
+                                val intent = Intent(this, PesanActivity::class.java)
+                                intent.putExtra("chat_id", chatId)
+                                startActivity(intent)
+                            }
+                            .addOnFailureListener { e ->
+                                Log.e("PesanActivity", "Failed to send message: $e")
+                            }
+                    }
+                } else {
+                    // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
+                    firestore.collection("chats")
+                        .document(chatId)
+                        .collection("messages")
+                        .add(message)
+                        .addOnSuccessListener {
+                            Log.d("PesanActivity", "Message sent successfully")
+                            val intent = Intent(this, PesanActivity::class.java)
+                            intent.putExtra("chat_id", chatId)
+                            startActivity(intent)
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("PesanActivity", "Failed to send message: $e")
+                        }
+                }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal mengirim pesan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("PesanActivity", "Error checking chat existence: $e")
+            }
+    }
+
+    private fun createChat(buyerId: String, sellerId: String, message: Message) {
+        val chatData = hashMapOf(
+            "participants" to listOf(buyerId, sellerId),  // Add buyer and seller as participants
+            "timestamp" to System.currentTimeMillis()    // Timestamp for when the chat was created
+        )
+
+        firestore.collection("chats")
+            .add(chatData)
+            .addOnSuccessListener { documentReference ->
+                // Add the first message to the newly created chat
+                firestore.collection("chats")
+                    .document(documentReference.id)
+                    .collection("messages")
+                    .add(message)
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Chat and first message created successfully", Toast.LENGTH_SHORT).show()
+                        val chatId = documentReference.id
+                        val intent = Intent(this, PesanActivity::class.java)
+                        intent.putExtra("chat_id", chatId)
+                        startActivity(intent)
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this, "Failed to add first message: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error creating chat: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -115,7 +188,12 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             // Display product details
             namaProduct.text = p.productName
             jenisProduk.text = p.productType
-            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f", p.pricePerUnit)}" else "Harga belum tersedia"
+            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${
+                String.format(
+                    "%,.0f",
+                    p.pricePerUnit
+                )
+            }" else "Harga belum tersedia"
             stock.text = "Stok: ${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
             userName.text = "Added by: ${p.userName}"
@@ -135,32 +213,37 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 imgProduct.setImageResource(R.drawable.image_icon)
             }
 
-            getLikesCount(p)
-
-            val source = intent.getStringExtra("source")
+            // Set button text and listeners based on source
             if (source == "seller") {
-                btnBuy.text = "Hapus Produk"
-                btnKirimPesan.text = "Edit Produk"  // Change the button text to "Edit Produk"
+                // Change button text and set functionality for seller
+                binding.btnBuy.text = "Hapus Produk"
+                binding.btnKirimPesan.text = "Edit Produk"
 
-                // Button click listeners for the seller
-                btnBuy.setOnClickListener {
+                // Button to delete product
+                binding.btnBuy.setOnClickListener {
                     hapusProduk(p) // Handle deleting the product
                 }
 
+                // Button to edit product
                 btnKirimPesan.setOnClickListener {
-                    // When the "Edit Produk" button is clicked, navigate to ProductBaruActivity
-                    openEditProduct(p)
+                    openEditProduct(p) // Open ProductBaruActivity for editing
                 }
             } else {
-                btnBuy.text = "Beli Produk"
-                btnKirimPesan.text = "Kirim Pesan"
-                btnBuy.setOnClickListener {
-                    val bottomSheet = BottomSheetBuyActivity.newInstance(product!!) // Kirim seluruh objek Product
+                // Regular buy product functionality for non-seller users
+                binding.btnBuy.text = "Beli Produk"
+                binding.btnKirimPesan.text = "Kirim Pesan"
+                binding.btnBuy.setOnClickListener {
+                    val bottomSheet =
+                        BottomSheetBuyActivity.newInstance(product!!) // Send the whole product object
                     bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
                     bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
                 }
-                btnKirimPesan.setOnClickListener {
-                    Toast.makeText(this@InfoProductActivity, "Fitur kirim pesan belum diimplementasi", Toast.LENGTH_SHORT).show()
+                binding.btnKirimPesan.setOnClickListener {
+                    Toast.makeText(
+                        this@InfoProductActivity,
+                        "Fitur kirim pesan belum diimplementasi",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
             }
         }
@@ -168,20 +251,17 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
     private fun openEditProduct(p: Product) {
         val intent = Intent(this, ProductBaruActivity::class.java).apply {
-            // Pass the product data for editing
-            putExtra("products", p) // Passing the product object to ProductBaruActivity
+            putExtra("product", p)
         }
-        // Start ProductBaruActivity for editing
         startActivity(intent)
     }
-
 
     private fun hapusProduk(p: Product) {
         firestore.collection("products")
             .document(p.productId)
             .delete()
             .addOnSuccessListener {
-                // Hapus juga likes yang terkait dengan produk ini
+                // Remove associated likes as well
                 firestore.collection("productLikes")
                     .document(p.productId)
                     .delete()
@@ -197,7 +277,6 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 Toast.makeText(this, "Gagal menghapus produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
 
     private fun toggleLikeStatusForUser(product: Product) {
         val currentUserId = auth.currentUser?.uid ?: return

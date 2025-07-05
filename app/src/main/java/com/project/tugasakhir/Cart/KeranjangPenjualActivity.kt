@@ -18,10 +18,9 @@ import com.project.tugasakhir.databinding.ActivityKeranjangPenjualBinding
 class KeranjangPenjualActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityKeranjangPenjualBinding
-
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
-    private val products = mutableListOf<Product>() // Declare products list
+    private val products = mutableListOf<Product>()
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -30,19 +29,21 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityKeranjangPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
         binding.rvPesan.layoutManager = LinearLayoutManager(this)
         adapter = OrderAdapter(orders, products, { selectedOrder ->
             openOrderDetail(selectedOrder)
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = false)
+
         binding.rvPesan.adapter = adapter
 
-        loadUserOrders()
-        loadProducts() // Load products as well
+        loadSellerOrders() // Load orders from Firestore
+        loadProducts() // Load products to match with orders
     }
 
-    private fun loadUserOrders() {
+    private fun loadSellerOrders() {
         binding.progressbarSettings.visibility = View.VISIBLE
         val currentUser = auth.currentUser
         if (currentUser == null) {
@@ -51,60 +52,54 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        // Ambil daftar produk yang dijual oleh penjual saat ini berdasarkan userName
-        db.collection("products")
-            .whereEqualTo("userName", currentUser.displayName)  // Filter produk berdasarkan username penjual
+        // Ambil nama penjual dari pengguna yang sedang login
+        val sellerName = currentUser.displayName ?: ""
+
+        // Pastikan sellerName tidak kosong
+        if (sellerName.isEmpty()) {
+            binding.progressbarSettings.visibility = View.GONE
+            Toast.makeText(this, "Nama penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Query untuk mengambil pesanan berdasarkan sellerName di subkoleksi 'items'
+        db.collection("carts")
+            .document(currentUser.uid) // Mengakses cart berdasarkan user
+            .collection("items") // Mengakses subkoleksi items dalam cart
+            .whereEqualTo("sellerUserName", sellerName) // Menyaring berdasarkan sellerUserName di dalam subkoleksi items
             .get()
-            .addOnSuccessListener { productDocuments ->
-                if (productDocuments.isEmpty) {
-                    Toast.makeText(this, "No products found for this seller", Toast.LENGTH_SHORT).show()
-                    return@addOnSuccessListener
-                }
-
-                // Ambil ID produk dari produk yang dijual oleh penjual
-                val productIds = productDocuments.map { it.id }
-
-                // Ambil pesanan terkait produk yang dijual oleh penjual
-                db.collection("carts")
-                    .whereIn("productId", productIds)  // Memastikan pesanan terkait produk yang dimiliki oleh penjual
-                    .get()
-                    .addOnSuccessListener { documents ->
-                        binding.progressbarSettings.visibility = View.GONE
-                        if (documents.isEmpty) {
-                            Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
-                        } else {
-                            orders.clear()  // Bersihkan daftar pesanan sebelumnya
-                            for (doc in documents) {
-                                val order = doc.toObject(Order::class.java).apply {
-                                    docId = doc.id
-                                }
-                                orders.add(order)
-                            }
-                            adapter.notifyDataSetChanged()  // Memberitahu adapter agar menampilkan pesanan yang baru
+            .addOnSuccessListener { itemDocuments ->
+                binding.progressbarSettings.visibility = View.GONE
+                if (itemDocuments.isEmpty) {
+                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
+                } else {
+                    orders.clear() // Kosongkan daftar pesanan sebelumnya
+                    // Loop melalui setiap dokumen di koleksi carts
+                    for (doc in itemDocuments) {
+                        val order = doc.toObject(Order::class.java).apply {
+                            docId = doc.id  // Menyimpan ID dokumen untuk setiap pesanan
                         }
+                        orders.add(order)  // Menambahkan pesanan ke daftar
                     }
-                    .addOnFailureListener { e ->
-                        binding.progressbarSettings.visibility = View.GONE
-                        Toast.makeText(this, "Gagal memuat data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
+                    adapter.notifyDataSetChanged()  // Notify adapter untuk memperbarui RecyclerView
+                }
             }
             .addOnFailureListener { e ->
                 binding.progressbarSettings.visibility = View.GONE
-                Toast.makeText(this, "Failed to load products: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
 
     private fun loadProducts() {
         db.collection("products")
             .get()
             .addOnSuccessListener { documents ->
-                products.clear() // Clear the previous products
+                products.clear()  // Kosongkan daftar produk sebelumnya
                 for (doc in documents) {
                     val product = doc.toObject(Product::class.java)
-                    products.add(product)
+                    products.add(product)  // Menambahkan produk ke daftar
                 }
-                adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
+                adapter.notifyDataSetChanged()  // Notify adapter untuk memperbarui RecyclerView
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed to load products: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -117,17 +112,15 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        if (order.docId.isEmpty()) { // Periksa apakah docId valid
-            Toast.makeText(this, "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        val docRef = db.collection("carts").document(currentUser.uid).collection("items").document(order.docId)
+        val docRef = db.collection("carts")
+            .document(currentUser.uid)
+            .collection("items")
+            .document(order.docId)
 
         docRef.delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-                loadUserOrders()  // Reload pesanan setelah penghapusan
+                loadSellerOrders()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -136,7 +129,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
 
     private fun openOrderDetail(order: Order) {
         val intent = Intent(this, TerimaPesananActivity::class.java)
-        intent.putExtra("order_data", order)  // Pass the selected order to the next activity
+        intent.putExtra("order_data", order)
         startActivity(intent)
     }
 }

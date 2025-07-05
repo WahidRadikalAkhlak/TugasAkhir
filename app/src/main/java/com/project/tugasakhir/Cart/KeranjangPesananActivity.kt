@@ -81,11 +81,11 @@ class KeranjangPesananActivity : AppCompatActivity() {
             return
         }
 
-        orders.clear()  // Clear the old orders before fetching new ones
-
+        orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .document(currentUser.uid) // User-specific cart
+            .document(currentUser.uid)  // User-specific cart
             .collection("items")
+            .whereEqualTo("statusOrder", "Memesan")  // Hanya pesanan dengan status "Memesan"
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -97,16 +97,19 @@ class KeranjangPesananActivity : AppCompatActivity() {
                 itemCount = 0
                 totalPrice = 0.0
 
+                // Membuat map untuk menyaring pesanan berdasarkan orderNumber
+                val orderMap = mutableMapOf<String, Order>()
+
                 // Loop through all documents to retrieve order details
                 for (doc in documents) {
                     val order = doc.toObject(Order::class.java).apply {
                         docId = doc.id
                         email = doc.getString("email") ?: "Email tidak tersedia"
                         userName = doc.getString("userName") ?: "Nama tidak tersedia"
-                        orderNumber = doc.getString("orderNumber") ?: ""  // Ensure this is fetched
-                        orderDate = doc.getString("orderDate") ?: ""  // Ensure this is fetched
-                        orderTime = doc.getString("orderTime") ?: ""  // Ensure this is fetched
-                        statusOrder = doc.getString("statusOrder") ?: "Memesan"  // Ensure this is fetched
+                        orderNumber = doc.getString("orderNumber") ?: ""
+                        orderDate = doc.getString("orderDate") ?: ""
+                        orderTime = doc.getString("orderTime") ?: ""
+                        statusOrder = doc.getString("statusOrder") ?: "Memesan"
                         pricePerUnit = doc.getDouble("pricePerUnit") ?: 0.0
                         productName = doc.getString("productName") ?: ""
                         productType = doc.getString("productType") ?: ""
@@ -114,32 +117,32 @@ class KeranjangPesananActivity : AppCompatActivity() {
                         totalPrice = doc.getDouble("totalPrice") ?: 0.0
                         timestamp = doc.getTimestamp("timestamp")
 
-                        // Correctly fetch image URLs and base64 lists
                         imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                         imageBase64List = (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
                     }
 
-                    // Only add items that are not confirmed, canceled, or already canceled
-                    if (order.productName.isNotEmpty() && order.productType.isNotEmpty() &&
-                        order.statusOrder != "Pesanan Dibatalkan") { // Don't include canceled orders
-                        orders.add(order)
-                        itemCount += order.quantity
-                        totalPrice += order.totalPrice
+                    // Menambahkan pesanan ke dalam map jika orderNumber unik dan statusnya masih "Memesan"
+                    if (order.productName.isNotEmpty() && order.productType.isNotEmpty()) {
+                        if (!orderMap.containsKey(order.orderNumber)) {
+                            orderMap[order.orderNumber] = order
+                            itemCount += order.quantity
+                            totalPrice += order.totalPrice
+                        }
                     }
                 }
 
-                // Display the data for the first order in the text fields
+                // Menambahkan pesanan yang sudah dipisahkan berdasarkan orderNumber ke dalam list orders
+                orders.addAll(orderMap.values)
+
+                // Update UI dengan pesanan pertama jika tersedia
                 binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
                 binding.orderNumber.text = orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
                 binding.statusOrder.text = orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
                 binding.tanggalOrder.text = orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
                 binding.orderTime.text = orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
 
-                // Notify the adapter that the data has changed
                 adapter.notifyDataSetChanged()
                 updateBottomLayout(itemCount, totalPrice)
-
-                // Check and update button visibility after loading the items
                 updateButtonVisibility()
             }
             .addOnFailureListener { e ->
@@ -167,36 +170,36 @@ class KeranjangPesananActivity : AppCompatActivity() {
         val metodePembayaran = "Bayar Ditempat"
         val pesanKepadaPenjual = binding.edittextPesan.text.toString().trim()
 
-        // Jika pesan kosong, beri nilai default jika perlu
         if (pesanKepadaPenjual.isEmpty()) {
             binding.edittextPesan.error = "Pesan tidak boleh kosong"
             return
         }
 
+        // Update the status of each order to "Menunggu Konfirmasi Pembelian Anda" and save to Firestore
         orders.forEach { order ->
-            // Update status pesanan dan data lainnya, termasuk pesan kepada penjual
+            // Update order status to "Menunggu Konfirmasi Pembelian Anda" in Firestore
             order.statusOrder = "Menunggu Konfirmasi Pembelian Anda"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
-            // Update data pesanan ke Firestore
             updateOrderStatus(order, "Menunggu Konfirmasi Pembelian Anda", metodePembayaran, pesanKepadaPenjual)
+
+            // Remove the confirmed order from the local list
+            orders.remove(order)
         }
 
-        binding.confirmButton.visibility = View.GONE // Hanya menyembunyikan tombol konfirmasi pesanan
-        binding.cancelButton.visibility = View.VISIBLE // Tombol batal tetap ditampilkan
+        // Refresh the cart after confirmation
+        loadCartItems()
 
-        // Update UI untuk mencerminkan perubahan setelah konfirmasi
-        updateUIWithOrderData()
-
-        // Notify the adapter to update the list
-        adapter.notifyDataSetChanged()
+        binding.confirmButton.visibility = View.GONE
+        binding.cancelButton.visibility = View.VISIBLE
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
 
+
     private fun onCancelOrder() {
-        val metodePembayaran = "Bayar Ditempat" // Metode pembayaran tetap jika dibatalkan
+        val metodePembayaran = "Bayar Ditempat"
         val pesanKepadaPenjual = binding.edittextPesan.text.toString().trim()
 
         if (pesanKepadaPenjual.isEmpty()) {
@@ -204,34 +207,25 @@ class KeranjangPesananActivity : AppCompatActivity() {
             return
         }
 
-        // Pastikan status pesanan diubah tanpa menghapus data produk
         orders.forEach { order ->
-            // Update status pesanan menjadi "Pesanan Dibatalkan"
-            order.statusOrder = "Pesanan Dibatalkan"
-            order.metodePembayaran = metodePembayaran // Jangan mengubah metode pembayaran
-            order.pesanKepadaPenjual = pesanKepadaPenjual // Pesan tetap, bisa dikosongkan jika perlu
+            // Update the status to "Pesanan Anda Dibatalkan"
+            order.statusOrder = "Pesanan Anda Dibatalkan"
+            order.metodePembayaran = metodePembayaran
+            order.pesanKepadaPenjual = pesanKepadaPenjual
 
-            // Update status pesanan di Firestore tanpa merubah data produk
-            updateOrderStatus(order, "Pesanan Dibatalkan", metodePembayaran, pesanKepadaPenjual)
+            // Update the order in Firestore
+            updateOrderStatus(order, "Pesanan Anda Dibatalkan", metodePembayaran, pesanKepadaPenjual)
         }
 
-        // Tombol konfirmasi pesanan disembunyikan
         binding.confirmButton.visibility = View.GONE
-        // Tombol batalkan pesanan disembunyikan setelah dibatalkan
         binding.cancelButton.visibility = View.GONE
+        loadCartItems() // Reload the cart items after the cancellation
 
-        // Pastikan data yang ditampilkan adalah data yang terbaru dari Firestore
-        loadCartItems() // Memuat ulang data setelah pembatalan
-
-        // Notify the adapter to refresh the list after the status change
+        // Update UI after the status change
         adapter.notifyDataSetChanged()
-
-        // Update tampilan tombol dan informasi lain setelah pembatalan
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
-
-
 
     private fun updateButtonVisibility() {
         // Check if all orders are confirmed or canceled
@@ -285,13 +279,11 @@ class KeranjangPesananActivity : AppCompatActivity() {
             return
         }
 
-        // Referensi dokumen pesanan di Firestore
         val docRef = db.collection("carts")
             .document(currentUser.uid)
             .collection("items")
             .document(order.docId)
 
-        // Update status pesanan, metode pembayaran, dan pesan kepada penjual di Firestore
         docRef.update(
             "statusOrder", newStatus,
             "metodePembayaran", metodePembayaran,

@@ -5,6 +5,12 @@
     android:layout_height="match_parent"
     tools:context=".Account.Penjual.DaftarProductActivity">
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:src="@drawable/gradient_profile"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- TextView for 'Produk Saya' title, centered -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_produk_saya"
@@ -12,6 +18,7 @@
         android:layout_height="wrap_content"
         android:text="Produk Saya"
         android:textSize="20sp"
+        android:fontFamily="@font/poppinssemibold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,6 +32,7 @@
         android:layout_margin="20dp"
         app:layout_constraintTop_toBottomOf="@id/icon_group"
         app:layout_constraintStart_toStartOf="parent"
+        android:background="@drawable/edit_text_background"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- RecyclerView for displaying product list -->
@@ -51,32 +59,33 @@
         android:layout_marginTop="16dp">
 
     <!-- Accept Order Button -->
-    <LinearLayout
-        android:id="@+id/btn_accept_order"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
-        android:layout_marginEnd="16dp">
 
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="@drawable/store"
-            android:contentDescription="Terima Pesanan"
-            android:layout_marginBottom="4dp" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/accept_order_text"
+        <!-- Add Product Button -->
+        <LinearLayout
+            android:id="@+id/btn_accept_order"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Terima Pesanan"
-            android:textSize="14sp"
-            android:textColor="@android:color/black" />
-    </LinearLayout>
+            android:layout_marginEnd="16dp"
+            android:gravity="center"
+            android:orientation="vertical">
 
-    <!-- Add Product Button -->
-    <LinearLayout
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_marginBottom="4dp"
+                android:background="@drawable/store"
+                android:contentDescription="Terima Pesanan" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/accept_order_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Terima Pesanan"
+                android:textColor="@android:color/black"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"

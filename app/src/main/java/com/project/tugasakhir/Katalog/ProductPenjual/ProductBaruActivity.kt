@@ -40,7 +40,7 @@ class ProductBaruActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // AutoCompleteTextView for product type
-        val jenisProdukArray = arrayOf("Buah", "Sayur")
+        val jenisProdukArray = arrayOf("Padi", "Jagung", "Kedelai", "Umbi", "Sayur", "Buah", "Tanaman Obat")
         val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
         binding.jenisProduk.setAdapter(adapter)
 
@@ -132,9 +132,15 @@ class ProductBaruActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val base64Images = mutableListOf<String>()
-                for (uri in selectedImages) {
-                    val base64 = uriToBase64(uri)
-                    if (base64 != null) base64Images.add(base64)
+                if (selectedImages.isNotEmpty()) {
+                    // If new images are selected, convert them to base64 and update image list
+                    for (uri in selectedImages) {
+                        val base64 = uriToBase64(uri)
+                        if (base64 != null) base64Images.add(base64)
+                    }
+                } else {
+                    // If no new images, retain the old image list from editingProduct
+                    base64Images.addAll(editingProduct?.imageBase64List ?: emptyList())
                 }
 
                 val productData = hashMapOf(
@@ -146,17 +152,36 @@ class ProductBaruActivity : AppCompatActivity() {
                     "isAvailable" to tampilkanProduk,
                     "imageBase64List" to base64Images,
                     "email" to userEmail,
-                    "userName" to userName
+                    "userName" to userName 
                 )
 
-                // Check if we are updating or saving new product
-                val newProductRef = db.collection("products").document()  // Firestore generates a unique ID automatically
-                productData["productId"] = newProductRef.id  // Add unique product ID
-                newProductRef.set(productData).await()  // Save the product data
+                // Check if we're editing or saving a new product
+                if (editingProduct != null) {
+                    // If editing an existing product, update the product document
+                    val productId = editingProduct?.productId
+                    if (productId != null) {
+                        db.collection("products").document(productId)
+                            .update(productData)
+                            .await()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@ProductBaruActivity, "Produk berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                            finish() // Close the activity after updating
+                        }
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(this@ProductBaruActivity, "ID produk tidak ditemukan", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    // If it's a new product, create a new document in Firestore
+                    val newProductRef = db.collection("products").document()  // Firestore generates a unique ID automatically
+                    productData["productId"] = newProductRef.id  // Add unique product ID
+                    newProductRef.set(productData).await()  // Save the product data
 
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
-                    finish()
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        finish() // Close the activity after saving
+                    }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {

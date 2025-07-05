@@ -11,7 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.project.tugasakhir.Adapter.ChatAdapter
+import com.project.tugasakhir.Adapter.ChatHistoryAdapter
 import com.project.tugasakhir.Chat.pesan.PesanActivity
 import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.databinding.FragmentChatBinding
@@ -19,18 +19,14 @@ import com.project.tugasakhir.databinding.FragmentChatBinding
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentChatBinding? = null
-    private val binding get() = _binding ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
+    private val binding get() = _binding ?: throw IllegalStateException("Binding must be initialized before use!")
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private lateinit var chatHistoryAdapter: ChatHistoryAdapter  // Adapter untuk chat history
+    private val chatList = mutableListOf<Message>()  // Daftar chat yang akan ditampilkan
 
-    private lateinit var adapter: ChatAdapter
-    private val chatMessages = mutableListOf<Message>()
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -38,71 +34,75 @@ class ChatFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Initialize RecyclerView with ChatAdapter
+        // Set up RecyclerView and Adapter for displaying chat history
+        chatHistoryAdapter = ChatHistoryAdapter(chatList, auth.currentUser?.uid ?: "") { chat ->
+            openChatDetail(chat)  // Open chat detail when clicked
+        }
         binding.rvPesan.layoutManager = LinearLayoutManager(requireContext())
-        adapter = ChatAdapter(chatMessages) { message -> openChatDetail(message) }
-        binding.rvPesan.adapter = adapter
+        binding.rvPesan.adapter = chatHistoryAdapter
 
-        // Load chat messages from Firestore
-        loadChatMessages()
+        loadChatMessages() // Load chat messages from Firestore
     }
 
+    // Fetch all chats where the current user is a participant
     private fun loadChatMessages() {
         val currentUserId = auth.currentUser?.uid ?: return
 
-        // Debugging: Check if the currentUserId is being fetched correctly
-        Log.d("ChatFragment", "Current User ID: $currentUserId")
-
+        // Fetch chats where the current user is a participant
         db.collection("chats")
-            .whereArrayContains("participants", currentUserId)  // Look for chats where the current user is a participant
-            .get()  // Using .get() instead of .addSnapshotListener for a one-time query
+            .whereArrayContains("participants", currentUserId)
+            .get()
             .addOnSuccessListener { querySnapshot ->
                 if (querySnapshot.isEmpty) {
-                    Toast.makeText(requireContext(), "No chats found", Toast.LENGTH_SHORT).show()
+                    showToast("No chats found")
                 } else {
-                    // Process the documents in the snapshot
                     querySnapshot.documents.forEach { document ->
                         val chatId = document.id
-                        Log.d("ChatFragment", "Chat ID found: $chatId")
-                        loadMessagesForChat(chatId)  // Load messages for this chat
+                        val participants = document.get("participants") as List<String>
+                        val timestamp = document.getLong("timestamp") ?: 0L
+
+                        // Create Message object to represent the chat (not individual messages)
+                        val chat = Message(
+                            senderId = "",  // Not required for chat listing
+                            senderName = "",  // Not required for chat listing
+                            message = "Click to chat",  // Placeholder message
+                            timestamp = timestamp,
+                            participants = participants,
+                            receiverId = "",  // Not required for chat listing
+                            receiverName = "",  // Not required for chat listing
+                            chatId = chatId
+                        )
+                        chatList.add(chat)
                     }
+                    chatHistoryAdapter.notifyDataSetChanged()  // Notify adapter to update UI
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Failed to load chats: ${e.message}", Toast.LENGTH_SHORT).show()
+                showToast("Failed to load chats: ${e.message}")
             }
     }
 
-    private fun loadMessagesForChat(chatId: String) {
-        db.collection("chats").document(chatId)
-            .collection("messages")
-            .orderBy("timestamp")  // Sort by timestamp to get messages in order
-            .get()  // Using .get() for a one-time fetch
-            .addOnSuccessListener { snapshot ->
-                chatMessages.clear()
-                snapshot.documents.forEach { document ->
-                    val message = document.toObject(Message::class.java)
-                    message?.let {  // Use let to ensure message is not null
-                        chatMessages.add(it)
-                    }
-                }
-                adapter.notifyDataSetChanged()  // Notify adapter that data has changed
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Error loading messages: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-
-    // Open chat details when a chat item is clicked
-    private fun openChatDetail(message: Message) {
+    // Open chat detail screen when a chat is clicked
+    private fun openChatDetail(chat: Message) {
         val intent = Intent(requireContext(), PesanActivity::class.java)
-        intent.putExtra("message_data", message)
-        startActivity(intent)
+        intent.putExtra("chat_id", chat.chatId)
+
+        // Find the other participant in the chat
+        val otherParticipant = chat.participants.find { it != auth.currentUser?.uid }
+        if (otherParticipant != null) {
+            intent.putExtra("receiver_id", otherParticipant)  // Pass receiverId to PesanActivity
+        }
+
+        startActivity(intent)  // Open PesanActivity to send messages
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
     }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
 }
+

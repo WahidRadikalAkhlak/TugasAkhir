@@ -30,10 +30,8 @@ class OrderAdapter(
     }
 
     private fun getProductForOrder(order: Order): Product? {
-        return products.find { it.productName == order.productName }  // Find matching product
+        return products.find { it.productName == order.productName }
     }
-
-    // CartViewHolder for displaying order info along with product image
     inner class CartViewHolder(val binding: ItemKeranjangBinding) : RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
@@ -56,22 +54,24 @@ class OrderAdapter(
             val product = getProductForOrder(order)
 
             if (product != null) {
-                // Display order and product info
-                binding.userName.text = product.userName  // Use product's userName (seller's name)
+                // Bind user name (penjual) from the product
+                binding.userName.text = product.userName  // Penjual name
+
+                // Bind other order details
                 binding.orderNumber.text = order.orderNumber
                 binding.statusOrder.text = order.statusOrder
                 binding.tanggalOrder.text = order.orderDate
                 binding.orderTime.text = order.orderTime
 
-                // Load product image from the corresponding Product object
+                // Load product image from the product object (if available)
                 if (product.imageUrls.isNotEmpty()) {
                     Glide.with(binding.imageView.context)
-                        .load(product.imageUrls[0])  // Display product image
+                        .load(product.imageUrls[0])  // Load the first image from the product
                         .placeholder(R.drawable.image_icon)
                         .error(R.drawable.image_icon)
                         .into(binding.imageView)
                 } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if no product image
+                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if none
                 }
             }
         }

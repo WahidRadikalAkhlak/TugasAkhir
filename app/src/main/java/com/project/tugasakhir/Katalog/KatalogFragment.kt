@@ -48,8 +48,9 @@ class KatalogFragment : Fragment() {
             }
             context?.startActivity(intent)
         }
+        // Set the GridLayoutManager for horizontal scrolling with 2 items per row
         binding.rvProdukList.adapter = produkAdapter
-        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
 
         // Adapter for recommendations (with likes count)
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
@@ -135,25 +136,32 @@ class KatalogFragment : Fragment() {
             return
         }
 
-        val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts)
+        // Increase the number of recommended products from 3 to a larger number (e.g., 10)
+        val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
     private fun applyFallbackRecommendations(filteredSource: List<Product> = allProducts) {
-        val groupedProducts = filteredSource.groupBy { it.productName }
+        // Fallback logic if products don't have enough likes
+        val groupedProducts = filteredSource.groupBy { it.productType }
 
-        val recommendedProducts = groupedProducts.mapNotNull { (_, productList) ->
-            productList.minByOrNull { it.pricePerUnit }
-        }.sortedBy { it.pricePerUnit }
+        val recommendedProducts = groupedProducts.flatMap { (_, productList) ->
+            productList.sortedBy { it.pricePerUnit } // Sort by price for the fallback
+        }.take(10) // Show top 10 based on price
 
-        rekomendasiAdapter.updateData(recommendedProducts.take(3))
+        rekomendasiAdapter.updateData(recommendedProducts)
     }
 
     private fun setupChipFilter() {
         binding.chipgrp2.setOnCheckedChangeListener { _, checkedId ->
             selectedChipType = when (checkedId) {
-                R.id.chip2 -> "Sayur"
-                R.id.chip3 -> "Buah"
+                R.id.chip2 -> "Padi"
+                R.id.chip3 -> "Jagung"
+                R.id.chip4 -> "Kedelai"
+                R.id.chip5 -> "Umbi"
+                R.id.chip6 -> "Sayur"
+                R.id.chip7 -> "Buah"
+                R.id.chip8 -> "Tanaman Obat"
                 else -> "" // Semua
             }
             applyCombinedFilters()
@@ -196,7 +204,7 @@ class KatalogFragment : Fragment() {
         return commonUsers
     }
 
-    private fun recommendProductsBasedOnSimilarity(matrix: List<List<Double>>, filteredProducts: List<Product>): List<Product> {
+    private fun recommendProductsBasedOnSimilarity(matrix: List<List<Double>>, filteredProducts: List<Product>, topN: Int): List<Product> {
         val recommendedProducts = mutableListOf<Product>()
 
         for (i in matrix.indices) {
@@ -206,7 +214,7 @@ class KatalogFragment : Fragment() {
             if (filteredProducts.size <= similarities.size) {
                 val sortedSimilarities = similarities.withIndex()
                     .sortedByDescending { it.value }
-                    .take(3) // Ambil 3 produk teratas yang mirip
+                    .take(topN) // Ambil 'topN' produk teratas yang mirip
 
                 for (similarity in sortedSimilarities) {
                     if (similarity.value > 0) {

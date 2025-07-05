@@ -79,7 +79,6 @@
                 android:id="@+id/chipgrp2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
                 android:orientation="horizontal"
                 app:checkedChip="@id/chip1"
                 app:singleLine="true"
@@ -99,7 +98,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sayur"
+                    android:text="Padi"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -108,7 +107,52 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Jagung"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip4"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Kedelai"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip5"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Umbi"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip6"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Sayur"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip7"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Buah"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip8"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tanaman Obat"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
@@ -127,8 +171,6 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <!-- RecyclerView for displaying products -->
-
-        <!-- Title for recommendations -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_produk_list"
             android:layout_width="match_parent"

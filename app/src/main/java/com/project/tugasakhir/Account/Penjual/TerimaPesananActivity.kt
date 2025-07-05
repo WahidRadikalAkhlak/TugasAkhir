@@ -135,18 +135,10 @@ class TerimaPesananActivity : AppCompatActivity() {
         binding.confirmButton.visibility = View.GONE
         binding.cancelButton.visibility = View.VISIBLE
         adapter.notifyDataSetChanged()
-        updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
-
-    // Fungsi untuk memperbarui status pesanan di Firestore
     private fun updateOrderStatus(order: Order) {
         val currentUser = auth.currentUser ?: return
-        if (order.docId.isEmpty()) {
-            Toast.makeText(this, "Order ID not found", Toast.LENGTH_SHORT).show()
-            return
-        }
-
         val docRef = db.collection("carts")
             .document(currentUser.uid)
             .collection("items")
@@ -154,10 +146,10 @@ class TerimaPesananActivity : AppCompatActivity() {
 
         docRef.update("statusOrder", order.statusOrder)
             .addOnSuccessListener {
-                Log.d("FirestoreUpdate", "Order successfully updated with status: ${order.statusOrder}")
+                Log.d("FirestoreUpdate", "Order status updated: ${order.statusOrder}")
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to update order", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to update order: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -227,11 +219,8 @@ class TerimaPesananActivity : AppCompatActivity() {
                 totalPrice -= order.totalPrice
                 adapter.notifyDataSetChanged()
 
-                // Update the bottom layout
                 updateBottomLayout(itemCount, totalPrice)
-
-                // Reload cart items after deletion
-                loadSellerOrders()
+                loadSellerOrders() // Reload orders after deletion
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Failed to delete order: ${e.message}", Toast.LENGTH_SHORT).show()

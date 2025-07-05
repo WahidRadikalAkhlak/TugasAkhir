@@ -7,14 +7,21 @@ data class Message(
     val senderId: String = "",
     var senderName: String = "",
     val message: String = "",
-    val timestamp: Long = 0L
+    val timestamp: Long = 0L,
+    val participants: List<String> = listOf(),
+    val receiverId: String = "", // Add receiverId for the product owner's username
+    var receiverName: String = "", // Add receiverName for the product owner's name
+    val chatId: String = "" // Chat ID
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
         senderId = parcel.readString() ?: "",
         senderName = parcel.readString() ?: "",
-        message= parcel.readString() ?: "",
-        timestamp = parcel.readLong()
+        message = parcel.readString() ?: "",
+        timestamp = parcel.readLong(),
+        receiverId = parcel.readString() ?: "",
+        receiverName = parcel.readString() ?: "",
+        chatId = parcel.readString() ?: ""  // Read chatId from Parcel
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -22,6 +29,9 @@ data class Message(
         parcel.writeString(senderName)
         parcel.writeString(message)
         parcel.writeLong(timestamp)
+        parcel.writeString(receiverId)
+        parcel.writeString(receiverName)
+        parcel.writeString(chatId) // Write chatId to Parcel
     }
 
     override fun describeContents(): Int = 0

@@ -225,10 +225,14 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             Toast.makeText(requireContext(), "Produk tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
+
         val currentDate = getCurrentDateString()
         val currentTime = getCurrentTimeString()
         val email = currentUser.email ?: "Alamat tidak tersedia"
-        val orderNumber = "ORD${System.currentTimeMillis()}${Random.nextInt(1000, 9999)}"
+
+        // Generate orderNumber with 'ORD' prefix and a unique value using current timestamp and random number
+        val orderNumber = "ORD${System.currentTimeMillis()}${Random.nextInt(1000, 9999)}"  // Custom order number with 'ORD' prefix
+        val sellerName = product?.userName ?: "Unknown"
 
         val orderData = hashMapOf(
             "userId" to currentUser.uid,
@@ -240,27 +244,27 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "quantity" to quantity,
             "pricePerKg" to pricePerKg,
             "totalPrice" to quantity * pricePerKg,
-            "orderNumber" to orderNumber,
+            "orderNumber" to orderNumber,  // Use 'ORD' prefix for orderNumber
             "timestamp" to FieldValue.serverTimestamp(),
             "productName" to productName,
             "productType" to productType,
             "pricePerUnit" to pricePerUnit,
-            "userName" to (currentUser.displayName ?: "User")
+            "userName" to (currentUser.displayName ?: "User"),
+            "sellerName" to sellerName
         )
 
-        // Save the order to Firestore
+        // Save the order to Firestore with the orderNumber as the document ID
         val db = FirebaseFirestore.getInstance()
         db.collection("carts")
             .document(currentUser.uid)
             .collection("items")
-            .document("ORD${System.currentTimeMillis()}")
-            .set(orderData)
+            .document(orderNumber)  // Set orderNumber as the document ID
+            .set(orderData) // Use the specified orderNumber as the document ID
             .addOnSuccessListener {
-                // Update product stock after adding order to cart
-                updateProductStock(productId, quantity)
-
+                // After successfully adding the order to Firestore
                 Toast.makeText(requireContext(), "Order berhasil ditambahkan", Toast.LENGTH_SHORT).show()
-                dismiss()
+                updateProductStock(productId, quantity)
+                dismiss()  // Dismiss the bottom sheet after order is placed
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Gagal menambahkan order: ${e.message}", Toast.LENGTH_SHORT).show()
