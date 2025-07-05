@@ -1,6 +1,7 @@
 package com.project.tugasakhir.Adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.project.tugasakhir.Data.Message
@@ -19,19 +20,22 @@ class ChatSendAdapter(
         fun bind(message: Message) {
             // Menyesuaikan apakah pesan dikirim oleh pengguna saat ini
             if (message.senderId == currentUserId) {
-                // Apply gradient for sender's message
-                binding.messageroot.setBackgroundResource(R.drawable.gradient_profile)
+                // Set the sender's message layout to the right
+                binding.messageroot.visibility = View.VISIBLE
+                binding.receiverMessageRoot.visibility = View.GONE
+                binding.messageroot.setBackgroundResource(R.drawable.gradient_profile)  // Set specific background for sender's message
+                binding.tvMessageText.text = message.message
+                val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
+                binding.tvMessageTime.text = formattedTime
             } else {
-                // Apply gradient for receiver's message
-                binding.messageroot.setBackgroundResource(R.drawable.gradient_profile)
+                // Set the receiver's message layout to the left
+                binding.receiverMessageRoot.visibility = View.VISIBLE
+                binding.messageroot.visibility = View.GONE
+                binding.receiverMessageRoot.setBackgroundResource(R.drawable.white_field_background)  // Set specific background for receiver's message
+                binding.tvReceiverMessageText.text = message.message
+                val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
+                binding.tvReceiverMessageTime.text = formattedTime
             }
-
-            // Mengatur teks pesan
-            binding.tvMessageText.text = message.message
-
-            // Memformat waktu pesan
-            val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
-            binding.tvMessageTime.text = formattedTime
         }
     }
 

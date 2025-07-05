@@ -44,7 +44,6 @@ class ChatFragment : Fragment() {
         loadChatMessages() // Load chat messages from Firestore
     }
 
-    // Fetch all chats where the current user is a participant
     private fun loadChatMessages() {
         val currentUserId = auth.currentUser?.uid ?: return
 
@@ -61,20 +60,35 @@ class ChatFragment : Fragment() {
                         val participants = document.get("participants") as List<String>
                         val timestamp = document.getLong("timestamp") ?: 0L
 
-                        // Create Message object to represent the chat (not individual messages)
-                        val chat = Message(
-                            senderId = "",  // Not required for chat listing
-                            senderName = "",  // Not required for chat listing
-                            message = "Click to chat",  // Placeholder message
-                            timestamp = timestamp,
-                            participants = participants,
-                            receiverId = "",  // Not required for chat listing
-                            receiverName = "",  // Not required for chat listing
-                            chatId = chatId
-                        )
-                        chatList.add(chat)
+                        // Find the receiver's ID (the other participant)
+                        val otherParticipant = participants.find { it != currentUserId }
+                        if (otherParticipant != null) {
+                            // Fetch receiver's name from Firestore using receiverId
+                            db.collection("users")
+                                .document(otherParticipant)
+                                .get()
+                                .addOnSuccessListener { receiverDoc ->
+                                    val receiverName = receiverDoc.getString("nama") ?: "Receiver"
+
+                                    // Create a Message object with the correct receiver name
+                                    val chat = Message(
+                                        senderId = "",  // Not required for chat listing
+                                        senderName = "",  // Not required for chat listing
+                                        message = "Click to chat",  // Placeholder message
+                                        timestamp = timestamp,
+                                        participants = participants,
+                                        receiverId = otherParticipant,  // Correct receiverId
+                                        receiverName = receiverName,  // Correct receiverName
+                                        chatId = chatId
+                                    )
+                                    chatList.add(chat)
+                                    chatHistoryAdapter.notifyDataSetChanged()  // Notify adapter to update UI
+                                }
+                                .addOnFailureListener { e ->
+                                    showToast("Failed to load receiver's name: ${e.message}")
+                                }
+                        }
                     }
-                    chatHistoryAdapter.notifyDataSetChanged()  // Notify adapter to update UI
                 }
             }
             .addOnFailureListener { e ->
@@ -82,7 +96,6 @@ class ChatFragment : Fragment() {
             }
     }
 
-    // Open chat detail screen when a chat is clicked
     private fun openChatDetail(chat: Message) {
         val intent = Intent(requireContext(), PesanActivity::class.java)
         intent.putExtra("chat_id", chat.chatId)

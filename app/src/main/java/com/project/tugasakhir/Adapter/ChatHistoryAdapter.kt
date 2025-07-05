@@ -18,17 +18,13 @@ class ChatHistoryAdapter(
 
     inner class MessageViewHolder(private val binding: ItemChatBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(chat: Message) {
-            // Set the sender's or receiver's name
-            if (chat.senderId == currentUserId) {
-                binding.pengguna.text = chat.receiverName  // If the message is from the current user, show receiver's name
-            } else {
-                binding.pengguna.text = chat.senderName  // If the message is from the other user, show sender's name
-            }
+            // Set the receiver's name for the chat listing
+            binding.pengguna.text = chat.receiverName  // Display receiverName in the view
 
             // Show the message content
             binding.isiPesan.text = chat.message
 
-            // Set profile image (you can replace it with actual user profile images)
+            // Set profile image (replace with actual user profile image if available)
             binding.iconProfil.setImageResource(R.drawable.account_circle)
 
             // Format the timestamp

@@ -9,9 +9,9 @@ data class Message(
     val message: String = "",
     val timestamp: Long = 0L,
     val participants: List<String> = listOf(),
-    val receiverId: String = "", // Add receiverId for the product owner's username
+    val receiverId: String = "",  // Add receiverId for the product owner's username
     var receiverName: String = "", // Add receiverName for the product owner's name
-    val chatId: String = "" // Chat ID
+    val chatId: String = ""
 ) : Parcelable {
 
     constructor(parcel: Parcel) : this(
