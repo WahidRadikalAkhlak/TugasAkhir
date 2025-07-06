@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ImageAdapter
 import com.project.tugasakhir.Data.Product
@@ -143,6 +144,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     base64Images.addAll(editingProduct?.imageBase64List ?: emptyList())
                 }
 
+                val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
+
                 val productData = hashMapOf(
                     "productName" to namaProduct,
                     "productType" to jenisProduk,
@@ -152,7 +155,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     "isAvailable" to tampilkanProduk,
                     "imageBase64List" to base64Images,
                     "email" to userEmail,
-                    "userName" to userName 
+                    "userName" to userName,
+                    "sellerUID" to sellerUID  // Add the seller's UID
                 )
 
                 // Check if we're editing or saving a new product
@@ -160,6 +164,7 @@ class ProductBaruActivity : AppCompatActivity() {
                     // If editing an existing product, update the product document
                     val productId = editingProduct?.productId
                     if (productId != null) {
+                        productData["productId"] = productId // Add productId to update the document
                         db.collection("products").document(productId)
                             .update(productData)
                             .await()

@@ -51,12 +51,6 @@ class CartFragment : Fragment() {
     }
 
     private fun loadUserOrders() {
-        if (!isAdded) {
-            Log.e("CartFragment", "Fragment belum terpasang ke Activity!")
-            return
-        }
-
-        binding.progressbarSettings.visibility = View.VISIBLE
         val currentUser = auth.currentUser
         if (currentUser == null) {
             binding.progressbarSettings.visibility = View.GONE
@@ -65,33 +59,25 @@ class CartFragment : Fragment() {
         }
 
         db.collection("carts")
-            .document(currentUser.uid)
-            .collection("items")
+            .whereEqualTo("userId", currentUser.uid) // Mengambil data berdasarkan pembeli
             .get()
             .addOnSuccessListener { documents ->
-                if (!isAdded) {
-                    Log.e("CartFragment", "Fragment tidak lagi terpasang saat callback dipanggil!")
-                    return@addOnSuccessListener
-                }
-                binding.progressbarSettings.visibility = View.GONE
                 if (documents.isEmpty) {
                     Toast.makeText(requireContext(), "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
                 } else {
-                    orders.clear()  // Clear the previous orders
+                    orders.clear() // Clear previous orders
                     for (doc in documents) {
                         val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id
+                            docId = doc.id // Set docId from Firestore document
                         }
-                        orders.add(order)
+                        orders.add(order) // Add the order to the list
                     }
-                    adapter.notifyDataSetChanged()
+                    adapter.notifyDataSetChanged() // Refresh the UI
                 }
             }
             .addOnFailureListener { e ->
-                if (isAdded) {
-                    binding.progressbarSettings.visibility = View.GONE
-                    Toast.makeText(requireContext(), "Gagal memuat data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
+                binding.progressbarSettings.visibility = View.GONE
+                Toast.makeText(requireContext(), "Gagal memuat pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

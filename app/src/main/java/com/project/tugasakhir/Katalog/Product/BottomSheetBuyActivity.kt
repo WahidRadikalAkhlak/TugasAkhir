@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Data.Product
@@ -28,6 +29,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
     private var productName: String = ""
     private var productType: String = ""
     private var pricePerUnit: Double = 0.0
+    private var productId: String = ""
     private var product: Product? = null
     private var _binding: ActivityBottomSheetBuyBinding? = null
     private val binding get() = _binding!!
@@ -63,6 +65,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
                 productName = it.productName
                 productType = it.productType
                 pricePerUnit = it.pricePerUnit
+                productId = it.productId
             }
         }
     }
@@ -221,18 +224,48 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             return
         }
 
-        val productId = product?.productId ?: run {
+        if (productId.isEmpty()) {
             Toast.makeText(requireContext(), "Produk tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
 
+        // Get sellerUID and continue processing if successful
+        getSellerUIDFromProduct(productId) { sellerUID ->
+            val orderNumber = "ORD${System.currentTimeMillis()}${Random.nextInt(1000, 9999)}"
+            val sellerName = product?.userName ?: "Unknown"
+
+            // Proceed with saving the order
+            saveOrderToFirestore(sellerUID, orderNumber, quantity, productId, sellerName)
+        }
+    }
+
+    private fun getSellerUIDFromProduct(productId: String, onSuccess: (String) -> Unit) {
+        val db = FirebaseFirestore.getInstance()
+        val productRef = db.collection("products").document(productId)
+
+        productRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val sellerUID = document.getString("sellerUID")
+                    if (sellerUID != null) {
+                        onSuccess(sellerUID)
+                    } else {
+                        Log.d("Product", "Seller UID not found in product")
+                    }
+                } else {
+                    Log.d("Product", "Product not found")
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("Product", "Error getting product: ${e.message}")
+            }
+    }
+
+    private fun saveOrderToFirestore(sellerUID: String, orderNumber: String, quantity: Int, productId: String, sellerName: String) {
+        val currentUser = FirebaseAuth.getInstance().currentUser ?: return
+        val email = currentUser.email ?: "Alamat tidak tersedia"
         val currentDate = getCurrentDateString()
         val currentTime = getCurrentTimeString()
-        val email = currentUser.email ?: "Alamat tidak tersedia"
-
-        // Generate orderNumber with 'ORD' prefix and a unique value using current timestamp and random number
-        val orderNumber = "ORD${System.currentTimeMillis()}${Random.nextInt(1000, 9999)}"  // Custom order number with 'ORD' prefix
-        val sellerName = product?.userName ?: "Unknown"
 
         val orderData = hashMapOf(
             "userId" to currentUser.uid,
@@ -243,25 +276,24 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "orderTime" to currentTime,
             "quantity" to quantity,
             "pricePerKg" to pricePerKg,
+            "sellerUID" to sellerUID,  // Seller UID
             "totalPrice" to quantity * pricePerKg,
-            "orderNumber" to orderNumber,  // Use 'ORD' prefix for orderNumber
+            "orderNumber" to orderNumber,
             "timestamp" to FieldValue.serverTimestamp(),
             "productName" to productName,
             "productType" to productType,
             "pricePerUnit" to pricePerUnit,
             "userName" to (currentUser.displayName ?: "User"),
-            "sellerName" to sellerName
+            "sellerName" to sellerName,
+            "productId" to productId
         )
 
-        // Save the order to Firestore with the orderNumber as the document ID
         val db = FirebaseFirestore.getInstance()
+
         db.collection("carts")
-            .document(currentUser.uid)
-            .collection("items")
-            .document(orderNumber)  // Set orderNumber as the document ID
-            .set(orderData) // Use the specified orderNumber as the document ID
+            .document(orderNumber)  // Menggunakan orderNumber sebagai ID dokumen
+            .set(orderData)
             .addOnSuccessListener {
-                // After successfully adding the order to Firestore
                 Toast.makeText(requireContext(), "Order berhasil ditambahkan", Toast.LENGTH_SHORT).show()
                 updateProductStock(productId, quantity)
                 dismiss()  // Dismiss the bottom sheet after order is placed

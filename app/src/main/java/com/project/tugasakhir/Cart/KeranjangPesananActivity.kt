@@ -83,9 +83,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .document(currentUser.uid)  // User-specific cart
-            .collection("items")
-            .whereEqualTo("statusOrder", "Memesan")  // Hanya pesanan dengan status "Memesan"
+            .whereEqualTo("userId", currentUser.uid) // Mengambil data berdasarkan pembeli
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -243,25 +241,6 @@ class KeranjangPesananActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUIWithOrderData() {
-        // Pastikan UI menampilkan data yang benar setelah pembatalan
-        val firstOrder = orders.firstOrNull()
-        if (firstOrder != null) {
-            binding.email.text = firstOrder.email ?: "Email tidak tersedia"
-            binding.orderNumber.text = firstOrder.orderNumber ?: "Order Number tidak tersedia"
-            binding.statusOrder.text = firstOrder.statusOrder ?: "Status Order tidak tersedia"
-            binding.tanggalOrder.text = firstOrder.orderDate ?: "Order Date tidak tersedia"
-            binding.orderTime.text = firstOrder.orderTime ?: "Order Time tidak tersedia"
-        } else {
-            // Jika data order tidak ditemukan atau tidak ada yang sesuai, setel nilai default
-            binding.email.text = "Email tidak tersedia"
-            binding.orderNumber.text = "Order Number tidak tersedia"
-            binding.statusOrder.text = "Status Order tidak tersedia"
-            binding.tanggalOrder.text = "Order Date tidak tersedia"
-            binding.orderTime.text = "Order Time tidak tersedia"
-        }
-    }
-
     private fun updateBottomLayout(itemCount: Int, totalPrice: Double) {
         binding.itemCount.text = "Item: $itemCount"
         binding.totalPrice.text = "Rp ${String.format("%,.0f", totalPrice)}"
@@ -274,25 +253,29 @@ class KeranjangPesananActivity : AppCompatActivity() {
         pesanKepadaPenjual: String
     ) {
         val currentUser = auth.currentUser ?: return
-        if (order.docId.isEmpty()) {
-            Toast.makeText(this, "Order ID tidak ditemukan", Toast.LENGTH_SHORT).show()
+
+        if (order.orderNumber.isEmpty()) { // Ensure orderNumber is not empty
+            Toast.makeText(this, "Order Number tidak ditemukan", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val docRef = db.collection("carts")
-            .document(currentUser.uid)
-            .collection("items")
-            .document(order.docId)
+        // Accessing the document directly by orderNumber
+        val docRef = db.collection("carts").document(order.orderNumber)
 
+        // Update the order fields directly in Firestore
         docRef.update(
             "statusOrder", newStatus,
             "metodePembayaran", metodePembayaran,
             "pesanKepadaPenjual", pesanKepadaPenjual
-        ).addOnSuccessListener {
-            Log.d("FirestoreUpdate", "Order successfully updated with status: $newStatus")
-        }.addOnFailureListener {
-            Toast.makeText(this, "Gagal update order", Toast.LENGTH_SHORT).show()
-        }
+        )
+            .addOnSuccessListener {
+                Log.d("FirestoreUpdate", "Order successfully updated with status: $newStatus")
+                Toast.makeText(this, "Status order berhasil diperbarui", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirestoreUpdate", "Error updating order: ${e.message}")
+                Toast.makeText(this, "Gagal update order: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun hapusPesanan(order: Order) {

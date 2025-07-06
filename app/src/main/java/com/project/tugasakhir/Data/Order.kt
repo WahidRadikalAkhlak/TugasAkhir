@@ -16,6 +16,7 @@ data class Order(
     var email: String = "",
     var imageUrls: List<String> = emptyList(),
     val description: String = "",
+    val sellerUID: String = "",
     var imageBase64List: List<String> = emptyList(),
     var userName: String = "",
     var userAddress: String = "",
@@ -28,5 +29,6 @@ data class Order(
     var timestamp: Timestamp? = null,
     var orderTime: String = "",
     @get:Exclude var docId: String = "",
-    var pricePerKg: Double = 0.0
+    var pricePerKg: Double = 0.0,
+    var productId: String = ""
 ) : Parcelable

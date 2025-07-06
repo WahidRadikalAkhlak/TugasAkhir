@@ -22,7 +22,8 @@ data class Product(
     val distance: Double = Double.MAX_VALUE,
     val userName: String = "",
     var likes: Map<String, Int> = emptyMap(),
-    val email: String = ""
+    val email: String = "",
+    var sellerUID: String = ""
 ) : Parcelable {
 
     fun getIsAvailable(): Boolean {

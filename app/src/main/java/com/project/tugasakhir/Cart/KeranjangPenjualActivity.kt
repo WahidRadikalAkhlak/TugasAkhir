@@ -2,9 +2,11 @@ package com.project.tugasakhir.Cart
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -18,10 +20,9 @@ import com.project.tugasakhir.databinding.ActivityKeranjangPenjualBinding
 class KeranjangPenjualActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityKeranjangPenjualBinding
-    private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
+    private val orders = mutableListOf<Order>()
     private val products = mutableListOf<Product>()
-
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
@@ -30,6 +31,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         binding = ActivityKeranjangPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Setup RecyclerView
         binding.rvPesan.layoutManager = LinearLayoutManager(this)
         adapter = OrderAdapter(orders, products, { selectedOrder ->
             openOrderDetail(selectedOrder)
@@ -39,12 +41,14 @@ class KeranjangPenjualActivity : AppCompatActivity() {
 
         binding.rvPesan.adapter = adapter
 
-        loadSellerOrders() // Load orders from Firestore
-        loadProducts() // Load products to match with orders
+        loadSellerOrders() // Load orders for the seller
+        loadProducts() // Load the products to match with orders
+
+        // Chip filter setup
+        setupChipFilter()
     }
 
     private fun loadSellerOrders() {
-        binding.progressbarSettings.visibility = View.VISIBLE
         val currentUser = auth.currentUser
         if (currentUser == null) {
             binding.progressbarSettings.visibility = View.GONE
@@ -52,58 +56,59 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        // Ambil nama penjual dari pengguna yang sedang login
-        val sellerName = currentUser.displayName ?: ""
-
-        // Pastikan sellerName tidak kosong
-        if (sellerName.isEmpty()) {
-            binding.progressbarSettings.visibility = View.GONE
-            Toast.makeText(this, "Nama penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Query untuk mengambil pesanan berdasarkan sellerName di subkoleksi 'items'
         db.collection("carts")
-            .document(currentUser.uid) // Mengakses cart berdasarkan user
-            .collection("items") // Mengakses subkoleksi items dalam cart
-            .whereEqualTo("sellerUserName", sellerName) // Menyaring berdasarkan sellerUserName di dalam subkoleksi items
+            .whereEqualTo("sellerUID", currentUser.uid) // Mengambil data berdasarkan pembeli
             .get()
-            .addOnSuccessListener { itemDocuments ->
-                binding.progressbarSettings.visibility = View.GONE
-                if (itemDocuments.isEmpty) {
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
                     Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
                 } else {
-                    orders.clear() // Kosongkan daftar pesanan sebelumnya
-                    // Loop melalui setiap dokumen di koleksi carts
-                    for (doc in itemDocuments) {
+                    orders.clear() // Clear previous orders
+                    for (doc in documents) {
                         val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id  // Menyimpan ID dokumen untuk setiap pesanan
+                            docId = doc.id // Set docId from Firestore document
                         }
-                        orders.add(order)  // Menambahkan pesanan ke daftar
+                        orders.add(order) // Add the order to the list
                     }
-                    adapter.notifyDataSetChanged()  // Notify adapter untuk memperbarui RecyclerView
+                    adapter.notifyDataSetChanged() // Refresh the UI
                 }
             }
             .addOnFailureListener { e ->
                 binding.progressbarSettings.visibility = View.GONE
-                Toast.makeText(this, "Gagal memuat data pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
+    // Function to load products from Firestore to match with orders
     private fun loadProducts() {
         db.collection("products")
             .get()
             .addOnSuccessListener { documents ->
-                products.clear()  // Kosongkan daftar produk sebelumnya
+                products.clear() // Clear previous products list
                 for (doc in documents) {
                     val product = doc.toObject(Product::class.java)
-                    products.add(product)  // Menambahkan produk ke daftar
+                    products.add(product) // Add each product to the list
                 }
-                adapter.notifyDataSetChanged()  // Notify adapter untuk memperbarui RecyclerView
+                adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to load products: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
+    }
+
+    // Chip filter setup to filter orders based on their status
+    private fun setupChipFilter() {
+        binding.chipgrp2.setOnCheckedChangeListener { group, checkedId ->
+            val filteredOrders = when (checkedId) {
+                R.id.chip2 -> orders.filter { it.statusOrder == "Memesan" } // Order in "Memesan" status
+                R.id.chip3 -> orders.filter { it.statusOrder == "Konfirmasi" } // Order in "Konfirmasi" status
+                R.id.chip4 -> orders.filter { it.statusOrder == "Selesai" } // Order in "Selesai" status
+                else -> orders // Show all orders when "Semua" is selected
+            }
+            orders.clear()
+            orders.addAll(filteredOrders)
+            adapter.notifyDataSetChanged()
+        }
     }
 
     private fun hapusPesanan(order: Order) {
@@ -112,15 +117,16 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        val docRef = db.collection("carts")
-            .document(currentUser.uid)
+        val sellerUID = currentUser.uid  // Use the seller's UID
+        val orderRef = db.collection("carts")
+            .document(sellerUID) // Reference to seller's cart
             .collection("items")
-            .document(order.docId)
+            .document(order.docId)  // Document ID for the specific order
 
-        docRef.delete()
+        orderRef.delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-                loadSellerOrders()
+                loadSellerOrders()  // Refresh orders list after deletion
             }
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
@@ -129,7 +135,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
 
     private fun openOrderDetail(order: Order) {
         val intent = Intent(this, TerimaPesananActivity::class.java)
-        intent.putExtra("order_data", order)
+        intent.putExtra("order_data", order)  // Pass selected order to the next activity
         startActivity(intent)
     }
 }
