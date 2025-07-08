@@ -44,7 +44,8 @@ class LoginActivity : AppCompatActivity() {
         googleSignInClient = GoogleSignIn.getClient(this, googleSignInOptions)
 
         // Configure Login button with the color you want
-        binding.btnLogin.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
+        binding.btnLogin.backgroundTintList =
+            ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
         binding.btnLogin.setTextColor(resources.getColor(R.color.black, null))
 
         // Login button functionality
@@ -81,7 +82,8 @@ class LoginActivity : AppCompatActivity() {
                     db.collection("users").document(uid).get()
                         .addOnSuccessListener { doc ->
                             val username = doc.getString("nama") ?: "User"
-                            val userAddress = doc.getString("userAddress") ?: "Address not available"
+                            val userAddress =
+                                doc.getString("userAddress") ?: "Address not available"
 
                             val intent = Intent(this, MainActivity::class.java)
                             intent.putExtra("USERNAME", username)
@@ -95,7 +97,11 @@ class LoginActivity : AppCompatActivity() {
                             finish()
                         }
                 } else {
-                    Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        "Login failed: ${task.exception?.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
     }
@@ -114,7 +120,8 @@ class LoginActivity : AppCompatActivity() {
                 val account = result.getResult(ApiException::class.java)
                 firebaseAuthWithGoogle(account.idToken ?: "")
             } catch (e: ApiException) {
-                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
             }
         }
     }
@@ -152,12 +159,17 @@ class LoginActivity : AppCompatActivity() {
                                             finish()
                                         }
                                         .addOnFailureListener {
-                                            Toast.makeText(this, "Failed to save user data", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                this,
+                                                "Failed to save user data",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                 } else {
                                     // Pengguna sudah terdaftar di Firestore
                                     val username = doc.getString("nama") ?: "User"
-                                    val userAddress = doc.getString("userAddress") ?: "Address not available"
+                                    val userAddress =
+                                        doc.getString("userAddress") ?: "Address not available"
 
                                     val intent = Intent(this, MainActivity::class.java)
                                     intent.putExtra("USERNAME", username)
@@ -167,7 +179,11 @@ class LoginActivity : AppCompatActivity() {
                                 }
                             }
                             .addOnFailureListener {
-                                Toast.makeText(this, "Failed to retrieve user data", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Failed to retrieve user data",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                     }
                 } else {

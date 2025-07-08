@@ -1,6 +1,8 @@
 package com.project.tugasakhir.Account
 
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.Login.LoginActivity
 import com.project.tugasakhir.Account.Penjual.DaftarPenjualActivity
 import com.project.tugasakhir.Account.Penjual.DaftarProductActivity
+import com.project.tugasakhir.Account.Profile.LanguagesActivity
 import com.project.tugasakhir.Account.Profile.SettingsActivity
 import com.project.tugasakhir.databinding.FragmentAccountBinding
 
@@ -20,7 +23,7 @@ class AccountFragment : Fragment() {
     private lateinit var binding: FragmentAccountBinding
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
+    private lateinit var sharedPreferences: SharedPreferences
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -33,7 +36,8 @@ class AccountFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val currentUser = auth.currentUser
-
+        sharedPreferences =
+            requireContext().getSharedPreferences("theme_pref", Context.MODE_PRIVATE)
         if (currentUser != null) {
             val email = currentUser.email ?: ""
             val name = currentUser.displayName ?: "User"
@@ -62,6 +66,10 @@ class AccountFragment : Fragment() {
             navigateToLogin()
         }
 
+        binding.clbahasa.setOnClickListener {
+            navigateToLanguages()
+        }
+
         binding.btnDaftarbisnis.setOnClickListener {
             if (currentUser == null) {
                 navigateToLogin()
@@ -88,6 +96,12 @@ class AccountFragment : Fragment() {
         }
     }
 
+    private fun
+            navigateToLanguages() {
+        val intent = Intent(requireContext(), LanguagesActivity::class.java)
+        startActivity(intent)
+    }
+
     private fun checkBusinessAccountStatus(email: String) {
         if (email.isBlank()) {
             binding.btnDaftarbisnis.visibility = View.GONE
@@ -99,7 +113,8 @@ class AccountFragment : Fragment() {
 
         db.collection("penjual").document(docId).get()
             .addOnSuccessListener { doc ->
-                val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
+                val isBusinessAccount =
+                    doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
 
                 if (isBusinessAccount) {
                     binding.btnDaftarProduct.visibility = View.VISIBLE
@@ -122,7 +137,11 @@ class AccountFragment : Fragment() {
 
     private fun checkBusinessAccountStatusForProduct(email: String) {
         if (email.isBlank()) {
-            Toast.makeText(requireContext(), "Email tidak valid. Silakan login ulang.", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                requireContext(),
+                "Email tidak valid. Silakan login ulang.",
+                Toast.LENGTH_SHORT
+            ).show()
             navigateToLogin()
             return
         }
@@ -130,11 +149,16 @@ class AccountFragment : Fragment() {
 
         db.collection("penjual").document(docId).get()
             .addOnSuccessListener { doc ->
-                val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
+                val isBusinessAccount =
+                    doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
                 val currentUser = auth.currentUser
 
                 if (currentUser == null) {
-                    Toast.makeText(requireContext(), "Silakan login terlebih dahulu.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Silakan login terlebih dahulu.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     navigateToLogin()
                     return@addOnSuccessListener
                 }
@@ -146,7 +170,11 @@ class AccountFragment : Fragment() {
                     }
                     startActivity(intent)
                 } else {
-                    Toast.makeText(requireContext(), "Anda belum terdaftar sebagai akun bisnis, silakan daftar terlebih dahulu.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        requireContext(),
+                        "Anda belum terdaftar sebagai akun bisnis, silakan daftar terlebih dahulu.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     val intent = Intent(requireContext(), DaftarPenjualActivity::class.java).apply {
                         putExtra("EMAIL", currentUser.email)
                         putExtra("USERNAME", currentUser.displayName)
@@ -163,7 +191,11 @@ class AccountFragment : Fragment() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             binding.btnDaftarProduct.setOnClickListener {
-                Toast.makeText(requireContext(), "Silakan login terlebih dahulu", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Silakan login terlebih dahulu",
+                    Toast.LENGTH_SHORT
+                ).show()
                 navigateToLogin()
             }
             return

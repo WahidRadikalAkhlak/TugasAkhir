@@ -23,7 +23,7 @@
             android:id="@+id/searchText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Anda Ingin Belanja Apa Hari Ini?"
+            android:text="@string/appkatalog"
             android:textSize="14sp"
             android:textStyle="bold"
             android:layout_marginTop="10dp"
@@ -43,11 +43,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_margin="8dp">
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:padding="8dp">
+
                 <androidx.appcompat.widget.AppCompatEditText
                     android:id="@+id/searchEditText"
                     android:layout_width="0dp"
@@ -55,8 +57,9 @@
                     android:layout_marginStart="8dp"
                     android:background="@drawable/edit_text_background"
                     android:layout_weight="1"
-                    android:hint="Search"
+                    android:hint="@string/search"
                     android:inputType="text" />
+
                 <ImageView
                     android:layout_width="20dp"
                     android:layout_height="20dp"
@@ -89,7 +92,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Semua"
+                    android:text="@string/allproduct"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -98,7 +101,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Padi"
+                    android:text="@string/padi"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -107,7 +110,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Jagung"
+                    android:text="@string/jagung"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -116,7 +119,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Kedelai"
+                    android:text="@string/kedelai"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -125,7 +128,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Umbi"
+                    android:text="@string/umbi"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -134,7 +137,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Sayur"
+                    android:text="@string/sayur"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -143,7 +146,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Buah"
+                    android:text="@string/buah"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -152,7 +155,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Tanaman Obat"
+                    android:text="@string/obat"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
@@ -162,7 +165,7 @@
             android:id="@+id/tv_produk_list"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Produk Yang Tersedia"
+            android:text="@string/produklist"
             android:textSize="16sp"
             android:fontFamily="@font/poppinssemibold"
             android:layout_marginTop="8dp"
@@ -188,7 +191,7 @@
             android:id="@+id/rekomendasiText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Rekomendasi Untuk Kamu"
+            android:text="@string/produkrekomendasi"
             android:textSize="16sp"
             android:fontFamily="@font/poppinssemibold"
             android:layout_marginTop="16dp"

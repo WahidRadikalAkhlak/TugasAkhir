@@ -1,10 +1,7 @@
 package com.project.tugasakhir.Adapter
 
-import android.graphics.Bitmap
-import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -32,7 +29,9 @@ class OrderAdapter(
     private fun getProductForOrder(order: Order): Product? {
         return products.find { it.productName == order.productName }
     }
-    inner class CartViewHolder(val binding: ItemKeranjangBinding) : RecyclerView.ViewHolder(binding.root) {
+
+    inner class CartViewHolder(val binding: ItemKeranjangBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
                 val position = adapterPosition
@@ -77,8 +76,8 @@ class OrderAdapter(
         }
     }
 
-    // OrderDetailViewHolder for displaying detailed order and product info
-    inner class OrderDetailViewHolder(val binding: ItemKeranjangProdukBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class OrderDetailViewHolder(val binding: ItemKeranjangProdukBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         init {
             binding.root.setOnClickListener {
                 val position = adapterPosition
@@ -145,15 +144,15 @@ class OrderAdapter(
     private fun deleteOrder(order: Order, position: Int) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
+            // Ensure that 'orderNumber' is used as the document ID
             val orderRef = FirebaseFirestore.getInstance()
-                .collection("carts")
-                .document(currentUser.uid)
-                .collection("items")
-                .document(order.docId)
+                .collection("carts")  // The parent collection
+                .document(order.orderNumber)  // Use 'orderNumber' as document ID
+
             orderRef.delete()
                 .addOnSuccessListener {
                     Log.d("OrderAdapter", "Order deleted successfully")
-                    orders.removeAt(position) // Remove from local list
+                    orders.removeAt(position) // Remove from the local list
                     notifyItemRemoved(position) // Notify adapter of item removal
                 }
                 .addOnFailureListener { e ->
@@ -165,11 +164,10 @@ class OrderAdapter(
     private fun updateOrderInFirestore(order: Order) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
+            // Ensure that 'orderNumber' is used as the document ID
             val orderRef = FirebaseFirestore.getInstance()
-                .collection("carts")
-                .document(currentUser.uid)
-                .collection("items")
-                .document(order.docId)
+                .collection("carts")  // The parent collection
+                .document(order.orderNumber)  // Use 'orderNumber' as document ID
 
             orderRef.update("quantity", order.quantity)
                 .addOnSuccessListener {
@@ -188,13 +186,20 @@ class OrderAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             ITEM_TYPE_CART -> {
-                val binding = ItemKeranjangBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                val binding =
+                    ItemKeranjangBinding.inflate(LayoutInflater.from(parent.context), parent, false)
                 CartViewHolder(binding)
             }
+
             ITEM_TYPE_ORDER_DETAIL -> {
-                val binding = ItemKeranjangProdukBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+                val binding = ItemKeranjangProdukBinding.inflate(
+                    LayoutInflater.from(parent.context),
+                    parent,
+                    false
+                )
                 OrderDetailViewHolder(binding)
             }
+
             else -> throw IllegalArgumentException("Invalid view type")
         }
     }

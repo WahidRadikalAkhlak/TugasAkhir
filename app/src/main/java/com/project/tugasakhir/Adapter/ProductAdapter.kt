@@ -14,7 +14,8 @@ class ProductAdapter(
     private val products: MutableList<Product>
 ) : RecyclerView.Adapter<ProductAdapter.ProductViewHolder>() {
 
-    inner class ProductViewHolder(private val binding: ItemProductBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ProductViewHolder(private val binding: ItemProductBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(product: Product) {
             binding.tvProductName.text = product.productName
             binding.tvProductType.text = product.productType

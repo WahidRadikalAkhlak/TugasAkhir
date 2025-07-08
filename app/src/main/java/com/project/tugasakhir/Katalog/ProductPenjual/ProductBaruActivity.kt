@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
+import android.util.Log
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -13,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.project.tugasakhir.Account.Penjual.DaftarProductActivity
 import com.project.tugasakhir.Adapter.ImageAdapter
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.databinding.ActivityProductBaruBinding
@@ -41,8 +44,10 @@ class ProductBaruActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         // AutoCompleteTextView for product type
-        val jenisProdukArray = arrayOf("Padi", "Jagung", "Kedelai", "Umbi", "Sayur", "Buah", "Tanaman Obat")
-        val adapter = ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
+        val jenisProdukArray =
+            arrayOf("Padi", "Jagung", "Kedelai", "Umbi-Umbian", "Sayur", "Buah", "Tanaman Obat")
+        val adapter =
+            ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
         binding.jenisProduk.setAdapter(adapter)
 
         userEmail = intent.getStringExtra("EMAIL") ?: ""
@@ -50,7 +55,8 @@ class ProductBaruActivity : AppCompatActivity() {
 
         // Initialize the image adapter for RecyclerView
         imageAdapter = ImageAdapter(selectedImages, this)
-        binding.RVImagenes.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.RVImagenes.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.RVImagenes.adapter = imageAdapter
 
         binding.addImgProduct.setOnClickListener { openGallery() }
@@ -61,8 +67,13 @@ class ProductBaruActivity : AppCompatActivity() {
 
         binding.BtnSimpanProduk.setOnClickListener {
             if (selectedImages.isEmpty() && editingProduct == null) {
-                Toast.makeText(this, "Silakan tambahkan minimal satu foto produk", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Silakan tambahkan minimal satu foto produk",
+                    Toast.LENGTH_SHORT
+                ).show()
             } else {
+                showProgressBar()
                 saveOrUpdateProduct()
             }
         }
@@ -88,25 +99,26 @@ class ProductBaruActivity : AppCompatActivity() {
         getImageResult.launch(intent)
     }
 
-    private val getImageResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        if (result.resultCode == RESULT_OK) {
-            val data = result.data
-            if (data != null) {
-                if (data.clipData != null) {
-                    val count = data.clipData!!.itemCount
-                    for (i in 0 until count) {
-                        val imageUri = data.clipData!!.getItemAt(i).uri
-                        selectedImages.add(imageUri)
+    private val getImageResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                val data = result.data
+                if (data != null) {
+                    if (data.clipData != null) {
+                        val count = data.clipData!!.itemCount
+                        for (i in 0 until count) {
+                            val imageUri = data.clipData!!.getItemAt(i).uri
+                            selectedImages.add(imageUri)
+                        }
+                    } else {
+                        data.data?.let { selectedImages.add(it) }
                     }
-                } else {
-                    data.data?.let { selectedImages.add(it) }
+                    imageAdapter.notifyDataSetChanged()
                 }
-                imageAdapter.notifyDataSetChanged()
+            } else {
+                Toast.makeText(this, "Gagal memilih gambar", Toast.LENGTH_SHORT).show()
             }
-        } else {
-            Toast.makeText(this, "Gagal memilih gambar", Toast.LENGTH_SHORT).show()
         }
-    }
 
     private fun saveOrUpdateProduct() {
         val namaProduct = binding.namaProduct.text.toString().trim()
@@ -117,8 +129,10 @@ class ProductBaruActivity : AppCompatActivity() {
         val tampilkanProduk = binding.switchTampilkanproduk.isChecked
 
         if (namaProduct.isEmpty() || jenisProduk.isEmpty() || deskripsi.isEmpty() ||
-            stokTersediaStr.isEmpty() || hargaPerUnitStr.isEmpty()) {
+            stokTersediaStr.isEmpty() || hargaPerUnitStr.isEmpty()
+        ) {
             Toast.makeText(this, "Harap isi semua kolom!", Toast.LENGTH_SHORT).show()
+            hideProgressBar()
             return
         }
 
@@ -126,7 +140,9 @@ class ProductBaruActivity : AppCompatActivity() {
         val hargaPerUnit = hargaPerUnitStr.toDoubleOrNull()
 
         if (stokTersedia == null || hargaPerUnit == null) {
-            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT)
+                .show()
+            hideProgressBar()
             return
         }
 
@@ -144,8 +160,10 @@ class ProductBaruActivity : AppCompatActivity() {
                     base64Images.addAll(editingProduct?.imageBase64List ?: emptyList())
                 }
 
-                val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
+                val sellerUID =
+                    FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
 
+                // Prepare product data without email and username if it's an update
                 val productData = hashMapOf(
                     "productName" to namaProduct,
                     "productType" to jenisProduk,
@@ -154,12 +172,9 @@ class ProductBaruActivity : AppCompatActivity() {
                     "pricePerUnit" to hargaPerUnit,
                     "isAvailable" to tampilkanProduk,
                     "imageBase64List" to base64Images,
-                    "email" to userEmail,
-                    "userName" to userName,
-                    "sellerUID" to sellerUID  // Add the seller's UID
+                    "sellerUID" to sellerUID
                 )
 
-                // Check if we're editing or saving a new product
                 if (editingProduct != null) {
                     // If editing an existing product, update the product document
                     val productId = editingProduct?.productId
@@ -167,33 +182,74 @@ class ProductBaruActivity : AppCompatActivity() {
                         productData["productId"] = productId // Add productId to update the document
                         db.collection("products").document(productId)
                             .update(productData)
-                            .await()
+                            .await() // Menunggu agar update selesai sebelum melanjutkan
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@ProductBaruActivity, "Produk berhasil diperbarui!", Toast.LENGTH_SHORT).show()
-                            finish() // Close the activity after updating
+                            hideProgressBar()
+                            Toast.makeText(
+                                this@ProductBaruActivity,
+                                "Produk berhasil diperbarui!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            // Optionally reload the updated product list in DaftarProductActivity
+                            startActivity(
+                                Intent(
+                                    this@ProductBaruActivity,
+                                    DaftarProductActivity::class.java
+                                )
+                            ) // Ensure this opens the updated list
+                            finish() // Close the current activity
                         }
                     } else {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(this@ProductBaruActivity, "ID produk tidak ditemukan", Toast.LENGTH_SHORT).show()
+                            hideProgressBar()
+                            Toast.makeText(
+                                this@ProductBaruActivity,
+                                "ID produk tidak ditemukan",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 } else {
                     // If it's a new product, create a new document in Firestore
-                    val newProductRef = db.collection("products").document()  // Firestore generates a unique ID automatically
+                    val newProductRef = db.collection("products")
+                        .document()  // Firestore generates a unique ID automatically
                     productData["productId"] = newProductRef.id  // Add unique product ID
+                    productData["email"] =
+                        userEmail  // Only add email and username for new products
+                    productData["userName"] =
+                        userName  // Only add email and username for new products
                     newProductRef.set(productData).await()  // Save the product data
 
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        hideProgressBar()
+                        Toast.makeText(
+                            this@ProductBaruActivity,
+                            "Produk berhasil disimpan!",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish() // Close the activity after saving
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@ProductBaruActivity, "Gagal menyimpan produk: ${e.message}", Toast.LENGTH_LONG).show()
+                    hideProgressBar()
+                    Toast.makeText(
+                        this@ProductBaruActivity,
+                        "Gagal menyimpan produk: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
+        Log.d("UpdateProduct", "Updating product with email: $userEmail and username: $userName")
+    }
+
+    private fun showProgressBar() {
+        binding.progressBar.visibility = View.VISIBLE
+    }
+
+    private fun hideProgressBar() {
+        binding.progressBar.visibility = View.GONE
     }
 
     private fun uriToBase64(uri: Uri): String? {

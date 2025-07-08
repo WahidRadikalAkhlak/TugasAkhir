@@ -43,7 +43,7 @@
                 android:layout_marginStart="7dp"
                 android:layout_marginTop="45dp"
                 android:fontFamily="@font/poppinsmedium"
-                android:text="My Account"
+                android:text="@string/myaccount"
                 android:textColor="@color/white"
                 android:textSize="23sp"
                 app:layout_constraintStart_toStartOf="@id/guideline1"
@@ -104,7 +104,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="15dp"
-                android:text="Daftar Akun Bisnis"
+                android:text="@string/daftarAkunbisnis"
                 android:background="@drawable/edit_text_background"
                 app:layout_constraintStart_toStartOf="@id/guideline1"
                 app:layout_constraintEnd_toEndOf="@id/guideline2"
@@ -131,7 +131,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:src="@drawable/settings"
                     android:layout_marginStart="12dp"
-                    android:padding="5dp"/>
+                    android:padding="5dp" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -152,7 +152,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"/>
+                    android:src="@drawable/ic_arrow" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -176,7 +176,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:src="@drawable/language"
                     android:layout_marginStart="12dp"
-                    android:padding="5dp"/>
+                    android:padding="5dp" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -197,60 +197,14 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"/>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/clTema"
-                app:layout_constraintTop_toBottomOf="@id/clbahasa"
-                app:layout_constraintStart_toStartOf="@id/guideline1"
-                app:layout_constraintEnd_toEndOf="@id/guideline2"
-                android:layout_width="0dp"
-                android:layout_marginTop="13dp"
-                android:layout_height="56dp"
-                android:background="@drawable/white_field_background"
-                android:elevation="1dp">
-
-                <ImageView
-                    android:id="@+id/img_tema"
-                    android:layout_width="35dp"
-                    android:layout_height="35dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:src="@drawable/brightness_medium"
-                    android:layout_marginStart="12dp"
-                    android:padding="4dp"/>
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/img_tema"
-                    style="@style/profileTitleText"
-                    android:textSize="17sp"
-                    android:fontFamily="@font/poppinsregular"
-                    android:layout_marginStart="12dp"
-                    android:text="@string/tema" />
-
-                <ImageView
-                    android:layout_width="25dp"
-                    android:layout_height="25dp"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    android:layout_marginEnd="12dp"
-                    android:src="@drawable/ic_arrow"/>
+                    android:src="@drawable/ic_arrow" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/clLogout"
-                app:layout_constraintTop_toBottomOf="@id/clTema"
+                app:layout_constraintTop_toBottomOf="@id/clbahasa"
                 app:layout_constraintStart_toStartOf="@id/guideline1"
                 app:layout_constraintEnd_toEndOf="@id/guideline2"
                 android:layout_width="0dp"
@@ -268,7 +222,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:src="@drawable/ic_logout"
                     android:layout_marginStart="14dp"
-                    android:padding="5dp"/>
+                    android:padding="5dp" />
 
                 <TextView
                     android:id="@+id/tvLogout"
@@ -314,7 +268,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:src="@drawable/add_business"
                     android:layout_marginStart="14dp"
-                    android:padding="5dp"/>
+                    android:padding="5dp" />
 
                 <TextView
                     android:layout_width="0dp"
@@ -326,7 +280,7 @@
                     android:textSize="17sp"
                     android:fontFamily="@font/poppinsregular"
                     android:layout_marginStart="10dp"
-                    android:text="Mulai Berbisnis" />
+                    android:text="@string/mulai_berbisnis" />
 
                 <ImageView
                     android:layout_width="25dp"
@@ -336,7 +290,6 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     android:layout_marginEnd="12dp"
                     android:src="@drawable/ic_arrow" />
-
 
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -358,7 +311,7 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="15dp"
-                app:layout_constraintTop_toBottomOf="@id/clLogout"/>
+                app:layout_constraintTop_toBottomOf="@id/clLogout" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

@@ -16,7 +16,8 @@ class KatalogAdapter(
     private val isRecommendation: Boolean = false // Display likes count in recommendations
 ) : RecyclerView.Adapter<KatalogAdapter.KatalogViewHolder>() {
 
-    inner class KatalogViewHolder(private val binding: ItemProductBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class KatalogViewHolder(private val binding: ItemProductBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(product: Product) {
             binding.tvProductName.text = product.productName ?: "Nama produk tidak tersedia"
             binding.tvProductType.text = product.productType ?: "Tipe produk tidak tersedia"
@@ -56,7 +57,8 @@ class KatalogAdapter(
 
         private fun base64ToBitmap(base64Str: String): Bitmap? {
             return try {
-                val decodedBytes = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
+                val decodedBytes =
+                    android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
                 android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
             } catch (e: Exception) {
                 android.util.Log.e("KatalogAdapter", "Failed to decode base64 image", e)

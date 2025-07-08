@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginTop="15dp"
@@ -78,8 +76,7 @@
                 app:layout_constraintStart_toEndOf="@id/nilai_pengguna"
                 app:layout_constraintTop_toTopOf="@id/txt_nilai"
                 android:layout_marginStart="30dp"
-                app:flow_verticalAlign="center"
-                />
+                app:flow_verticalAlign="center" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/pemesanan"
@@ -88,7 +85,7 @@
                 android:text="@string/pemesanan"
                 android:layout_marginStart="30dp"
                 app:layout_constraintStart_toEndOf="@id/divider_1"
-                app:layout_constraintTop_toTopOf="@id/txt_nilai"/>
+                app:layout_constraintTop_toTopOf="@id/txt_nilai" />
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/banyak_pemesanan"
@@ -96,7 +93,7 @@
                 android:layout_height="wrap_content"
                 android:text="@string/Banyak_pemesanan"
                 app:layout_constraintStart_toEndOf="@id/pemesanan"
-                app:layout_constraintTop_toTopOf="@id/txt_nilai"/>
+                app:layout_constraintTop_toTopOf="@id/txt_nilai" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -107,5 +104,5 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/deskripsi"
-        app:layout_constraintTop_toBottomOf="@+id/ll_item_image"/>
+        app:layout_constraintTop_toBottomOf="@+id/ll_item_image" />
 </androidx.constraintlayout.widget.ConstraintLayout>

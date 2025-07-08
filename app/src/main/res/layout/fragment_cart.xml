@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -6,16 +5,14 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Cart.CartFragment">
 
+    <!-- ProgressBar is placed in front of the entire layout -->
     <ProgressBar
         android:id="@+id/progressbarSettings"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:indeterminateTint="@color/white"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:layout_gravity="center" /> <!-- Center the progress bar -->
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintParent"
@@ -45,11 +42,12 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:orientation="horizontal"
-                app:checkedChip="@id/chip1"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:singleLine="true"
+                app:checkedChip="@id/chip1"
                 app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
@@ -57,7 +55,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Semua"
+                    android:text="@string/allproduct"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -66,7 +64,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Memesan"
+                    android:text="@string/memesan"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -75,7 +73,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Konfirmasi"
+                    android:text="@string/konfirmasi"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -84,13 +82,13 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Selesai"
+                    android:text="@string/selesai"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 
-    <!-- RecyclerView -->
+        <!-- RecyclerView -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_pesan"
             android:layout_width="match_parent"
@@ -100,7 +98,5 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView2"
             tools:listitem="@layout/item_keranjang" />
 
-
     </androidx.constraintlayout.widget.ConstraintLayout>
-
-    </FrameLayout>
+</FrameLayout>

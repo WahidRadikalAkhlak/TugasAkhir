@@ -10,14 +10,13 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
-import com.project.tugasakhir.Data.Product
-import com.project.tugasakhir.databinding.FragmentKatalogBinding
 import com.project.tugasakhir.Adapter.KatalogAdapter
 import com.project.tugasakhir.Adapter.ProductImageAdapter
+import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.R
+import com.project.tugasakhir.databinding.FragmentKatalogBinding
 
 class KatalogFragment : Fragment() {
     private var _binding: FragmentKatalogBinding? = null
@@ -32,7 +31,11 @@ class KatalogFragment : Fragment() {
 
     private val db = FirebaseFirestore.getInstance()
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentKatalogBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -48,9 +51,11 @@ class KatalogFragment : Fragment() {
             }
             context?.startActivity(intent)
         }
+
         // Set the GridLayoutManager for horizontal scrolling with 2 items per row
         binding.rvProdukList.adapter = produkAdapter
-        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
+        binding.rvProdukList.layoutManager =
+            GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
 
         // Adapter for recommendations (with likes count)
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
@@ -61,8 +66,14 @@ class KatalogFragment : Fragment() {
             context?.startActivity(intent)
         }, true) // Display likes count in recommendations
 
-        binding.rvRekomendasi.adapter = rekomendasiAdapter // Set rekomendasiAdapter to rvRekomendasi
-        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 1, GridLayoutManager.HORIZONTAL, false) // Horizontal Layout
+        binding.rvRekomendasi.adapter =
+            rekomendasiAdapter // Set rekomendasiAdapter to rvRekomendasi
+        binding.rvRekomendasi.layoutManager = GridLayoutManager(
+            requireContext(),
+            1,
+            GridLayoutManager.HORIZONTAL,
+            false
+        ) // Horizontal Layout
 
         setupSearch()
         setupChipFilter()
@@ -95,15 +106,46 @@ class KatalogFragment : Fragment() {
                         if (likesCountFetched.size == produkList.size) {
                             // All likes have been fetched, now refresh the RecyclerView
                             produkAdapter.notifyDataSetChanged()
-                            applyCollaborativeFiltering()  // Apply the collaborative filtering after likes are fetched
+                            applyCollaborativeFiltering()
+                            updateRecommendations()
                         }
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Gagal mengambil data produk: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
+
+    private fun updateRecommendations() {
+        // Group products by product type
+        val groupedProducts = allProducts.groupBy { it.productType }
+
+        val recommendedProducts = mutableListOf<Product>()
+
+        // Iterate through each product type
+        for ((type, productsInCategory) in groupedProducts) {
+            val productWithLikes = productsInCategory.filter { it.likesCount >= 3 }
+
+            if (productWithLikes.isNotEmpty()) {
+                // Add products with at least 3 likes to recommendations
+                recommendedProducts.addAll(productWithLikes)
+            } else {
+                // If no product has likes >= 3, show the cheapest product
+                val cheapestProduct = productsInCategory.minByOrNull { it.pricePerUnit }
+                if (cheapestProduct != null) {
+                    recommendedProducts.add(cheapestProduct)
+                }
+            }
+        }
+
+        rekomendasiAdapter.updateData(recommendedProducts)
+    }
+
     private fun applyCollaborativeFiltering() {
         if (allProducts.isEmpty()) {
             Log.e("KatalogFragment", "No products available for collaborative filtering")
@@ -137,7 +179,8 @@ class KatalogFragment : Fragment() {
         }
 
         // Increase the number of recommended products from 3 to a larger number (e.g., 10)
-        val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
+        val recommendedProducts =
+            recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
@@ -204,7 +247,11 @@ class KatalogFragment : Fragment() {
         return commonUsers
     }
 
-    private fun recommendProductsBasedOnSimilarity(matrix: List<List<Double>>, filteredProducts: List<Product>, topN: Int): List<Product> {
+    private fun recommendProductsBasedOnSimilarity(
+        matrix: List<List<Double>>,
+        filteredProducts: List<Product>,
+        topN: Int
+    ): List<Product> {
         val recommendedProducts = mutableListOf<Product>()
 
         for (i in matrix.indices) {
@@ -219,13 +266,19 @@ class KatalogFragment : Fragment() {
                 for (similarity in sortedSimilarities) {
                     if (similarity.value > 0) {
                         val recommendedProduct = filteredProducts.getOrNull(similarity.index)
-                        if (recommendedProduct != null && !recommendedProducts.contains(recommendedProduct)) {
+                        if (recommendedProduct != null && !recommendedProducts.contains(
+                                recommendedProduct
+                            )
+                        ) {
                             recommendedProducts.add(recommendedProduct)
                         }
                     }
                 }
             } else {
-                Log.e("KatalogFragment", "Mismatch in size between similarity matrix and filtered products list.")
+                Log.e(
+                    "KatalogFragment",
+                    "Mismatch in size between similarity matrix and filtered products list."
+                )
             }
         }
         return recommendedProducts
@@ -265,8 +318,14 @@ class KatalogFragment : Fragment() {
 
     private fun applyCombinedFilters(searchQuery: String = "") {
         val filtered = allProducts.filter {
-            (selectedChipType.isEmpty() || it.productType.equals(selectedChipType, ignoreCase = true)) &&
-                    (searchQuery.isEmpty() || it.productName.contains(searchQuery, ignoreCase = true))
+            (selectedChipType.isEmpty() || it.productType.equals(
+                selectedChipType,
+                ignoreCase = true
+            )) &&
+                    (searchQuery.isEmpty() || it.productName.contains(
+                        searchQuery,
+                        ignoreCase = true
+                    ))
         }
 
         // Update produk list
@@ -275,7 +334,7 @@ class KatalogFragment : Fragment() {
         produkAdapter.notifyDataSetChanged()
 
         // Update rekomendasi
-        val recommended = filtered.filter { it.likesCount > 3 }
+        val recommended = filtered.filter { it.likesCount >= 3 }
 
         if (recommended.isNotEmpty()) {
             rekomendasiAdapter.updateData(recommended)
@@ -283,6 +342,7 @@ class KatalogFragment : Fragment() {
             applyFallbackRecommendations(filtered)
         }
     }
+
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

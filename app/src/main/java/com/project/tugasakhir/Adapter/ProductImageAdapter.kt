@@ -53,6 +53,7 @@ class ProductImageAdapter(
             // Handle click event for the product
             binding.root.setOnClickListener { onItemClick(product) }
         }
+
         // Pemisahan fungsi untuk memuat gambar dengan lebih jelas
         private fun loadProductImage(product: Product) {
             // Pastikan imageUrls bukan null dan tidak kosong
@@ -82,6 +83,7 @@ class ProductImageAdapter(
             }
         }
     }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProductViewHolder(binding)
@@ -99,6 +101,7 @@ class ProductImageAdapter(
         products.addAll(newList)
         notifyDataSetChanged()
     }
+
     private fun setPriceText(pricePerUnit: Double?): String {
         return if (pricePerUnit != null && pricePerUnit > 0) {
             "Rp ${String.format("%,.0f", pricePerUnit)}"

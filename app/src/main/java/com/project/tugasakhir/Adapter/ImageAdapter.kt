@@ -13,7 +13,8 @@ class ImageAdapter(
     private val context: Context
 ) : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
 
-    inner class ImageViewHolder(private val binding: ItemGambarProdukBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class ImageViewHolder(private val binding: ItemGambarProdukBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(uri: Uri) {
             Glide.with(binding.root.context)  // bisa juga pake context jika ingin
                 .load(uri)  // pakai uri yang benar

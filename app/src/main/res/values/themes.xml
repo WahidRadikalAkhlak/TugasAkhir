@@ -1,13 +1,15 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme -->
     <style name="Base.Theme.TugasAkhir" parent="Theme.Material3.Light.NoActionBar">
         <!-- Set colorPrimary to change ActionBar color -->
         <item name="colorPrimary">@color/chip_bg_states</item>  <!-- Menggunakan warna hijau -->
-        <item name="colorPrimaryVariant">@color/chip_bg</item> <!-- Variasi warna untuk ActionBar -->
+        <item name="colorPrimaryVariant">@color/chip_bg
+        </item> <!-- Variasi warna untuk ActionBar -->
         <item name="colorOnPrimary">@color/white</item> <!-- Teks putih pada ActionBar -->
 
         <!-- Secondary Color -->
-        <item name="colorSecondary">@color/fontColor</item> <!-- Warna sekunder untuk elemen lainnya -->
+        <item name="colorSecondary">@color/fontColor
+        </item> <!-- Warna sekunder untuk elemen lainnya -->
         <item name="colorSecondaryVariant">@color/chip_bg</item>
         <item name="colorOnSecondary">@color/white</item> <!-- Teks putih pada elemen sekunder -->
 
@@ -16,11 +18,13 @@
         <item name="windowNoTitle">true</item> <!-- Menyembunyikan judul window -->
 
         <!-- Mengatur warna status bar -->
-        <item name="android:statusBarColor">@color/chip_bg_states</item> <!-- Status Bar berwarna hijau -->
-        <item name="android:navigationBarColor">@color/chip_bg_states</item> <!-- Navigation Bar dengan warna hijau -->
+        <item name="android:statusBarColor">@color/chip_bg_states
+        </item> <!-- Status Bar berwarna hijau -->
+        <item name="android:navigationBarColor">@color/chip_bg_states
+        </item> <!-- Navigation Bar dengan warna hijau -->
     </style>
 
     <!-- Custom theme for your application -->
-    <style name="Theme.TugasAkhir" parent="Base.Theme.TugasAkhir"/>
+    <style name="Theme.TugasAkhir" parent="Base.Theme.TugasAkhir" />
 
 </resources>

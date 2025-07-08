@@ -30,5 +30,6 @@ data class Order(
     var orderTime: String = "",
     @get:Exclude var docId: String = "",
     var pricePerKg: Double = 0.0,
-    var productId: String = ""
+    var productId: String = "",
+    var tawarHarga: Double? = 0.0
 ) : Parcelable

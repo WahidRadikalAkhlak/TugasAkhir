@@ -2,7 +2,6 @@ package com.project.tugasakhir.Chat
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,14 +18,19 @@ import com.project.tugasakhir.databinding.FragmentChatBinding
 class ChatFragment : Fragment() {
 
     private var _binding: FragmentChatBinding? = null
-    private val binding get() = _binding ?: throw IllegalStateException("Binding must be initialized before use!")
+    private val binding
+        get() = _binding ?: throw IllegalStateException("Binding must be initialized before use!")
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private lateinit var chatHistoryAdapter: ChatHistoryAdapter  // Adapter untuk chat history
     private val chatList = mutableListOf<Message>()  // Daftar chat yang akan ditampilkan
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
         _binding = FragmentChatBinding.inflate(inflater, container, false)
         return binding.root
     }

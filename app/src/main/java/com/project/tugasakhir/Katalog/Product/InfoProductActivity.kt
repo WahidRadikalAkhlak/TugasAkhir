@@ -1,5 +1,6 @@
 package com.project.tugasakhir.Katalog.Product
 
+import BottomSheetBuyActivity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -87,7 +88,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to check like: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to check like: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -115,7 +117,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                         chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // Menambahkan chatId
                     )
 
-                    val chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
+                    val chatId =
+                        "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
 
                     firestore.collection("chats").document(chatId).get()
                         .addOnSuccessListener { document ->
@@ -169,37 +172,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
             .addOnFailureListener { e ->
                 Log.e("PesanActivity", "Error fetching seller UID: $e")
-                Toast.makeText(this, "Error fetching seller UID: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-    }
-
-    private fun createChat(buyerId: String, sellerId: String, message: Message) {
-        val chatData = hashMapOf(
-            "participants" to listOf(buyerId, sellerId),  // Add buyer and seller as participants
-            "timestamp" to System.currentTimeMillis()    // Timestamp for when the chat was created
-        )
-
-        firestore.collection("chats")
-            .add(chatData)
-            .addOnSuccessListener { documentReference ->
-                // Add the first message to the newly created chat
-                firestore.collection("chats")
-                    .document(documentReference.id)
-                    .collection("messages")
-                    .add(message)
-                    .addOnSuccessListener {
-                        Toast.makeText(this, "Chat and first message created successfully", Toast.LENGTH_SHORT).show()
-                        val chatId = documentReference.id
-                        val intent = Intent(this, PesanActivity::class.java)
-                        intent.putExtra("chat_id", chatId)
-                        startActivity(intent)
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(this, "Failed to add first message: ${e.message}", Toast.LENGTH_SHORT).show()
-                    }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Error creating chat: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Error fetching seller UID: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -286,15 +260,24 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                     .document(p.productId)
                     .delete()
                     .addOnSuccessListener {
-                        Toast.makeText(this, "Produk berhasil dihapus beserta likes", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Produk berhasil dihapus beserta likes",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         finish()
                     }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, "Gagal menghapus likes: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Gagal menghapus likes: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal menghapus produk: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -315,7 +298,11 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                             updateLikesCount(product, false)
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(this, "Failed to remove like: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Failed to remove like: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 } else {
                     productLikesRef.set(mapOf("likedAt" to FieldValue.serverTimestamp()))
@@ -324,12 +311,20 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                             updateLikesCount(product, true)
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(this, "Failed to add like: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Failed to add like: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to check like status: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Failed to check like status: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -340,19 +335,25 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
                     val currentLikesCount = doc.getLong("likesCount")?.toInt() ?: 0
-                    val newLikesCount = if (isLikeAdded) currentLikesCount + 1 else currentLikesCount - 1
+                    val newLikesCount =
+                        if (isLikeAdded) currentLikesCount + 1 else currentLikesCount - 1
 
                     productRef.update("likesCount", newLikesCount)
                         .addOnSuccessListener {
                             binding.likesCount.text = "$newLikesCount Likes"
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(this, "Failed to update like count: ${e.message}", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                this,
+                                "Failed to update like count: ${e.message}",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to get likes count: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to get likes count: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -366,7 +367,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 updateLikesCountInProduct(product, likesCount)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to get like count: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Failed to get like count: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -378,7 +380,11 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 binding.likesCount.text = "$likesCount Likes"
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to update like count: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Failed to update like count: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -399,6 +405,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             null
         }
     }
+
     override fun onAddToCart(quantity: Int) {
         val p = product ?: return
         val userId = auth.currentUser?.uid ?: run {
@@ -420,18 +427,29 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                             .document(doc.id)
 
                         val newQuantity = doc.getLong("quantity")?.toInt() ?: 0 + quantity
-                        docRef.update("quantity", newQuantity, "totalPrice", p.pricePerUnit * newQuantity)
+                        docRef.update(
+                            "quantity",
+                            newQuantity,
+                            "totalPrice",
+                            p.pricePerUnit * newQuantity
+                        )
                             .addOnSuccessListener {
-                                Toast.makeText(this, "Jumlah produk diperbarui", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(this, "Jumlah produk diperbarui", Toast.LENGTH_SHORT)
+                                    .show()
                             }
                             .addOnFailureListener { e ->
-                                Toast.makeText(this, "Gagal memperbarui keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this,
+                                    "Gagal memperbarui keranjang: ${e.message}",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memeriksa keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memeriksa keranjang: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -449,10 +467,15 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
         firestore.collection("carts").document(userId).collection("items")
             .add(cartItem)
             .addOnSuccessListener {
-                Toast.makeText(this, "Produk berhasil ditambahkan ke keranjang", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Produk berhasil ditambahkan ke keranjang", Toast.LENGTH_SHORT)
+                    .show()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menambahkan ke keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Gagal menambahkan ke keranjang: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 }

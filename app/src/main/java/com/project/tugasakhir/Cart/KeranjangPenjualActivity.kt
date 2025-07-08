@@ -2,11 +2,9 @@ package com.project.tugasakhir.Cart
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -57,25 +55,30 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         }
 
         db.collection("carts")
-            .whereEqualTo("sellerUID", currentUser.uid) // Mengambil data berdasarkan pembeli
-            .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
-                } else {
-                    orders.clear() // Clear previous orders
+            .whereEqualTo("sellerUID", currentUser.uid)
+            .addSnapshotListener { documents, error ->
+                if (error != null) {
+                    Toast.makeText(
+                        this,
+                        "Error loading orders: ${error.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@addSnapshotListener
+                }
+
+                if (documents != null && !documents.isEmpty) {
+                    orders.clear()  // Clear previous orders
                     for (doc in documents) {
                         val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id // Set docId from Firestore document
+                            docId = doc.id
                         }
-                        orders.add(order) // Add the order to the list
+                        orders.add(order)
                     }
-                    adapter.notifyDataSetChanged() // Refresh the UI
+                    adapter.notifyDataSetChanged()  // Refresh the UI
+                } else {
+                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT)
+                        .show()
                 }
-            }
-            .addOnFailureListener { e ->
-                binding.progressbarSettings.visibility = View.GONE
-                Toast.makeText(this, "Gagal memuat pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -92,7 +95,8 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -117,19 +121,17 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        val sellerUID = currentUser.uid  // Use the seller's UID
         val orderRef = db.collection("carts")
-            .document(sellerUID) // Reference to seller's cart
-            .collection("items")
-            .document(order.docId)  // Document ID for the specific order
+            .document(order.orderNumber)  // Directly reference the order document by orderNumber
 
         orderRef.delete()
             .addOnSuccessListener {
                 Toast.makeText(this, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-                loadSellerOrders()  // Refresh orders list after deletion
+                loadSellerOrders()  // Reload the seller's orders
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 

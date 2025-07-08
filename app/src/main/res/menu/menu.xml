@@ -3,17 +3,17 @@
     <item
         android:id="@+id/katalog"
         android:icon="@drawable/article"
-        android:title="Katalog"/>
+        android:title="Katalog" />
     <item
         android:id="@+id/chat"
         android:icon="@drawable/forum"
-        android:title="Chat"/>
+        android:title="Chat" />
     <item
         android:id="@+id/cart"
         android:icon="@drawable/shopping_cart"
-        android:title="Shopping Cart"/>
+        android:title="Shopping Cart" />
     <item
         android:id="@+id/account"
         android:icon="@drawable/account_circle"
-        android:title="Account"/>
+        android:title="Account" />
 </menu>

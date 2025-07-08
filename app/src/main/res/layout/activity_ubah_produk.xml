@@ -12,8 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="200dp"
         android:src="@color/black"
-        android:contentDescription="@string/gambar_produk">
-    </ImageView>
+        android:contentDescription="@string/gambar_produk"></ImageView>
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/nama_product"
@@ -24,22 +23,20 @@
         android:layout_marginTop="10dp"
         android:layout_marginStart="10dp"
         android:textSize="20sp"
-        style="@style/TextAppearance.Material3.BodyMedium"
-        />
+        style="@style/TextAppearance.Material3.BodyMedium" />
 
     <RelativeLayout
         android:id="@+id/layout_jenis_tipe"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/nama_product"
-        android:layout_alignStart="@id/nama_product"
-        >
+        android:layout_alignStart="@id/nama_product">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/jenis_produk"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/jenis_produk"/>
+            android:text="@string/jenis_produk" />
 
         <com.google.android.material.divider.MaterialDivider
             android:id="@+id/divider_1"
@@ -47,8 +44,7 @@
             android:layout_height="5dp"
             android:layout_toEndOf="@+id/jenis_produk"
             android:layout_marginStart="20dp"
-            android:layout_centerVertical="true"
-            />
+            android:layout_centerVertical="true" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tipe_produk"
@@ -56,7 +52,7 @@
             android:layout_height="wrap_content"
             android:text="@string/tipe_produk"
             android:layout_alignStart="@id/divider_1"
-            android:layout_marginStart="20dp"/>
+            android:layout_marginStart="20dp" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -65,21 +61,21 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/layout_jenis_tipe"
         android:layout_alignStart="@id/nama_product"
-        android:layout_marginTop="10dp"
-        >
+        android:layout_marginTop="10dp">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/Harga"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/harga"/>
+            android:text="@string/harga" />
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/HargaBarang"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/Harga"
             android:text="@string/harga_barang"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/stock"
@@ -87,7 +83,8 @@
             android:layout_height="wrap_content"
             android:text="@string/tersedia"
             android:layout_marginRight="15dp"
-            android:layout_alignParentEnd="true"/>
+            android:layout_alignParentEnd="true" />
+
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/berat"
             android:layout_width="wrap_content"
@@ -96,16 +93,17 @@
             android:layout_marginRight="15dp"
             android:layout_below="@+id/stock"
             android:textStyle="bold"
-            android:layout_alignParentEnd="true"/>
+            android:layout_alignParentEnd="true" />
     </RelativeLayout>
+
     <com.google.android.material.divider.MaterialDivider
         android:layout_width="350dp"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layout_harga_tersedia"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
-        android:id="@+id/divider_2"
-        />
+        android:id="@+id/divider_2" />
+
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/deskripsi"
         android:layout_width="wrap_content"
@@ -115,7 +113,7 @@
         android:textSize="15sp"
         android:textStyle="bold"
         android:layout_marginTop="15dp"
-        android:text="@string/deskripsi"/>
+        android:text="@string/deskripsi" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/deskripsi1"
@@ -123,7 +121,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/deskripsi"
         android:layout_alignStart="@id/nama_product"
-        android:text="@string/deskripsi"/>
+        android:text="@string/deskripsi" />
 
     <com.google.android.material.button.MaterialButton
         android:layout_width="300dp"

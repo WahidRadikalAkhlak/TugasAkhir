@@ -7,8 +7,8 @@ import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.ItemChatBinding
 import java.text.SimpleDateFormat
-import java.util.Locale
 import java.util.Date
+import java.util.Locale
 
 class ChatHistoryAdapter(
     private val chats: List<Message>,  // List of chats to display
@@ -16,7 +16,8 @@ class ChatHistoryAdapter(
     private val onItemClickListener: (Message) -> Unit  // Listener for chat click
 ) : RecyclerView.Adapter<ChatHistoryAdapter.MessageViewHolder>() {
 
-    inner class MessageViewHolder(private val binding: ItemChatBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class MessageViewHolder(private val binding: ItemChatBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(chat: Message) {
             // Set the receiver's name for the chat listing
             binding.pengguna.text = chat.receiverName  // Display receiverName in the view
@@ -28,7 +29,8 @@ class ChatHistoryAdapter(
             binding.iconProfil.setImageResource(R.drawable.account_circle)
 
             // Format the timestamp
-            val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(chat.timestamp))
+            val formattedTime =
+                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(chat.timestamp))
             binding.timestamp.text = formattedTime
 
             // Handle item click to open chat detail

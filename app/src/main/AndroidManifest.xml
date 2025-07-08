@@ -19,6 +19,9 @@
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
         <activity
+            android:name=".Account.Profile.LanguagesActivity"
+            android:exported="false" />
+        <activity
             android:name=".Account.Penjual.TerimaPesananActivity"
             android:exported="false" />
         <activity

@@ -24,7 +24,8 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         auth = FirebaseAuth.getInstance()
-        binding.btnRegister.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
+        binding.btnRegister.backgroundTintList =
+            ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
         binding.btnRegister.setTextColor(resources.getColor(R.color.black, null))
         binding.btnRegister.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
@@ -45,7 +46,13 @@ class RegisterActivity : AppCompatActivity() {
         }
     }
 
-    private fun registerUser(email: String, password: String, name: String, phone: String, userAddress: String) {
+    private fun registerUser(
+        email: String,
+        password: String,
+        name: String,
+        phone: String,
+        userAddress: String
+    ) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
                 if (task.isSuccessful) {
@@ -70,21 +77,41 @@ class RegisterActivity : AppCompatActivity() {
                                     db.collection("users").document(uid) // UID dari Firebase Auth
                                         .set(userData)
                                         .addOnSuccessListener {
-                                            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                this,
+                                                "Registration successful",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                             navigateToLogin()
                                         }
                                         .addOnFailureListener { e ->
-                                            Toast.makeText(this, "Failed to save user data: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                this,
+                                                "Failed to save user data: ${e.message}",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
                                 } else {
-                                    Toast.makeText(this, "Failed to update profile: ${profileUpdateTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        this,
+                                        "Failed to update profile: ${profileUpdateTask.exception?.message}",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                             }
                     } else {
-                        Toast.makeText(this, "User registration failed: User is null", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "User registration failed: User is null",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 } else {
-                    Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        "Registration failed: ${task.exception?.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
     }

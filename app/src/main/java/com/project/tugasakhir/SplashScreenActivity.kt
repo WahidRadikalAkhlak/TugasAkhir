@@ -5,10 +5,9 @@ import android.os.Bundle
 import android.os.Handler
 import androidx.activity.ComponentActivity
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.project.tugasakhir.databinding.ActivitySplashScreenBinding // Import binding
+import com.project.tugasakhir.databinding.ActivitySplashScreenBinding
 
 class SplashActivity : ComponentActivity() {
 

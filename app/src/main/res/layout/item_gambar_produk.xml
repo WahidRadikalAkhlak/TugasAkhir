@@ -16,10 +16,10 @@
             android:id="@+id/item_image"
             android:layout_width="match_parent"
             android:layout_height="150dp"
-        android:scaleType="centerCrop"
-        android:adjustViewBounds="false"
+            android:scaleType="centerCrop"
+            android:adjustViewBounds="false"
             android:src="@drawable/image_icon"
-        android:contentDescription="@string/product_image" />
+            android:contentDescription="@string/product_image" />
 
         <ImageView
             android:id="@+id/dellete_item"

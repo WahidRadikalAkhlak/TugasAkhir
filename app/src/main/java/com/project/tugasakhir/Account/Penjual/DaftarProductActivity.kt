@@ -11,8 +11,8 @@ import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Cart.KeranjangPenjualActivity
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
-import com.project.tugasakhir.databinding.ActivityDaftarProductBinding
 import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity
+import com.project.tugasakhir.databinding.ActivityDaftarProductBinding
 
 class DaftarProductActivity : AppCompatActivity() {
 
@@ -41,7 +41,8 @@ class DaftarProductActivity : AppCompatActivity() {
         userName = intent.getStringExtra(EXTRA_USERNAME)
 
         if (userEmail.isNullOrEmpty()) {
-            Toast.makeText(this, "Email user tidak tersedia. Harap login ulang.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Email user tidak tersedia. Harap login ulang.", Toast.LENGTH_LONG)
+                .show()
             finish()
             return
         }
@@ -57,7 +58,7 @@ class DaftarProductActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        fetchProductData()
+        fetchProductData() // This will ensure the list is always fresh
     }
 
     private fun setupRecyclerView() {
@@ -65,13 +66,17 @@ class DaftarProductActivity : AppCompatActivity() {
         adapter = ProductImageAdapter(productList) { product ->
             val intent = Intent(this, InfoProductActivity::class.java).apply {
                 putExtra("product", product)      // Kirim objek produk
-                putExtra("source", "seller")      // Tandai asalnya dari daftar produk penjual (edit/hapus)
+                putExtra(
+                    "source",
+                    "seller"
+                )      // Tandai asalnya dari daftar produk penjual (edit/hapus)
             }
             startActivity(intent)
         }
 
         // Ubah GridLayoutManager menjadi LinearLayoutManager dengan orientasi horizontal
-        binding.rvProductList.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.rvProductList.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProductList.adapter = adapter
     }
 
@@ -96,7 +101,8 @@ class DaftarProductActivity : AppCompatActivity() {
     }
 
     private fun setupSearchView() {
-        binding.searchView.setOnQueryTextListener(object : androidx.appcompat.widget.SearchView.OnQueryTextListener {
+        binding.searchView.setOnQueryTextListener(object :
+            androidx.appcompat.widget.SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean = false
 
             override fun onQueryTextChange(newText: String?): Boolean {
@@ -112,15 +118,15 @@ class DaftarProductActivity : AppCompatActivity() {
             return
         }
         db.collection("products")
-            .whereEqualTo("email", email)  // Ganti userId dengan email
+            .whereEqualTo("email", email)
             .get()
             .addOnSuccessListener { documents ->
                 val productsFromFirestore = documents.mapNotNull { doc ->
                     doc.toObject(Product::class.java)
                 }
-                productList.clear()
-                productList.addAll(productsFromFirestore)
-                adapter.notifyDataSetChanged()
+                productList.clear() // Clear existing list
+                productList.addAll(productsFromFirestore) // Add new data
+                adapter.notifyDataSetChanged() // Notify adapter to refresh the list
 
                 if (productList.isEmpty()) {
                     Toast.makeText(this, "Belum ada produk tersedia.", Toast.LENGTH_SHORT).show()
@@ -128,8 +134,13 @@ class DaftarProductActivity : AppCompatActivity() {
             }
             .addOnFailureListener { e ->
                 Log.e("DaftarProductActivity", "Gagal mengambil data produk", e)
-                Toast.makeText(this, "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Gagal mengambil data produk: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+
     }
 
     private fun filterProductList(query: String?) {
@@ -138,7 +149,10 @@ class DaftarProductActivity : AppCompatActivity() {
         } else {
             val filteredList = productList.filter { product ->
                 product.productName.contains(query, ignoreCase = true) ||  // Filter by product name
-                        product.productType.contains(query, ignoreCase = true)    // Filter by product type
+                        product.productType.contains(
+                            query,
+                            ignoreCase = true
+                        )    // Filter by product type
             }
             adapter.updateData(filteredList)  // Update the adapter with the filtered list
         }

@@ -13,7 +13,6 @@ import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
-import com.project.tugasakhir.databinding.ActivityKeranjangPesananBinding
 import com.project.tugasakhir.databinding.ActivityTerimaPesananBinding
 
 class TerimaPesananActivity : AppCompatActivity() {
@@ -28,15 +27,16 @@ class TerimaPesananActivity : AppCompatActivity() {
 
     private var itemCount = 0
     private var totalPrice = 0.0
+    private var tawarHarga = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityTerimaPesananBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         // Initialize RecyclerView and Adapter
         adapter = OrderAdapter(orders, products, { selectedOrder ->
-            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT)
+                .show()
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = true)
@@ -52,7 +52,7 @@ class TerimaPesananActivity : AppCompatActivity() {
         // Buttons configuration
         binding.confirmButton.backgroundTintList =
             ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
-        binding.cancelButton.backgroundTintList =
+        binding.tolakTawaran.backgroundTintList =
             ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
 
         binding.confirmButton.setOnClickListener {
@@ -64,7 +64,7 @@ class TerimaPesananActivity : AppCompatActivity() {
             }
         }
 
-        binding.cancelButton.setOnClickListener {
+        binding.tolakTawaran.setOnClickListener {
             Toast.makeText(this, "Cancelling order", Toast.LENGTH_SHORT).show()
             onCancelOrder()
         }
@@ -84,17 +84,19 @@ class TerimaPesananActivity : AppCompatActivity() {
 
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .whereEqualTo("sellerUID", currentUser.uid) // Mengambil data berdasarkan pembeli
+            .whereEqualTo("sellerUID", currentUser.uid) // Mengambil data berdasarkan sellerUID
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
-                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT)
+                        .show()
                     adapter.notifyDataSetChanged()
                     return@addOnSuccessListener
                 }
 
                 itemCount = 0
                 totalPrice = 0.0
+                tawarHarga = 0.0  // Initialize tawarHarga
 
                 // Membuat map untuk menyaring pesanan berdasarkan orderNumber
                 val orderMap = mutableMapOf<String, Order>()
@@ -116,9 +118,17 @@ class TerimaPesananActivity : AppCompatActivity() {
                         totalPrice = doc.getDouble("totalPrice") ?: 0.0
                         timestamp = doc.getTimestamp("timestamp")
 
-                        imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                        imageBase64List = (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                        pesanKepadaPenjual = doc.getString("pesanKepadaPenjual") ?: "Tidak ada pesan"
+                        // Getting tawarHarga, safely checking for null
+                        tawarHarga = doc.getDouble("tawarHarga")
+                            ?: 0.0  // If tawarHarga is not available, default to 0.0
+
+                        imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>()
+                            ?: emptyList()
+                        imageBase64List =
+                            (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>()
+                                ?: emptyList()
+                        pesanKepadaPenjual =
+                            doc.getString("pesanKepadaPenjual") ?: "Tidak ada pesan"
                     }
 
                     // Menambahkan pesanan ke dalam map jika orderNumber unik dan statusnya masih "Memesan"
@@ -136,10 +146,14 @@ class TerimaPesananActivity : AppCompatActivity() {
 
                 // Update UI dengan pesanan pertama jika tersedia
                 binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
-                binding.orderNumber.text = orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
-                binding.statusOrder.text = orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
-                binding.tanggalOrder.text = orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
-                binding.orderTime.text = orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
+                binding.orderNumber.text =
+                    orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
+                binding.statusOrder.text =
+                    orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
+                binding.tanggalOrder.text =
+                    orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
+                binding.orderTime.text =
+                    orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
 
                 // Display the message from Firestore in the TextView
                 binding.edittextPesanDariPenjual.text = orders.firstOrNull()?.pesanKepadaPenjual
@@ -149,7 +163,11 @@ class TerimaPesananActivity : AppCompatActivity() {
                 updateButtonVisibility()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Gagal memuat data keranjang: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -165,7 +183,8 @@ class TerimaPesananActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -178,14 +197,19 @@ class TerimaPesananActivity : AppCompatActivity() {
             return
         }
 
-        // Update the status of each order to "Menunggu Konfirmasi Pembelian Anda" and save to Firestore
+        // Update the status of each order to "Pesanan Anda Sedang Di Proses"
         orders.forEach { order ->
-            // Update order status to "Menunggu Konfirmasi Pembelian Anda" in Firestore
-            order.statusOrder = "Menunggu Konfirmasi Pembelian Anda"
+            // Update order status to "Pesanan Anda Sedang Di Proses" in Firestore
+            order.statusOrder = "Pesanan Anda Sedang Di Proses"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
-            updateOrderStatus(order, "Menunggu Konfirmasi Pembelian Anda", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(
+                order,
+                "Pesanan Anda Sedang Di Proses",
+                metodePembayaran,
+                pesanKepadaPenjual
+            )
 
             // Remove the confirmed order from the local list
             orders.remove(order)
@@ -195,11 +219,10 @@ class TerimaPesananActivity : AppCompatActivity() {
         loadCartItems()
 
         binding.confirmButton.visibility = View.GONE
-        binding.cancelButton.visibility = View.VISIBLE
+        binding.tolakTawaran.visibility = View.VISIBLE
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
-
 
     private fun onCancelOrder() {
         val metodePembayaran = "Bayar Ditempat"
@@ -211,17 +234,17 @@ class TerimaPesananActivity : AppCompatActivity() {
         }
 
         orders.forEach { order ->
-            // Update the status to "Pesanan Anda Dibatalkan"
-            order.statusOrder = "Pesanan Anda Dibatalkan"
+            // Update the status to "Pesanan Anda Ditolak"
+            order.statusOrder = "Pesanan Anda Ditolak"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             // Update the order in Firestore
-            updateOrderStatus(order, "Pesanan Anda Dibatalkan", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(order, "Pesanan Anda Ditolak", metodePembayaran, pesanKepadaPenjual)
         }
 
         binding.confirmButton.visibility = View.GONE
-        binding.cancelButton.visibility = View.GONE
+        binding.tolakTawaran.visibility = View.GONE
         loadCartItems() // Reload the cart items after the cancellation
 
         // Update UI after the status change
@@ -231,37 +254,17 @@ class TerimaPesananActivity : AppCompatActivity() {
     }
 
     private fun updateButtonVisibility() {
-        // Check if all orders are confirmed or canceled
-        val allConfirmedOrCancelled = orders.all {
-            it.statusOrder == "Menunggu Konfirmasi Pembelian Anda" || it.statusOrder == "Pesanan Dibatalkan"
-        }
+        // Check if there are orders with status "Menunggu Konfirmasi Pembelian Anda"
+        val hasPendingOrders = orders.any { it.statusOrder == "Menunggu Konfirmasi Pembelian Anda" }
 
-        // If all orders are confirmed or canceled, hide the confirm button
-        if (allConfirmedOrCancelled) {
-            binding.confirmButton.visibility = View.GONE // Hanya sembunyikan konfirmasi pesanan
-        } else {
-            // Otherwise, show the confirm and cancel buttons
+        if (hasPendingOrders) {
+            // Show buttons if there are pending orders
             binding.confirmButton.visibility = View.VISIBLE
-            binding.cancelButton.visibility = View.VISIBLE
-        }
-    }
-
-    private fun updateUIWithOrderData() {
-        // Pastikan UI menampilkan data yang benar setelah pembatalan
-        val firstOrder = orders.firstOrNull()
-        if (firstOrder != null) {
-            binding.email.text = firstOrder.email ?: "Email tidak tersedia"
-            binding.orderNumber.text = firstOrder.orderNumber ?: "Order Number tidak tersedia"
-            binding.statusOrder.text = firstOrder.statusOrder ?: "Status Order tidak tersedia"
-            binding.tanggalOrder.text = firstOrder.orderDate ?: "Order Date tidak tersedia"
-            binding.orderTime.text = firstOrder.orderTime ?: "Order Time tidak tersedia"
+            binding.tolakTawaran.visibility = View.VISIBLE
         } else {
-            // Jika data order tidak ditemukan atau tidak ada yang sesuai, setel nilai default
-            binding.email.text = "Email tidak tersedia"
-            binding.orderNumber.text = "Order Number tidak tersedia"
-            binding.statusOrder.text = "Status Order tidak tersedia"
-            binding.tanggalOrder.text = "Order Date tidak tersedia"
-            binding.orderTime.text = "Order Time tidak tersedia"
+            // Hide buttons if there are no pending orders
+            binding.confirmButton.visibility = View.GONE
+            binding.tolakTawaran.visibility = View.GONE
         }
     }
 
@@ -335,7 +338,8 @@ class TerimaPesananActivity : AppCompatActivity() {
                 loadCartItems()  // Make sure to reload after deletion
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 

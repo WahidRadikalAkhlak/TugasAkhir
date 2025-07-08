@@ -19,11 +19,14 @@ import com.project.tugasakhir.databinding.FragmentCartBinding
 class CartFragment : Fragment() {
 
     private var _binding: FragmentCartBinding? = null
-    private val binding get() = _binding ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
+    private val binding
+        get() = _binding
+            ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
 
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
-    private val products = mutableListOf<Product>()  // Declare the products list to hold product data
+    private val products =
+        mutableListOf<Product>()  // Declare the products list to hold product data
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
@@ -53,31 +56,46 @@ class CartFragment : Fragment() {
     private fun loadUserOrders() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            binding.progressbarSettings.visibility = View.GONE
-            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
+            if (isAdded) { // Check if fragment is attached to an activity
+                binding.progressbarSettings.visibility = View.GONE
+                Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
+            }
             return
         }
 
         db.collection("carts")
-            .whereEqualTo("userId", currentUser.uid) // Mengambil data berdasarkan pembeli
-            .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    Toast.makeText(requireContext(), "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
-                } else {
-                    orders.clear() // Clear previous orders
+            .whereEqualTo("userId", currentUser.uid)
+            .addSnapshotListener { documents, error ->
+                if (error != null) {
+                    if (isAdded) { // Check if fragment is attached to an activity
+                        Toast.makeText(
+                            requireContext(),
+                            "Error loading orders: ${error.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    return@addSnapshotListener
+                }
+
+                // Check if the documents are not empty
+                if (documents != null && documents.size() > 0) {
+                    orders.clear()  // Clear previous orders
                     for (doc in documents) {
                         val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id // Set docId from Firestore document
+                            docId = doc.id
                         }
-                        orders.add(order) // Add the order to the list
+                        orders.add(order)
                     }
-                    adapter.notifyDataSetChanged() // Refresh the UI
+                    adapter.notifyDataSetChanged()  // Refresh the UI
+                } else {
+                    if (isAdded) { // Check if fragment is attached to an activity
+                        Toast.makeText(
+                            requireContext(),
+                            "Tidak ada item dalam keranjang",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
-            }
-            .addOnFailureListener { e ->
-                binding.progressbarSettings.visibility = View.GONE
-                Toast.makeText(requireContext(), "Gagal memuat pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -93,7 +111,11 @@ class CartFragment : Fragment() {
                 adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Gagal memuat data produk: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -103,25 +125,38 @@ class CartFragment : Fragment() {
             return
         }
 
-        if (order.docId.isEmpty()) { // Periksa docId, bukan orderNumber
+        if (order.orderNumber.isEmpty()) { // Periksa orderNumber, bukan docId
             Toast.makeText(requireContext(), "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val docRef = db.collection("carts").document(currentUser.uid).collection("items").document(order.docId)
+        // Correct document reference for deleting the order from Firestore
+        val docRef = db.collection("carts").document(order.orderNumber)
 
         docRef.delete()
             .addOnSuccessListener {
-                Toast.makeText(requireContext(), "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
+                // Display success message
+                Toast.makeText(
+                    requireContext(),
+                    "Pesanan Anda Berhasil Dihapus",
+                    Toast.LENGTH_SHORT
+                ).show()
                 loadUserOrders()  // Reload the orders after deletion
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Gagal menghapus pesanan: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
         // Menghapus produk terkait jika diperlukan
         val productRef = db.collection("products")
-            .whereEqualTo("orderNumber", order.docId) // Ganti orderNumber dengan docId
+            .whereEqualTo(
+                "orderNumber",
+                order.orderNumber
+            ) // Ganti docId dengan orderNumber jika produk terkait dengan orderNumber
         productRef.get()
             .addOnSuccessListener { documents ->
                 for (doc in documents) {
@@ -130,7 +165,10 @@ class CartFragment : Fragment() {
                             Log.d("KeranjangPesanan", "Produk berhasil dihapus dari produk")
                         }
                         .addOnFailureListener { e ->
-                            Log.e("KeranjangPesanan", "Gagal menghapus produk dari produk: ${e.message}")
+                            Log.e(
+                                "KeranjangPesanan",
+                                "Gagal menghapus produk dari produk: ${e.message}"
+                            )
                         }
                 }
             }

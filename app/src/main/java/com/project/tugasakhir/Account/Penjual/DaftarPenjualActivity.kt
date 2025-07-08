@@ -1,6 +1,5 @@
 package com.project.tugasakhir.Account.Penjual
 
-import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.text.TextUtils
@@ -9,9 +8,8 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.project.tugasakhir.Account.AccountFragment
-import com.project.tugasakhir.databinding.ActivityDaftarPenjualBinding  // Import View Binding
 import com.project.tugasakhir.R
+import com.project.tugasakhir.databinding.ActivityDaftarPenjualBinding
 
 class DaftarPenjualActivity : AppCompatActivity() {
 
@@ -25,7 +23,8 @@ class DaftarPenjualActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDaftarPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        binding.btnDaftar.backgroundTintList = ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
+        binding.btnDaftar.backgroundTintList =
+            ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
         binding.btnDaftar.setOnClickListener {
             if (!isRegistering) {
                 registerSeller()
@@ -56,7 +55,11 @@ class DaftarPenjualActivity : AppCompatActivity() {
 
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            Toast.makeText(this, "User belum login, silakan login terlebih dahulu", Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                "User belum login, silakan login terlebih dahulu",
+                Toast.LENGTH_SHORT
+            ).show()
             showLoadingState(false)
             return
         }
@@ -95,7 +98,8 @@ class DaftarPenjualActivity : AppCompatActivity() {
                 finish()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal membuat akun bisnis: ${e.message}", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "Gagal membuat akun bisnis: ${e.message}", Toast.LENGTH_LONG)
+                    .show()
                 e.printStackTrace()
                 showLoadingState(false)
             }
@@ -115,7 +119,11 @@ class DaftarPenjualActivity : AppCompatActivity() {
                 userRef.document(docId).set(mapOf("email" to email, "isBusinessAccount" to true))
                     .addOnSuccessListener { /* sukses buat baru */ }
                     .addOnFailureListener { e ->
-                        Toast.makeText(this, "Gagal update data user: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this,
+                            "Gagal update data user: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
                         showLoadingState(false)
                     }
             }

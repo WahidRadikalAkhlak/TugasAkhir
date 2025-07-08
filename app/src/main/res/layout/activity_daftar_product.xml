@@ -16,13 +16,13 @@
         android:id="@+id/tv_produk_saya"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Produk Saya"
+        android:text="@string/tvproduksaya"
         android:textSize="20sp"
         android:fontFamily="@font/poppinssemibold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:layout_marginTop="30dp"/>
+        android:layout_marginTop="30dp" />
     <!-- SearchView for product search -->
     <androidx.appcompat.widget.SearchView
         android:id="@+id/searchView"
@@ -33,18 +33,18 @@
         app:layout_constraintTop_toBottomOf="@id/icon_group"
         app:layout_constraintStart_toStartOf="parent"
         android:background="@drawable/edit_text_background"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- RecyclerView for displaying product list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_product_list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-    android:layout_marginTop="20dp"
-    app:layout_constraintTop_toBottomOf="@id/searchView"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
-    tools:listitem="@layout/item_product" />
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/searchView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_product" />
 
     <!-- LinearLayout container for 'Accept Order' and 'Add Product' Buttons -->
     <LinearLayout
@@ -58,7 +58,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="16dp">
 
-    <!-- Accept Order Button -->
+        <!-- Accept Order Button -->
 
         <!-- Add Product Button -->
         <LinearLayout
@@ -80,32 +80,32 @@
                 android:id="@+id/accept_order_text"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Terima Pesanan"
+                android:text="@string/terimapesanan"
                 android:textColor="@android:color/black"
                 android:textSize="14sp" />
         </LinearLayout>
 
         <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <androidx.appcompat.widget.AppCompatImageButton
-            android:id="@+id/btn_add_product"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="@drawable/addproduct"
-            android:contentDescription="Tambah Produk"
-            android:layout_marginBottom="4dp" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/add_product_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Tambah Produk"
-            android:textSize="14sp"
-            android:textColor="@android:color/black" />
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <androidx.appcompat.widget.AppCompatImageButton
+                android:id="@+id/btn_add_product"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:background="@drawable/addproduct"
+                android:contentDescription="Tambah Produk"
+                android:layout_marginBottom="4dp" />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/add_product_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/tambah_produk_baru"
+                android:textSize="14sp"
+                android:textColor="@android:color/black" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -36,7 +35,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
         // Initialize RecyclerView and Adapter
         adapter = OrderAdapter(orders, products, { selectedOrder ->
-            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT)
+                .show()
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = true)
@@ -76,27 +76,25 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun loadCartItems() {
-        val currentUser = auth.currentUser ?: run {
-            Toast.makeText(this, "User belum login", Toast.LENGTH_SHORT).show()
+        val currentUser  = auth.currentUser  ?: run {
+            Toast.makeText(this, "User  belum login", Toast.LENGTH_SHORT).show()
             return
         }
 
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .whereEqualTo("userId", currentUser.uid) // Mengambil data berdasarkan pembeli
+            .whereEqualTo("userId", currentUser .uid) // Mengambil data berdasarkan pembeli
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
-                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT)
+                        .show()
                     adapter.notifyDataSetChanged()
                     return@addOnSuccessListener
                 }
 
                 itemCount = 0
                 totalPrice = 0.0
-
-                // Membuat map untuk menyaring pesanan berdasarkan orderNumber
-                val orderMap = mutableMapOf<String, Order>()
 
                 // Loop through all documents to retrieve order details
                 for (doc in documents) {
@@ -115,36 +113,44 @@ class KeranjangPesananActivity : AppCompatActivity() {
                         totalPrice = doc.getDouble("totalPrice") ?: 0.0
                         timestamp = doc.getTimestamp("timestamp")
 
-                        imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-                        imageBase64List = (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                        imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>()
+                            ?: emptyList()
+                        imageBase64List =
+                            (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>()
+                                ?: emptyList()
                     }
 
-                    // Menambahkan pesanan ke dalam map jika orderNumber unik dan statusnya masih "Memesan"
-                    if (order.productName.isNotEmpty() && order.productType.isNotEmpty()) {
-                        if (!orderMap.containsKey(order.orderNumber)) {
-                            orderMap[order.orderNumber] = order
-                            itemCount += order.quantity
-                            totalPrice += order.totalPrice
-                        }
+                    // Add the order to the list if it has a valid order number
+                    if (order.orderNumber.isNotEmpty()) {
+                        orders.add(order)
+                        itemCount += order.quantity
+                        totalPrice += order.totalPrice
                     }
                 }
 
-                // Menambahkan pesanan yang sudah dipisahkan berdasarkan orderNumber ke dalam list orders
-                orders.addAll(orderMap.values)
-
-                // Update UI dengan pesanan pertama jika tersedia
-                binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
-                binding.orderNumber.text = orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
-                binding.statusOrder.text = orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
-                binding.tanggalOrder.text = orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
-                binding.orderTime.text = orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
+                // Update UI with the first order if available
+                if (orders.isNotEmpty()) {
+                    binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
+                    binding.orderNumber.text =
+                        orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
+                    binding.statusOrder.text =
+                        orders.firstOrNull()?.statusOrder ?: "Status Order tidak tersedia"
+                    binding.tanggalOrder.text =
+                        orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
+                    binding.orderTime.text =
+                        orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
+                }
 
                 adapter.notifyDataSetChanged()
                 updateBottomLayout(itemCount, totalPrice)
                 updateButtonVisibility()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    this,
+                    "Gagal memuat data keranjang: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
     }
 
@@ -160,7 +166,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -180,7 +187,12 @@ class KeranjangPesananActivity : AppCompatActivity() {
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
-            updateOrderStatus(order, "Menunggu Konfirmasi Pembelian Anda", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(
+                order,
+                "Menunggu Konfirmasi Pembelian Anda",
+                metodePembayaran,
+                pesanKepadaPenjual
+            )
 
             // Remove the confirmed order from the local list
             orders.remove(order)
@@ -212,7 +224,12 @@ class KeranjangPesananActivity : AppCompatActivity() {
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             // Update the order in Firestore
-            updateOrderStatus(order, "Pesanan Anda Dibatalkan", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(
+                order,
+                "Pesanan Anda Dibatalkan",
+                metodePembayaran,
+                pesanKepadaPenjual
+            )
         }
 
         binding.confirmButton.visibility = View.GONE
@@ -284,35 +301,23 @@ class KeranjangPesananActivity : AppCompatActivity() {
             return
         }
 
-        if (order.docId.isEmpty()) {
-            Toast.makeText(this, "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
+        if (order.orderNumber.isEmpty()) {  // Ensure orderNumber exists
+            Toast.makeText(this, "Order Number tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val docRef = db.collection("carts")
-            .document(currentUser.uid)
-            .collection("items")
-            .document(order.docId)
-
-        docRef.delete()
+        // Delete the order from Firestore using orderNumber as the document ID
+        val cartRef =
+            db.collection("carts").document(order.orderNumber) // Use orderNumber as document ID
+        cartRef.delete()
             .addOnSuccessListener {
-                Toast.makeText(this, "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-
-                // Remove the order from the local list
-                orders.remove(order)
-                itemCount -= order.quantity
-                totalPrice -= order.totalPrice
-                adapter.notifyDataSetChanged()
-
-                // Update bottom layout
-                updateBottomLayout(itemCount, totalPrice)
-
-                // Reload cart items after deletion
-                loadCartItems()  // Make sure to reload after deletion
+                Toast.makeText(this, "Pesanan telah dihapus dari Keranjang", Toast.LENGTH_SHORT)
+                    .show()
+                loadCartItems()  // Reload orders after deletion
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
-
 }

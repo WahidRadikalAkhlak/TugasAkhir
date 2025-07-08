@@ -16,7 +16,8 @@ class ChatSendAdapter(
     private val currentUserId: String
 ) : RecyclerView.Adapter<ChatSendAdapter.MessageViewHolder>() {
 
-    inner class MessageViewHolder(private val binding: ItemTextMessageBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class MessageViewHolder(private val binding: ItemTextMessageBinding) :
+        RecyclerView.ViewHolder(binding.root) {
         fun bind(message: Message) {
             // Menyesuaikan apakah pesan dikirim oleh pengguna saat ini
             if (message.senderId == currentUserId) {
@@ -25,7 +26,8 @@ class ChatSendAdapter(
                 binding.receiverMessageRoot.visibility = View.GONE
                 binding.messageroot.setBackgroundResource(R.drawable.gradient_profile)  // Set specific background for sender's message
                 binding.tvMessageText.text = message.message
-                val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
+                val formattedTime =
+                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
                 binding.tvMessageTime.text = formattedTime
             } else {
                 // Set the receiver's message layout to the left
@@ -33,14 +35,16 @@ class ChatSendAdapter(
                 binding.messageroot.visibility = View.GONE
                 binding.receiverMessageRoot.setBackgroundResource(R.drawable.white_field_background)  // Set specific background for receiver's message
                 binding.tvReceiverMessageText.text = message.message
-                val formattedTime = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
+                val formattedTime =
+                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(message.timestamp))
                 binding.tvReceiverMessageTime.text = formattedTime
             }
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageViewHolder {
-        val binding = ItemTextMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val binding =
+            ItemTextMessageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return MessageViewHolder(binding)
     }
 

@@ -6,11 +6,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Chat.ChatFragment">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_pesan"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            tools:listitem="@layout/item_chat"
-            app:layout_constraintStart_toStartOf="parent" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_pesan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:listitem="@layout/item_chat"
+        app:layout_constraintStart_toStartOf="parent" />
 
 </FrameLayout>
