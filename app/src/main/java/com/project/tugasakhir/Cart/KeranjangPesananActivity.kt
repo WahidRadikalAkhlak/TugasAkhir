@@ -24,6 +24,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
+    private lateinit var selectedOrderNumber: String
 
     private var itemCount = 0
     private var totalPrice = 0.0
@@ -32,6 +33,15 @@ class KeranjangPesananActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityKeranjangPesananBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        selectedOrderNumber = intent.getStringExtra("ORDER_NUMBER") ?: ""
+
+        // Pastikan orderNumber tidak kosong
+        if (selectedOrderNumber.isEmpty()) {
+            Toast.makeText(this, "Order Number tidak valid", Toast.LENGTH_SHORT).show()
+            finish() // Tutup activity jika orderNumber tidak valid
+            return
+        }
 
         // Initialize RecyclerView and Adapter
         adapter = OrderAdapter(orders, products, { selectedOrder ->
@@ -45,7 +55,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
         binding.rvProdukKeranjang.adapter = adapter
 
         loadUserName()
-        loadCartItems()
+        loadCartItems() // Load cart items based on the selected order number
         loadProducts() // Load products as well
 
         // Buttons configuration
@@ -83,7 +93,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .whereEqualTo("userId", currentUser .uid) // Mengambil data berdasarkan pembeli
+            .whereEqualTo("userId", currentUser .uid)  // Mengambil data berdasarkan pembeli
+            .whereEqualTo("orderNumber", selectedOrderNumber) // Tambahkan pemfilteran berdasarkan orderNumber
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {

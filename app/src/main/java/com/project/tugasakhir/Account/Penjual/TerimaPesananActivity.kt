@@ -24,7 +24,7 @@ class TerimaPesananActivity : AppCompatActivity() {
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
     private val products = mutableListOf<Product>()
-
+    private lateinit var selectedOrderNumber: String
     private var itemCount = 0
     private var totalPrice = 0.0
     private var tawarHarga = 0.0
@@ -33,6 +33,13 @@ class TerimaPesananActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityTerimaPesananBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        selectedOrderNumber = intent.getStringExtra("ORDER_NUMBER") ?: ""
+        if (selectedOrderNumber.isEmpty()) {
+            Toast.makeText(this, "Order Number tidak valid", Toast.LENGTH_SHORT).show()
+            finish() // Tutup activity jika orderNumber tidak valid
+            return
+        }
         // Initialize RecyclerView and Adapter
         adapter = OrderAdapter(orders, products, { selectedOrder ->
             Toast.makeText(this, "Order dipilih: ${selectedOrder.productName}", Toast.LENGTH_SHORT)
@@ -85,6 +92,7 @@ class TerimaPesananActivity : AppCompatActivity() {
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
             .whereEqualTo("sellerUID", currentUser.uid) // Mengambil data berdasarkan sellerUID
+            .whereEqualTo("orderNumber", selectedOrderNumber)
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
@@ -197,6 +205,9 @@ class TerimaPesananActivity : AppCompatActivity() {
             return
         }
 
+        // Create a list to hold orders to be removed
+        val ordersToRemove = mutableListOf<Order>()
+
         // Update the status of each order to "Pesanan Anda Sedang Di Proses"
         orders.forEach { order ->
             // Update order status to "Pesanan Anda Sedang Di Proses" in Firestore
@@ -211,9 +222,12 @@ class TerimaPesananActivity : AppCompatActivity() {
                 pesanKepadaPenjual
             )
 
-            // Remove the confirmed order from the local list
-            orders.remove(order)
+            // Add the confirmed order to the removal list
+            ordersToRemove.add(order)
         }
+
+        // Remove the confirmed orders from the local list after iteration
+        orders.removeAll(ordersToRemove)
 
         // Refresh the cart after confirmation
         loadCartItems()

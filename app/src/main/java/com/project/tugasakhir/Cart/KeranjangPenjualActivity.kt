@@ -137,7 +137,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
 
     private fun openOrderDetail(order: Order) {
         val intent = Intent(this, TerimaPesananActivity::class.java)
-        intent.putExtra("order_data", order)  // Pass selected order to the next activity
+        intent.putExtra("ORDER_NUMBER", order.orderNumber) // Mengirim orderNumber yang dipilih
         startActivity(intent)
     }
 }
