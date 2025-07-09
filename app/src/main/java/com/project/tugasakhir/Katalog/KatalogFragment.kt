@@ -81,6 +81,7 @@ class KatalogFragment : Fragment() {
     }
 
     private fun loadProductsFromFirestore() {
+        // Ambil data produk dari Firestore
         db.collection("products")
             .get()
             .addOnSuccessListener { snapshots ->
@@ -88,6 +89,7 @@ class KatalogFragment : Fragment() {
                     doc.toObject(Product::class.java)
                 }.filter { product -> product.isAvailable }
 
+                // Menambahkan produk ke dalam list
                 allProducts.clear()
                 allProducts.addAll(productsFromFirestore)
 
@@ -97,14 +99,14 @@ class KatalogFragment : Fragment() {
                 produkList.clear()
                 produkList.addAll(productsFromFirestore)
 
-                // Fetch likes count for each product and update UI
+                // Ambil jumlah likes untuk setiap produk dan perbarui UI
                 val likesCountFetched = mutableListOf<Int>()
                 for (product in produkList) {
                     getLikesCountForProduct(product) { likesCount ->
                         product.likesCount = likesCount
                         likesCountFetched.add(likesCount)
                         if (likesCountFetched.size == produkList.size) {
-                            // All likes have been fetched, now refresh the RecyclerView
+                            // Semua jumlah likes telah diambil, sekarang refresh RecyclerView
                             produkAdapter.notifyDataSetChanged()
                             applyCollaborativeFiltering()
                             updateRecommendations()
@@ -201,7 +203,7 @@ class KatalogFragment : Fragment() {
                 R.id.chip2 -> "Padi"
                 R.id.chip3 -> "Jagung"
                 R.id.chip4 -> "Kedelai"
-                R.id.chip5 -> "Umbi"
+                R.id.chip5 -> "Umbi-Umbian"
                 R.id.chip6 -> "Sayur"
                 R.id.chip7 -> "Buah"
                 R.id.chip8 -> "Tanaman Obat"

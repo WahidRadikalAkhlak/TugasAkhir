@@ -229,7 +229,16 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 // Regular buy product functionality for non-seller users
                 binding.btnBuy.text = "Beli Produk"
                 binding.btnKirimPesan.text = "Kirim Pesan"
-                btnBuy.setOnClickListener {
+                binding.btnBuy.setOnClickListener {
+                    val userId = auth.currentUser?.uid // Cek apakah pengguna sudah login
+
+                    if (userId == null) {
+                        // Jika user belum login, tampilkan pesan dan hentikan aksi
+                        Toast.makeText(this@InfoProductActivity, "Harap login terlebih dahulu", Toast.LENGTH_SHORT)
+                            .show()
+                        return@setOnClickListener
+                    }
+
                     val bottomSheet = BottomSheetBuyActivity.newInstance(p)  // Pass entire product to BottomSheet
                     bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
                     bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
@@ -410,7 +419,10 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
     override fun onAddToCart(quantity: Int) {
         val p = product ?: return
-        val userId = auth.currentUser?.uid ?: run {
+        val userId = auth.currentUser?.uid // Cek apakah pengguna sudah login
+
+        if (userId == null) {
+            // Jika user belum login, tampilkan pesan dan hentikan proses
             Toast.makeText(this, "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
             return
         }

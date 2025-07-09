@@ -82,7 +82,8 @@ dependencies {
 
     // Google Identity (GoogleID)
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-
+    implementation("com.facebook.android:facebook-login:12.0.0")
+    implementation("com.facebook.android:facebook-login:[5,6)")
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

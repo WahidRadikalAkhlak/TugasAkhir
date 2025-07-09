@@ -82,6 +82,10 @@ class AccountFragment : Fragment() {
             }
         }
 
+        binding.clsettings.setOnClickListener{
+            navigateToSettings()
+        }
+
         // Tombol ini cukup arahkan langsung ke pengecekan status bisnis
         binding.btnDaftarProduct.setOnClickListener {
             if (currentUser == null) {
@@ -96,8 +100,7 @@ class AccountFragment : Fragment() {
         }
     }
 
-    private fun
-            navigateToLanguages() {
+    private fun navigateToLanguages() {
         val intent = Intent(requireContext(), LanguagesActivity::class.java)
         startActivity(intent)
     }
