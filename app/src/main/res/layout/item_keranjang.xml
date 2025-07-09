@@ -36,13 +36,13 @@
             android:gravity="start"
             android:paddingBottom="8dp">
 
-            <!-- Profile Image -->
             <ImageView
                 android:id="@+id/imageView"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_marginEnd="12dp"
-                android:contentDescription="Profile Image" />
+                android:contentDescription="Product Image"
+                android:src="@drawable/avatar" />
 
             <!-- User Information -->
             <LinearLayout

@@ -72,6 +72,8 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                         val order = doc.toObject(Order::class.java).apply {
                             docId = doc.id
                         }
+                        val product = products.find { it.productId == order.productId }
+                        order.imageUrls = product?.imageUrls ?: emptyList()
                         orders.add(order)
                     }
                     adapter.notifyDataSetChanged()  // Refresh the UI

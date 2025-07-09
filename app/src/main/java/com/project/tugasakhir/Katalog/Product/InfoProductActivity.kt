@@ -106,6 +106,9 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                     val sellerDoc = result.documents.first()
                     val sellerUid = sellerDoc.id  // UID penjual ada di ID dokumen Firestore
 
+                    // Membuat chatId yang konsisten
+                    val chatId = createChatId(auth.currentUser?.uid ?: "", sellerUid)
+
                     // Membuat objek pesan
                     val message = Message(
                         senderId = auth.currentUser?.uid ?: "",  // UID pengguna yang sedang login
@@ -114,15 +117,28 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                         timestamp = System.currentTimeMillis(),
                         receiverId = sellerUid,  // Menggunakan UID penjual yang diambil dari Firestore
                         receiverName = product.userName,  // Nama penjual diambil dari Product
-                        chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // Menambahkan chatId
+                        chatId = chatId
                     )
 
-                    val chatId =
-                        "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
-
+                    // Memeriksa apakah chat sudah ada di Firestore
                     firestore.collection("chats").document(chatId).get()
                         .addOnSuccessListener { document ->
-                            if (!document.exists()) {
+                            if (document.exists()) {
+                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
+                                firestore.collection("chats")
+                                    .document(chatId)
+                                    .collection("messages")
+                                    .add(message)
+                                    .addOnSuccessListener {
+                                        Log.d("PesanActivity", "Message sent successfully")
+                                        val intent = Intent(this, PesanActivity::class.java)
+                                        intent.putExtra("chat_id", chatId)
+                                        startActivity(intent)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("PesanActivity", "Failed to send message: $e")
+                                    }
+                            } else {
                                 // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
                                 firestore.collection("chats").document(chatId).set(
                                     hashMapOf(
@@ -135,7 +151,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                                     firestore.collection("chats")
                                         .document(chatId)
                                         .collection("messages")
-                                        .add(message)  // Menambahkan chatId ke pesan
+                                        .add(message)
                                         .addOnSuccessListener {
                                             Log.d("PesanActivity", "Message sent successfully")
                                             val intent = Intent(this, PesanActivity::class.java)
@@ -146,21 +162,6 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                                             Log.e("PesanActivity", "Failed to send message: $e")
                                         }
                                 }
-                            } else {
-                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
-                                firestore.collection("chats")
-                                    .document(chatId)
-                                    .collection("messages")
-                                    .add(message)  // Menambahkan chatId ke pesan
-                                    .addOnSuccessListener {
-                                        Log.d("PesanActivity", "Message sent successfully")
-                                        val intent = Intent(this, PesanActivity::class.java)
-                                        intent.putExtra("chat_id", chatId)
-                                        startActivity(intent)
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("PesanActivity", "Failed to send message: $e")
-                                    }
                             }
                         }
                         .addOnFailureListener { e ->
@@ -177,17 +178,19 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
     }
 
+    // Fungsi untuk membuat chatId berdasarkan userId dan sellerId
+    private fun createChatId(sellerId: String, userId: String): String {
+        // Membuat chatId dengan mengurutkan userId dan sellerId, sehingga urutannya konsisten
+        val ids = listOf(sellerId, userId).sorted()
+        return "chat_${ids[0]}_${ids[1]}"  // Urutan yang konsisten memastikan chatId yang sama untuk kedua pengguna
+    }
+
     private fun displayProductData(p: Product) {
         with(binding) {
             // Display product details
             namaProduct.text = p.productName
             jenisProduk.text = p.productType
-            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${
-                String.format(
-                    "%,.0f",
-                    p.pricePerUnit
-                )
-            }" else "Harga belum tersedia"
+            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f", p.pricePerUnit)}" else "Harga belum tersedia"
             stock.text = "Stok: ${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
             userName.text = "Added by: ${p.userName}"
@@ -226,9 +229,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 // Regular buy product functionality for non-seller users
                 binding.btnBuy.text = "Beli Produk"
                 binding.btnKirimPesan.text = "Kirim Pesan"
-                binding.btnBuy.setOnClickListener {
-                    val bottomSheet =
-                        BottomSheetBuyActivity.newInstance(product!!) // Send the whole product object
+                btnBuy.setOnClickListener {
+                    val bottomSheet = BottomSheetBuyActivity.newInstance(p)  // Pass entire product to BottomSheet
                     bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
                     bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
                 }

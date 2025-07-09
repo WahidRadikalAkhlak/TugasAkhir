@@ -86,20 +86,19 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun loadCartItems() {
-        val currentUser  = auth.currentUser  ?: run {
-            Toast.makeText(this, "User  belum login", Toast.LENGTH_SHORT).show()
+        val currentUser = auth.currentUser ?: run {
+            Toast.makeText(this, "User belum login", Toast.LENGTH_SHORT).show()
             return
         }
 
         orders.clear()  // Clear old orders before fetching new ones
         db.collection("carts")
-            .whereEqualTo("userId", currentUser .uid)  // Mengambil data berdasarkan pembeli
-            .whereEqualTo("orderNumber", selectedOrderNumber) // Tambahkan pemfilteran berdasarkan orderNumber
+            .whereEqualTo("userId", currentUser.uid)  // Mengambil data berdasarkan pembeli
+            .whereEqualTo("orderNumber", selectedOrderNumber) // Pastikan orderNumber yang digunakan konsisten
             .get()
             .addOnSuccessListener { documents ->
                 if (documents.isEmpty) {
-                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT)
-                        .show()
+                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
                     adapter.notifyDataSetChanged()
                     return@addOnSuccessListener
                 }
@@ -157,11 +156,8 @@ class KeranjangPesananActivity : AppCompatActivity() {
                 updateButtonVisibility()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    this,
-                    "Gagal memuat data keranjang: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Gagal memuat data keranjang: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -190,17 +186,14 @@ class KeranjangPesananActivity : AppCompatActivity() {
             binding.edittextPesan.error = "Pesan tidak boleh kosong"
             return
         }
-
-        // Update the status of each order to "Menunggu Konfirmasi Pembelian Anda" and save to Firestore
         orders.forEach { order ->
-            // Update order status to "Menunggu Konfirmasi Pembelian Anda" in Firestore
-            order.statusOrder = "Menunggu Konfirmasi Pembelian Anda"
+            order.statusOrder = "Menunggu Konfirmasi Penjual"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             updateOrderStatus(
                 order,
-                "Menunggu Konfirmasi Pembelian Anda",
+                "Menunggu Konfirmasi Penjual",
                 metodePembayaran,
                 pesanKepadaPenjual
             )
@@ -256,7 +249,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
     private fun updateButtonVisibility() {
         // Check if all orders are confirmed or canceled
         val allConfirmedOrCancelled = orders.all {
-            it.statusOrder == "Menunggu Konfirmasi Pembelian Anda" || it.statusOrder == "Pesanan Dibatalkan"
+            it.statusOrder == "Menunggu Konfirmasi Penjual" || it.statusOrder == "Pesanan Dibatalkan"
         }
 
         // If all orders are confirmed or canceled, hide the confirm button

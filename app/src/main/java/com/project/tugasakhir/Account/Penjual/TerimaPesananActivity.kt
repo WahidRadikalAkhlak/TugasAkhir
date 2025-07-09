@@ -1,5 +1,6 @@
 package com.project.tugasakhir.Account.Penjual
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
@@ -10,6 +11,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.OrderAdapter
+import com.project.tugasakhir.Chat.pesan.PesanActivity
+import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
@@ -27,7 +30,6 @@ class TerimaPesananActivity : AppCompatActivity() {
     private lateinit var selectedOrderNumber: String
     private var itemCount = 0
     private var totalPrice = 0.0
-    private var tawarHarga = 0.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,12 +77,131 @@ class TerimaPesananActivity : AppCompatActivity() {
             Toast.makeText(this, "Cancelling order", Toast.LENGTH_SHORT).show()
             onCancelOrder()
         }
+        binding.btnKirimPesan.setOnClickListener {
+            sendMessageToUser()  // Call the method to send the thank-you message
+        }
     }
 
     private fun loadUserName() {
         val currentUser = auth.currentUser
-        binding.namaPengguna.text =
-            currentUser?.displayName ?: currentUser?.email ?: "Pengguna belum login"
+        binding.namaPengguna.text = currentUser?.displayName ?: currentUser?.email ?: "Pengguna belum login"
+    }
+
+    private fun sendMessageToUser() {
+        val currentUser = auth.currentUser ?: return
+
+        // Mendapatkan userId dan orderNumber dari detail pesanan
+        val userId = orders.firstOrNull()?.userId ?: return
+        val orderNumber = orders.firstOrNull()?.orderNumber ?: return  // Mendapatkan orderNumber untuk query
+
+        // Query Firestore untuk mendapatkan userName dari koleksi 'carts' berdasarkan orderNumber
+        db.collection("carts").document(orderNumber).get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    // Mendapatkan userName dari dokumen
+                    val receiverName = document.getString("userName") ?: "User"
+
+                    // Membentuk chatId menggunakan userId dan sellerId (currentUser.uid)
+                    val chatId = createChatId(currentUser.uid, userId)
+
+                    // Memeriksa apakah chat sudah ada di Firestore
+                    val chatRef = db.collection("chats").document(chatId)
+
+                    chatRef.get().addOnSuccessListener { document ->
+                        if (document.exists()) {
+                            // Jika chat sudah ada, kirim pesan "Terima Kasih" ke chat yang sudah ada
+                            val message = Message(
+                                senderId = currentUser.uid,
+                                senderName = currentUser.displayName ?: "Unknown",
+                                message = "Terima Kasih sudah memesan Produk kami",
+                                timestamp = System.currentTimeMillis(),
+                                receiverId = userId,
+                                receiverName = receiverName,  // Menggunakan receiverName yang dinamis
+                                chatId = chatId
+                            )
+
+                            // Mengirim pesan ke chat yang sudah ada
+                            chatRef.collection("messages").add(message)
+                                .addOnSuccessListener {
+                                    Toast.makeText(this, "Pesan terkirim", Toast.LENGTH_SHORT).show()
+                                    Log.d("Pesan", "Pesan terkirim ke chat yang sudah ada")
+
+                                    // Membuka PesanActivity untuk melihat pesan
+                                    openChatDetail(chatId)
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, "Gagal mengirim pesan: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Log.e("Pesan", "Gagal mengirim pesan: ${e.message}")
+                                }
+                        } else {
+                            // Jika chat belum ada, buat chat baru dan kirim pesan
+                            val newChatId = createChatId(currentUser.uid, userId)
+
+                            // Membuat dokumen chat baru
+                            val chatData = hashMapOf(
+                                "participants" to listOf(currentUser.uid, userId),
+                                "timestamp" to System.currentTimeMillis(),
+                            )
+
+                            // Membuat chat dan mengirim pesan
+                            db.collection("chats").document(newChatId).set(chatData)
+                                .addOnSuccessListener {
+                                    // Sekarang, tambahkan pesan ke chat baru
+                                    val message = Message(
+                                        senderId = currentUser.uid,
+                                        senderName = currentUser.displayName ?: "Unknown",
+                                        message = "Terima Kasih sudah memesan Produk kami",
+                                        timestamp = System.currentTimeMillis(),
+                                        receiverId = userId,
+                                        receiverName = receiverName,
+                                        chatId = newChatId
+                                    )
+
+                                    // Mengirim pesan pertama
+                                    db.collection("chats").document(newChatId)
+                                        .collection("messages").add(message)
+                                        .addOnSuccessListener {
+                                            Toast.makeText(this, "Pesan terkirim", Toast.LENGTH_SHORT).show()
+                                            Log.d("Pesan", "Pesan terkirim ke chat baru")
+
+                                            // Membuka PesanActivity untuk melihat pesan
+                                            openChatDetail(newChatId)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Toast.makeText(this, "Gagal mengirim pesan: ${e.message}", Toast.LENGTH_SHORT).show()
+                                            Log.e("Pesan", "Gagal mengirim pesan: ${e.message}")
+                                        }
+                                }
+                                .addOnFailureListener { e ->
+                                    Toast.makeText(this, "Gagal membuat chat baru: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    Log.e("Pesan", "Gagal membuat chat baru: ${e.message}")
+                                }
+                        }
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(this, "Gagal memeriksa chat: ${e.message}", Toast.LENGTH_SHORT).show()
+                        Log.e("Pesan", "Gagal memeriksa chat: ${e.message}")
+                    }
+                } else {
+                    Toast.makeText(this, "User tidak ditemukan", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat username: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("Pesan", "Gagal memuat username: ${e.message}")
+            }
+    }
+
+    // Fungsi untuk membuat chatId berdasarkan userId dan sellerId
+    private fun createChatId(sellerId: String, userId: String): String {
+        // Membuat chatId dengan mengurutkan userId dan sellerId, sehingga urutannya konsisten
+        val ids = listOf(sellerId, userId).sorted()
+        return "chat_${ids[0]}_${ids[1]}"  // Urutan yang konsisten memastikan chatId yang sama untuk kedua pengguna
+    }
+
+    private fun openChatDetail(chatId: String) {
+        val intent = Intent(this, PesanActivity::class.java)
+        intent.putExtra("chat_id", chatId)  // Mengirim chatId
+        startActivity(intent)  // Membuka PesanActivity untuk melihat pesan
     }
 
     private fun loadCartItems() {
@@ -104,8 +225,6 @@ class TerimaPesananActivity : AppCompatActivity() {
 
                 itemCount = 0
                 totalPrice = 0.0
-                tawarHarga = 0.0  // Initialize tawarHarga
-
                 // Membuat map untuk menyaring pesanan berdasarkan orderNumber
                 val orderMap = mutableMapOf<String, Order>()
 
@@ -125,10 +244,6 @@ class TerimaPesananActivity : AppCompatActivity() {
                         quantity = doc.getLong("quantity")?.toInt() ?: 0
                         totalPrice = doc.getDouble("totalPrice") ?: 0.0
                         timestamp = doc.getTimestamp("timestamp")
-
-                        // Getting tawarHarga, safely checking for null
-                        tawarHarga = doc.getDouble("tawarHarga")
-                            ?: 0.0  // If tawarHarga is not available, default to 0.0
 
                         imageUrls = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>()
                             ?: emptyList()
@@ -211,13 +326,13 @@ class TerimaPesananActivity : AppCompatActivity() {
         // Update the status of each order to "Pesanan Anda Sedang Di Proses"
         orders.forEach { order ->
             // Update order status to "Pesanan Anda Sedang Di Proses" in Firestore
-            order.statusOrder = "Pesanan Anda Sedang Di Proses"
+            order.statusOrder = "Pesanan Sedang Dikemas"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             updateOrderStatus(
                 order,
-                "Pesanan Anda Sedang Di Proses",
+                "Pesanan Sedang Dikemas",
                 metodePembayaran,
                 pesanKepadaPenjual
             )
@@ -249,12 +364,12 @@ class TerimaPesananActivity : AppCompatActivity() {
 
         orders.forEach { order ->
             // Update the status to "Pesanan Anda Ditolak"
-            order.statusOrder = "Pesanan Anda Ditolak"
+            order.statusOrder = "Pesanan Ditolak"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             // Update the order in Firestore
-            updateOrderStatus(order, "Pesanan Anda Ditolak", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(order, "Pesanan Ditolak", metodePembayaran, pesanKepadaPenjual)
         }
 
         binding.confirmButton.visibility = View.GONE
@@ -269,7 +384,7 @@ class TerimaPesananActivity : AppCompatActivity() {
 
     private fun updateButtonVisibility() {
         // Check if there are orders with status "Menunggu Konfirmasi Pembelian Anda"
-        val hasPendingOrders = orders.any { it.statusOrder == "Menunggu Konfirmasi Pembelian Anda" }
+        val hasPendingOrders = orders.any { it.statusOrder == "Menunggu Konfirmasi Penjual" }
 
         if (hasPendingOrders) {
             // Show buttons if there are pending orders

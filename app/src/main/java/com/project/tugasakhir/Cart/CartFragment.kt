@@ -48,6 +48,7 @@ class CartFragment : Fragment() {
         }, { orderToDelete ->
             hapusPesanan(orderToDelete)
         }, isForKeranjangPesanan = false)
+
         binding.rvPesan.adapter = adapter
         loadUserOrders()
         loadProducts() // Load products as well
@@ -56,7 +57,7 @@ class CartFragment : Fragment() {
     private fun loadUserOrders() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            if (isAdded) { // Check if fragment is attached to an activity
+            if (isAdded) {
                 binding.progressbarSettings.visibility = View.GONE
                 Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
             }
@@ -67,7 +68,7 @@ class CartFragment : Fragment() {
             .whereEqualTo("userId", currentUser.uid)
             .addSnapshotListener { documents, error ->
                 if (error != null) {
-                    if (isAdded) { // Check if fragment is attached to an activity
+                    if (isAdded) {
                         Toast.makeText(
                             requireContext(),
                             "Error loading orders: ${error.message}",
@@ -77,18 +78,22 @@ class CartFragment : Fragment() {
                     return@addSnapshotListener
                 }
 
-                // Check if the documents are not empty
+                // Correctly checking if the documents are not empty
                 if (documents != null && documents.size() > 0) {
-                    orders.clear()  // Clear previous orders
+                    orders.clear()
                     for (doc in documents) {
                         val order = doc.toObject(Order::class.java).apply {
                             docId = doc.id
                         }
+
+                        // Handle product images
+                        order.imageUrls = doc.get("imageUrls") as? List<String> ?: emptyList()
+
                         orders.add(order)
                     }
-                    adapter.notifyDataSetChanged()  // Refresh the UI
+                    adapter.notifyDataSetChanged()
                 } else {
-                    if (isAdded) { // Check if fragment is attached to an activity
+                    if (isAdded) {
                         Toast.makeText(
                             requireContext(),
                             "Tidak ada item dalam keranjang",
@@ -120,55 +125,63 @@ class CartFragment : Fragment() {
     }
 
     private fun hapusPesanan(order: Order) {
-        val currentUser = auth.currentUser ?: run {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser == null) {
             Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
+            Log.d("KeranjangPesanan", "User not logged in.")
             return
         }
 
-        if (order.orderNumber.isEmpty()) { // Periksa orderNumber, bukan docId
-            Toast.makeText(requireContext(), "ID pesanan tidak valid", Toast.LENGTH_SHORT).show()
+        if (order.orderNumber.isEmpty()) {
+            Toast.makeText(requireContext(), "Order Number tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
 
-        // Correct document reference for deleting the order from Firestore
-        val docRef = db.collection("carts").document(order.orderNumber)
+        Log.d("KeranjangPesanan", "Attempting to delete order with orderNumber: ${order.orderNumber}")
 
-        docRef.delete()
-            .addOnSuccessListener {
-                // Display success message
-                Toast.makeText(
-                    requireContext(),
-                    "Pesanan Anda Berhasil Dihapus",
-                    Toast.LENGTH_SHORT
-                ).show()
-                loadUserOrders()  // Reload the orders after deletion
+        // Hapus order dari koleksi 'carts'
+        val cartRef = db.collection("carts")
+            .whereEqualTo("orderNumber", order.orderNumber)
+            .limit(1)  // Pastikan hanya satu dokumen yang ditemukan
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                Log.d("KeranjangPesanan", "Query Firestore berhasil: ${querySnapshot.size()} documents found.")
+                if (!querySnapshot.isEmpty) {
+                    val docId = querySnapshot.documents[0].id
+                    db.collection("carts").document(docId).delete()
+                        .addOnSuccessListener {
+                            Toast.makeText(requireContext(), "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
+                            loadUserOrders()  // Reload orders setelah penghapusan
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("Delete Order", "Error deleting order: ${e.message}")
+                            Toast.makeText(requireContext(), "Gagal menghapus pesanan", Toast.LENGTH_SHORT).show()
+                        }
+                } else {
+                    Toast.makeText(requireContext(), "Pesanan tidak ditemukan", Toast.LENGTH_SHORT).show()
+                }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Gagal menghapus pesanan: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Log.e("Delete Order", "Error querying Firestore: ${e.message}")
+                Toast.makeText(requireContext(), "Gagal menghapus pesanan", Toast.LENGTH_SHORT).show()
             }
 
-        // Menghapus produk terkait jika diperlukan
+        // Hapus produk yang terkait, jika ada
         val productRef = db.collection("products")
-            .whereEqualTo(
-                "orderNumber",
-                order.orderNumber
-            ) // Ganti docId dengan orderNumber jika produk terkait dengan orderNumber
+            .whereEqualTo("orderNumber", order.orderNumber)
+
         productRef.get()
             .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    Log.d("KeranjangPesanan", "No related products found for order: ${order.orderNumber}")
+                }
                 for (doc in documents) {
                     db.collection("products").document(doc.id).delete()
                         .addOnSuccessListener {
                             Log.d("KeranjangPesanan", "Produk berhasil dihapus dari produk")
                         }
                         .addOnFailureListener { e ->
-                            Log.e(
-                                "KeranjangPesanan",
-                                "Gagal menghapus produk dari produk: ${e.message}"
-                            )
+                            Log.e("KeranjangPesanan", "Gagal menghapus produk dari produk: ${e.message}")
                         }
                 }
             }

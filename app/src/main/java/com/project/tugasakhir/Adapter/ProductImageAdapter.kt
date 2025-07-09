@@ -1,6 +1,7 @@
 package com.project.tugasakhir.Adapter
 
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
@@ -27,12 +28,9 @@ class ProductImageAdapter(
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
 
-            binding.likesCount.visibility = View.GONE
-
             // Muat gambar produk
             loadProductImage(product)
 
-            // Tangani klik item untuk membuka detail produk
             binding.root.setOnClickListener { onItemClick(product) }
 
             // Safely load images, checking for null/empty lists
@@ -54,9 +52,8 @@ class ProductImageAdapter(
             binding.root.setOnClickListener { onItemClick(product) }
         }
 
-        // Pemisahan fungsi untuk memuat gambar dengan lebih jelas
         private fun loadProductImage(product: Product) {
-            // Pastikan imageUrls bukan null dan tidak kosong
+            // Cek jika imageUrls atau imageBase64List ada dan valid
             if (!product.imageUrls.isNullOrEmpty()) {
                 Glide.with(binding.imgProduct.context)
                     .load(product.imageUrls[0])  // Ambil gambar pertama dari imageUrls
@@ -66,25 +63,25 @@ class ProductImageAdapter(
             } else if (!product.imageBase64List.isNullOrEmpty()) {
                 base64ToBitmap(product.imageBase64List[0])?.let {
                     binding.imgProduct.setImageBitmap(it)
-                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
+                }
+                    ?: binding.imgProduct.setImageResource(R.drawable.image_icon)  // Default jika base64 gagal
             } else {
                 binding.imgProduct.setImageResource(R.drawable.image_icon)  // Placeholder jika tidak ada gambar
             }
         }
 
-
         private fun base64ToBitmap(base64Str: String): Bitmap? {
             return try {
                 val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
-                android.graphics.BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+                BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
             } catch (e: Exception) {
-                Log.e("ProductImageAdapter", "Failed to decode base64 image", e)
+                Log.e("ProductAdapter", "Failed to decode base64 image", e)
                 null
             }
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProductViewHolder(binding)
     }

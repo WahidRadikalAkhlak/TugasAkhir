@@ -89,10 +89,6 @@ class PesanActivity : AppCompatActivity() {
                     for (document in snapshot.documents) {
                         val message = document.toObject(Message::class.java)
                         message?.let {
-                            // Ensure receiverName is loaded correctly
-                            if (it.receiverName.isEmpty()) {
-                                it.receiverName = "Receiver"
-                            }
                             messageList.add(it)
                         }
                     }

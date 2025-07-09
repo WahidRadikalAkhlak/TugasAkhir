@@ -38,6 +38,7 @@
                     android:layout_height="60dp"
                     android:layout_marginEnd="10dp"
                     android:clipToOutline="true"
+                    android:src="@drawable/avatar"
                     android:shape="oval" />
 
                 <LinearLayout

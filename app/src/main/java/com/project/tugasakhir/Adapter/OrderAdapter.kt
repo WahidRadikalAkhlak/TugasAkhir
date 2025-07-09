@@ -1,10 +1,12 @@
 package com.project.tugasakhir.Adapter
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Data.Order
@@ -44,7 +46,8 @@ class OrderAdapter(
             binding.btnDeleteOrder.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    deleteOrder(orders[position], position)
+                    Log.d("OrderAdapter", "Delete button clicked for order at position: $position")
+                    onDeleteClick(orders[position])  // Panggil fungsi hapus pesanan di Fragment
                 }
             }
         }
@@ -53,25 +56,11 @@ class OrderAdapter(
             val product = getProductForOrder(order)
 
             if (product != null) {
-                // Bind user name (penjual) from the product
                 binding.userName.text = product.userName  // Penjual name
-
-                // Bind other order details
                 binding.orderNumber.text = order.orderNumber
                 binding.statusOrder.text = order.statusOrder
                 binding.tanggalOrder.text = order.orderDate
                 binding.orderTime.text = order.orderTime
-
-                // Load product image from the product object (if available)
-                if (product.imageUrls.isNotEmpty()) {
-                    Glide.with(binding.imageView.context)
-                        .load(product.imageUrls[0])  // Load the first image from the product
-                        .placeholder(R.drawable.image_icon)
-                        .error(R.drawable.image_icon)
-                        .into(binding.imageView)
-                } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if none
-                }
             }
         }
     }
@@ -112,6 +101,7 @@ class OrderAdapter(
             binding.btnDeleteOrder.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
+                    Log.d("OrderAdapter", "Delete button clicked for order at position: $position")
                     deleteOrder(orders[position], position)
                 }
             }
@@ -127,15 +117,17 @@ class OrderAdapter(
                 binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
                 binding.banyakProduk.text = order.quantity.toString()
 
-                // Load product image from the corresponding Product object
-                if (product.imageUrls.isNotEmpty()) {
-                    Glide.with(binding.imageView.context)
-                        .load(product.imageUrls[0])  // Display product image
-                        .placeholder(R.drawable.image_icon)
-                        .error(R.drawable.image_icon)
-                        .into(binding.imageView)
+                // Check if imageBase64List is available in the order
+                if (order.imageBase64List.isNotEmpty()) {
+                    val base64Image = order.imageBase64List[0]
+                    val bitmap = base64ToBitmap(base64Image)
+                    if (bitmap != null) {
+                        binding.imageView.setImageBitmap(bitmap)
+                    } else {
+                        binding.imageView.setImageResource(R.drawable.image_icon) // Default image
+                    }
                 } else {
-                    binding.imageView.setImageResource(R.drawable.image_icon)  // Default image if no product image
+                    binding.imageView.setImageResource(R.drawable.image_icon) // Default image if no base64 image
                 }
             }
         }
@@ -144,22 +136,29 @@ class OrderAdapter(
     private fun deleteOrder(order: Order, position: Int) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            // Ensure that 'orderNumber' is used as the document ID
+            // Pastikan 'orderNumber' digunakan sebagai document ID
             val orderRef = FirebaseFirestore.getInstance()
-                .collection("carts")  // The parent collection
-                .document(order.orderNumber)  // Use 'orderNumber' as document ID
+                .collection("carts")  // Koleksi utama 'carts'
+                .document(order.orderNumber)  // Gunakan 'orderNumber' sebagai document ID
 
             orderRef.delete()
                 .addOnSuccessListener {
                     Log.d("OrderAdapter", "Order deleted successfully")
-                    orders.removeAt(position) // Remove from the local list
-                    notifyItemRemoved(position) // Notify adapter of item removal
+                    if (position != RecyclerView.NO_POSITION && position < orders.size) {
+                        // Hapus item dari list orders
+                        orders.removeAt(position)
+                        notifyItemRemoved(position)
+                    }
                 }
                 .addOnFailureListener { e ->
+                    // Tangani kegagalan penghapusan
                     Log.e("OrderAdapter", "Error deleting order: ${e.message}")
                 }
+        } else {
+            Log.e("OrderAdapter", "User is not authenticated.")
         }
     }
+
 
     private fun updateOrderInFirestore(order: Order) {
         val currentUser = FirebaseAuth.getInstance().currentUser
@@ -176,6 +175,16 @@ class OrderAdapter(
                 .addOnFailureListener { e ->
                     Log.e("OrderAdapter", "Error updating order: ${e.message}")
                 }
+        }
+    }
+
+    private fun base64ToBitmap(base64Str: String): Bitmap? {
+        return try {
+            val decodedBytes = android.util.Base64.decode(base64Str, android.util.Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+            Log.e("OrderAdapter", "Failed to decode Base64 image", e)
+            null
         }
     }
 
