@@ -163,6 +163,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 val sellerUID =
                     FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
 
+                val alamatToko = fetchAlamatTokoFromFirestore()
                 // Prepare product data without email and username if it's an update
                 val productData = hashMapOf(
                     "productName" to namaProduct,
@@ -172,7 +173,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     "pricePerUnit" to hargaPerUnit,
                     "isAvailable" to tampilkanProduk,
                     "imageBase64List" to base64Images,
-                    "sellerUID" to sellerUID
+                    "sellerUID" to sellerUID,
+                    "alamatToko" to alamatToko
                 )
 
                 if (editingProduct != null) {
@@ -242,6 +244,14 @@ class ProductBaruActivity : AppCompatActivity() {
             }
         }
         Log.d("UpdateProduct", "Updating product with email: $userEmail and username: $userName")
+    }
+
+    private suspend fun fetchAlamatTokoFromFirestore(): String {
+        val userEmail = FirebaseAuth.getInstance().currentUser?.email
+        val emailForFirestore = userEmail?.replace(".", "_") ?: ""
+
+        val documentSnapshot = db.collection("penjual").document(emailForFirestore).get().await()
+        return documentSnapshot.getString("alamatToko") ?: "Alamat tidak tersedia"
     }
 
     private fun showProgressBar() {

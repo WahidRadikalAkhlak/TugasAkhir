@@ -28,6 +28,7 @@ class ProductImageAdapter(
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
 
+            binding.likesCount.visibility = View.GONE
             // Muat gambar produk
             loadProductImage(product)
 
@@ -81,16 +82,15 @@ class ProductImageAdapter(
         }
     }
 
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ProductViewHolder {
         val binding = ItemProductBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ProductViewHolder(binding)
     }
 
-    override fun getItemCount(): Int = products.size
-
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         holder.bind(products[position])
     }
+    override fun getItemCount(): Int = products.size
 
     // Method to update data when filtering or when new data is available
     fun updateData(newList: List<Product>) {

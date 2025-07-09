@@ -14,7 +14,7 @@ data class Product(
     val description: String = "",
     val stockAvailable: Int = 0,
     val pricePerUnit: Double = 0.0,
-    val address: String = "",
+    val alamatToko: String = "",
     var isAvailable: Boolean = false,
     var isRecommended: Boolean = false,
     var isLiked: Boolean = false,

@@ -106,9 +106,6 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                     val sellerDoc = result.documents.first()
                     val sellerUid = sellerDoc.id  // UID penjual ada di ID dokumen Firestore
 
-                    // Membuat chatId yang konsisten
-                    val chatId = createChatId(auth.currentUser?.uid ?: "", sellerUid)
-
                     // Membuat objek pesan
                     val message = Message(
                         senderId = auth.currentUser?.uid ?: "",  // UID pengguna yang sedang login
@@ -117,28 +114,15 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                         timestamp = System.currentTimeMillis(),
                         receiverId = sellerUid,  // Menggunakan UID penjual yang diambil dari Firestore
                         receiverName = product.userName,  // Nama penjual diambil dari Product
-                        chatId = chatId
+                        chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // Menambahkan chatId
                     )
 
-                    // Memeriksa apakah chat sudah ada di Firestore
+                    val chatId =
+                        "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
+
                     firestore.collection("chats").document(chatId).get()
                         .addOnSuccessListener { document ->
-                            if (document.exists()) {
-                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
-                                firestore.collection("chats")
-                                    .document(chatId)
-                                    .collection("messages")
-                                    .add(message)
-                                    .addOnSuccessListener {
-                                        Log.d("PesanActivity", "Message sent successfully")
-                                        val intent = Intent(this, PesanActivity::class.java)
-                                        intent.putExtra("chat_id", chatId)
-                                        startActivity(intent)
-                                    }
-                                    .addOnFailureListener { e ->
-                                        Log.e("PesanActivity", "Failed to send message: $e")
-                                    }
-                            } else {
+                            if (!document.exists()) {
                                 // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
                                 firestore.collection("chats").document(chatId).set(
                                     hashMapOf(
@@ -151,7 +135,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                                     firestore.collection("chats")
                                         .document(chatId)
                                         .collection("messages")
-                                        .add(message)
+                                        .add(message)  // Menambahkan chatId ke pesan
                                         .addOnSuccessListener {
                                             Log.d("PesanActivity", "Message sent successfully")
                                             val intent = Intent(this, PesanActivity::class.java)
@@ -162,6 +146,21 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                                             Log.e("PesanActivity", "Failed to send message: $e")
                                         }
                                 }
+                            } else {
+                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
+                                firestore.collection("chats")
+                                    .document(chatId)
+                                    .collection("messages")
+                                    .add(message)  // Menambahkan chatId ke pesan
+                                    .addOnSuccessListener {
+                                        Log.d("PesanActivity", "Message sent successfully")
+                                        val intent = Intent(this, PesanActivity::class.java)
+                                        intent.putExtra("chat_id", chatId)
+                                        startActivity(intent)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("PesanActivity", "Failed to send message: $e")
+                                    }
                             }
                         }
                         .addOnFailureListener { e ->
@@ -178,22 +177,16 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
     }
 
-    // Fungsi untuk membuat chatId berdasarkan userId dan sellerId
-    private fun createChatId(sellerId: String, userId: String): String {
-        // Membuat chatId dengan mengurutkan userId dan sellerId, sehingga urutannya konsisten
-        val ids = listOf(sellerId, userId).sorted()
-        return "chat_${ids[0]}_${ids[1]}"  // Urutan yang konsisten memastikan chatId yang sama untuk kedua pengguna
-    }
-
     private fun displayProductData(p: Product) {
         with(binding) {
             // Display product details
             namaProduct.text = p.productName
-            jenisProduk.text = p.productType
-            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f", p.pricePerUnit)}" else "Harga belum tersedia"
+            jenisProduk.text = "Jenis Produk: ${p.productType}"
+            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f",p.pricePerUnit)}" else "Harga belum tersedia"
             stock.text = "Stok: ${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
-            userName.text = "Added by: ${p.userName}"
+            userName.text = "Penjual: ${p.userName}"
+            address.text = "Alamat: ${p.alamatToko}"
 
             // Display the product image
             if (!p.imageUrls.isNullOrEmpty()) {
@@ -209,7 +202,6 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             } else {
                 imgProduct.setImageResource(R.drawable.image_icon)
             }
-
             // Set button text and listeners based on source
             if (source == "seller") {
                 // Change button text and set functionality for seller
@@ -230,16 +222,8 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 binding.btnBuy.text = "Beli Produk"
                 binding.btnKirimPesan.text = "Kirim Pesan"
                 binding.btnBuy.setOnClickListener {
-                    val userId = auth.currentUser?.uid // Cek apakah pengguna sudah login
-
-                    if (userId == null) {
-                        // Jika user belum login, tampilkan pesan dan hentikan aksi
-                        Toast.makeText(this@InfoProductActivity, "Harap login terlebih dahulu", Toast.LENGTH_SHORT)
-                            .show()
-                        return@setOnClickListener
-                    }
-
-                    val bottomSheet = BottomSheetBuyActivity.newInstance(p)  // Pass entire product to BottomSheet
+                    val bottomSheet =
+                        BottomSheetBuyActivity.newInstance(product!!) // Send the whole product object
                     bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
                     bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
                 }
@@ -419,10 +403,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
     override fun onAddToCart(quantity: Int) {
         val p = product ?: return
-        val userId = auth.currentUser?.uid // Cek apakah pengguna sudah login
-
-        if (userId == null) {
-            // Jika user belum login, tampilkan pesan dan hentikan proses
+        val userId = auth.currentUser?.uid ?: run {
             Toast.makeText(this, "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
             return
         }

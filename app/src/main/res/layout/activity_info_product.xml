@@ -20,20 +20,34 @@
         android:text="@string/nama_produk"
         android:layout_below="@+id/img_product"
         android:layout_margin="15dp"
-        android:textSize="20sp"
-        style="@style/TextAppearance.Material3.BodyMedium" />
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/userName"
+        android:textSize="25sp"
+        android:fontFamily="@font/poppinsextrabold"/>
+    <RelativeLayout
+        android:id="@+id/rl_usernameaddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Added by: User Name"
-        android:textSize="16sp"
-        android:layout_marginBottom="8dp"
         android:layout_below="@id/nama_product"
         android:layout_alignStart="@id/nama_product"
-        android:textColor="@android:color/darker_gray"
-        android:textStyle="italic" />
+        android:layout_marginTop="10dp">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/userName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Added by: User Name"
+            android:textSize="16sp"
+            android:fontFamily="@font/poppinsmedium"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Address :"
+            android:textSize="16sp"
+            android:fontFamily="@font/poppinsmedium"
+            android:layout_marginRight="15dp"
+            android:layout_alignParentEnd="true"/>
+    </RelativeLayout>
 
     <ImageButton
         android:id="@+id/btnLike"
@@ -41,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/img_product"
         android:layout_alignParentEnd="true"
-        android:layout_marginTop="8dp"
+        android:layout_margin="15dp"
         android:layout_marginRight="15dp"
         android:background="?attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/like_product"
@@ -55,34 +69,26 @@
         android:layout_height="wrap_content"
         android:text="0 Likes"
         android:textSize="16sp"
-        android:layout_marginRight="8dp"
+        android:layout_marginRight="15dp"
         android:layout_below="@id/btnLike"
-        android:layout_marginTop="8dp"
         android:layout_alignParentEnd="true"
         android:textColor="@android:color/darker_gray" />
-
-
-    <RelativeLayout
-        android:id="@+id/layout_jenis_tipe"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@id/userName"
-        android:layout_alignStart="@id/nama_product">
 
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/jenis_produk"
             android:layout_width="wrap_content"
+            android:textSize="16sp"
+            android:layout_alignStart="@id/nama_product"
+            android:layout_below="@+id/rl_usernameaddress"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/poppinsmedium"
             android:text="@string/jenis_produk" />
-
-
-    </RelativeLayout>
 
     <RelativeLayout
         android:id="@+id/layout_harga_tersedia"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/layout_jenis_tipe"
+        android:layout_below="@id/jenis_produk"
         android:layout_alignStart="@id/nama_product"
         android:layout_marginTop="10dp">
 
