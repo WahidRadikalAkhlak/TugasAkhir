@@ -26,7 +26,7 @@ class ChatHistoryAdapter(
             binding.isiPesan.text = chat.message
 
             // Set profile image (replace with actual user profile image if available)
-            binding.iconProfil.setImageResource(R.drawable.account_circle)
+            binding.iconProfil.setImageResource(R.drawable.avatar)
 
             // Format the timestamp
             val formattedTime =

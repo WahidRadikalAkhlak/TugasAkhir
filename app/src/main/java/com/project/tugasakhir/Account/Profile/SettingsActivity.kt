@@ -1,6 +1,7 @@
 package com.project.tugasakhir.Account.Profile
 
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -31,8 +32,6 @@ class SettingsActivity : AppCompatActivity() {
             if (isGoogleLogin) {
                 // Jika login dengan Google, tampilkan hint text di email dan password
                 binding.etEmail.hint = "Akun Google tidak dapat merubah Email"
-                binding.etNewPassword.hint = "Akun Google tidak dapat merubah Password"
-                binding.etConfirmPassword.hint = "Akun Google tidak dapat merubah Password"
                 binding.etNewPassword.isEnabled = false
                 binding.etConfirmPassword.isEnabled = false
                 binding.etEmail.isEnabled = false
@@ -83,6 +82,8 @@ class SettingsActivity : AppCompatActivity() {
                             Toast.makeText(this, "Failed to update password: ${it.message}", Toast.LENGTH_SHORT).show()
                         }
                 }
+                binding.progressBar.visibility = View.VISIBLE
+                binding.progressBar.visibility = View.GONE
             }
         } else {
             // Handle case when no user is logged in

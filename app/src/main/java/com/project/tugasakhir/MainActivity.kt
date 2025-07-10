@@ -19,11 +19,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
 
         binding.progressBar.visibility = View.VISIBLE
 
@@ -34,21 +29,29 @@ class MainActivity : AppCompatActivity() {
                 R.id.katalog -> {
                     loadFragment(KatalogFragment())
                     return@setOnItemSelectedListener true
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
                 }
 
                 R.id.chat -> {
                     loadFragment(ChatFragment())
                     return@setOnItemSelectedListener true
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
                 }
 
                 R.id.cart -> {
                     loadFragment(CartFragment())
                     return@setOnItemSelectedListener true
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
                 }
 
                 R.id.account -> {
                     loadFragment(AccountFragment())
                     return@setOnItemSelectedListener true
+                    binding.progressBar.visibility = View.VISIBLE
+                    binding.progressBar.visibility = View.GONE
                 }
             }
             false

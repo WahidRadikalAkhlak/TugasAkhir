@@ -3,6 +3,7 @@ package com.project.tugasakhir.Account.Profile
 import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import com.project.tugasakhir.databinding.ActivityLanguagesBinding
@@ -26,10 +27,14 @@ class LanguagesActivity : AppCompatActivity() {
         // Set up language buttons using binding
         binding.btnIndonesian.setOnClickListener {
             setLocale("id")
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
 
         binding.btnEnglish.setOnClickListener {
             setLocale("en")
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
     }
 

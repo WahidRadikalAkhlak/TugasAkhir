@@ -180,9 +180,8 @@ class KatalogFragment : Fragment() {
             return
         }
 
-        // Increase the number of recommended products from 3 to a larger number (e.g., 10)
-        val recommendedProducts =
-            recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
+        // Rekomendasi produk berdasarkan similarity
+        val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
@@ -214,29 +213,35 @@ class KatalogFragment : Fragment() {
     }
 
     private fun computeCosineSimilarity(productA: Product, productB: Product): Double {
+        val commonLikes = getCommonLikes(productA, productB)
 
-        val commonUsers = getCommonUsers(productA, productB)
-
-        if (commonUsers.isEmpty()) {
-            return 0.0
-        }
+        if (commonLikes.isEmpty()) return 0.0
 
         // Menghitung dot product dan magnitudes (norma)
-        val dotProduct = commonUsers.sumBy { userId ->
+        val dotProduct = commonLikes.sumBy { userId ->
             (productA.likes[userId] ?: 0) * (productB.likes[userId] ?: 0)
         }
 
-        val magnitudeA = Math.sqrt(commonUsers.sumByDouble {
+        val magnitudeA = Math.sqrt(commonLikes.sumByDouble {
             Math.pow((productA.likes[it] ?: 0).toDouble(), 2.0)
         })
 
-        val magnitudeB = Math.sqrt(commonUsers.sumByDouble {
+        val magnitudeB = Math.sqrt(commonLikes.sumByDouble {
             Math.pow((productB.likes[it] ?: 0).toDouble(), 2.0)
         })
 
         return if (magnitudeA == 0.0 || magnitudeB == 0.0) 0.0 else dotProduct / (magnitudeA * magnitudeB)
     }
 
+    private fun getCommonLikes(productA: Product, productB: Product): List<String> {
+        val commonUsers = mutableListOf<String>()
+        productA.likes.keys.forEach { userId ->
+            if (productB.likes.containsKey(userId)) {
+                commonUsers.add(userId)
+            }
+        }
+        return commonUsers
+    }
 
     private fun getCommonUsers(productA: Product, productB: Product): List<String> {
 
@@ -249,11 +254,7 @@ class KatalogFragment : Fragment() {
         return commonUsers
     }
 
-    private fun recommendProductsBasedOnSimilarity(
-        matrix: List<List<Double>>,
-        filteredProducts: List<Product>,
-        topN: Int
-    ): List<Product> {
+    private fun recommendProductsBasedOnSimilarity(matrix: List<List<Double>>, filteredProducts: List<Product>, topN: Int): List<Product> {
         val recommendedProducts = mutableListOf<Product>()
 
         for (i in matrix.indices) {
@@ -277,10 +278,7 @@ class KatalogFragment : Fragment() {
                     }
                 }
             } else {
-                Log.e(
-                    "KatalogFragment",
-                    "Mismatch in size between similarity matrix and filtered products list."
-                )
+                Log.e("KatalogFragment", "Mismatch in size between similarity matrix and filtered products list.")
             }
         }
         return recommendedProducts

@@ -29,6 +29,8 @@ class DaftarPenjualActivity : AppCompatActivity() {
             if (!isRegistering) {
                 registerSeller()
             }
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
     }
 

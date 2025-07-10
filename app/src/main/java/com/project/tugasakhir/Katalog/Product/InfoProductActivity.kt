@@ -18,6 +18,7 @@ import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity
 import com.project.tugasakhir.R
+import com.project.tugasakhir.Ulasan.ListUlasanActivity
 import com.project.tugasakhir.databinding.ActivityInfoProductBinding
 
 class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToCartListener {
@@ -39,6 +40,12 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             Toast.makeText(this, "Data produk tidak tersedia", Toast.LENGTH_SHORT).show()
             finish()
             return
+        }
+        // InfoProductActivity: When "Baca Ulasan" is clicked, navigate to ListUlasanActivity
+        binding.bacaUlasan.setOnClickListener {
+            val intent = Intent(this, ListUlasanActivity::class.java)
+            intent.putExtra("PRODUCT_ID", product?.productId)  // Pass productId to ListUlasanActivity
+            startActivity(intent)
         }
 
         source = intent.getStringExtra("source")
@@ -183,7 +190,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             namaProduct.text = p.productName
             jenisProduk.text = "Jenis Produk: ${p.productType}"
             HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f",p.pricePerUnit)}" else "Harga belum tersedia"
-            stock.text = "Stok: ${p.stockAvailable} kg"
+            stock.text = "${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
             userName.text = "Penjual: ${p.userName}"
             address.text = "Alamat: ${p.alamatToko}"

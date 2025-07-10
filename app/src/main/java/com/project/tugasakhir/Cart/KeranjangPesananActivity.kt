@@ -1,10 +1,12 @@
 package com.project.tugasakhir.Cart
 
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
@@ -13,6 +15,7 @@ import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
+import com.project.tugasakhir.Ulasan.UlasanActivity
 import com.project.tugasakhir.databinding.ActivityKeranjangPesananBinding
 
 class KeranjangPesananActivity : AppCompatActivity() {
@@ -68,14 +71,27 @@ class KeranjangPesananActivity : AppCompatActivity() {
             if (itemCount <= 0) {
                 Toast.makeText(this, "Tidak ada item untuk diproses", Toast.LENGTH_SHORT).show()
             } else {
+                // Show progress bar
+                binding.progressBar.visibility = View.VISIBLE
                 Toast.makeText(this, "Confirming order", Toast.LENGTH_SHORT).show()
+
+                // Confirm the order and navigate to review
                 onConfirmOrder()
+
+                // Hide progress bar after process
+                binding.progressBar.visibility = View.GONE
             }
         }
 
         binding.cancelButton.setOnClickListener {
+            // Menampilkan ProgressBar
+            binding.progressBar.visibility = View.VISIBLE
+
             Toast.makeText(this, "Cancelling order", Toast.LENGTH_SHORT).show()
             onCancelOrder()
+
+            // Sembunyikan ProgressBar setelah proses selesai
+            binding.progressBar.visibility = View.GONE
         }
     }
 
@@ -180,37 +196,86 @@ class KeranjangPesananActivity : AppCompatActivity() {
 
     private fun onConfirmOrder() {
         val metodePembayaran = "Bayar Ditempat"
-        val pesanKepadaPenjual = binding.edittextPesan.text.toString().trim()
+        var pesanKepadaPenjual = binding.edittextPesan.text.toString().trim()
 
-        if (pesanKepadaPenjual.isEmpty()) {
-            binding.edittextPesan.error = "Pesan tidak boleh kosong"
-            return
-        }
+        // Check if the order status is "Memesan" (can edit message)
         orders.forEach { order ->
-            order.statusOrder = "Menunggu Konfirmasi Penjual"
-            order.metodePembayaran = metodePembayaran
-            order.pesanKepadaPenjual = pesanKepadaPenjual
+            if (order.statusOrder == "Memesan") {
+                if (pesanKepadaPenjual.isEmpty()) {
+                    binding.edittextPesan.error = "Pesan tidak boleh kosong"
+                    return@forEach
+                }
 
-            updateOrderStatus(
-                order,
-                "Menunggu Konfirmasi Penjual",
-                metodePembayaran,
-                pesanKepadaPenjual
-            )
+                // Update order status to "Menunggu Konfirmasi Penjual" and save the message
+                order.statusOrder = "Menunggu Konfirmasi Penjual"
+                order.metodePembayaran = metodePembayaran
+                order.pesanKepadaPenjual = pesanKepadaPenjual
+                updateOrderStatus(
+                    order,
+                    "Menunggu Konfirmasi Penjual", // First confirmation status
+                    metodePembayaran,
+                    pesanKepadaPenjual
+                )
+            } else if (order.statusOrder == "Pesanan Sedang Dikemas") {
+                // When order status is "Pesanan Sedang Dikemas", retrieve the message from Firestore
+                getPesanKepadaPenjualFromFirestore(order) { pesan ->
+                    order.pesanKepadaPenjual = pesan ?: "Tidak ada pesan"
 
-            // Remove the confirmed order from the local list
+                    // Update order status to "Pesanan Selesai"
+                    order.statusOrder = "Pesanan Selesai"
+                    order.metodePembayaran = metodePembayaran
+                    updateOrderStatus(
+                        order,
+                        "Pesanan Selesai", // Final status
+                        metodePembayaran,
+                        order.pesanKepadaPenjual
+                    )
+                }
+                showReviewAlert(order)
+            }
+
+            // Remove order after updating status
             orders.remove(order)
         }
 
         // Refresh the cart after confirmation
         loadCartItems()
 
+        // Hide the button after the first confirmation
         binding.confirmButton.visibility = View.GONE
         binding.cancelButton.visibility = View.VISIBLE
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
 
+    private fun showReviewAlert(order: Order) {
+        AlertDialog.Builder(this)
+            .setTitle("Ulasan Produk")
+            .setMessage("Apakah Anda ingin memberikan ulasan dan rating untuk produk ini?")
+            .setPositiveButton("Ya") { _, _ ->
+                // Arahkan ke halaman UlasanActivity
+                val intent = Intent(this, UlasanActivity::class.java)
+                intent.putExtra("PRODUCT_NAME", order.productName) // Mengirim productName ke UlasanActivity
+                intent.putExtra("PRODUCT_ID", order.productId) // Mengirim productId ke UlasanActivity
+                startActivity(intent)
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
+    }
+
+    // Function to get the "pesanKepadaPenjual" from Firestore when the status is "Pesanan Sedang Dikemas"
+    private fun getPesanKepadaPenjualFromFirestore(order: Order, callback: (String?) -> Unit) {
+        val docRef = db.collection("carts").document(order.orderNumber)
+        docRef.get()
+            .addOnSuccessListener { document ->
+                val pesan = document.getString("pesanKepadaPenjual")
+                callback(pesan)
+            }
+            .addOnFailureListener { e ->
+                Log.e("FirestoreError", "Error fetching pesan: ${e.message}")
+                callback(null)
+            }
+    }
 
     private fun onCancelOrder() {
         val metodePembayaran = "Bayar Ditempat"
@@ -247,18 +312,18 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun updateButtonVisibility() {
-        // Check if all orders are confirmed or canceled
-        val allConfirmedOrCancelled = orders.all {
-            it.statusOrder == "Menunggu Konfirmasi Penjual" || it.statusOrder == "Pesanan Dibatalkan"
+        val hasPendingOrders = orders.any {
+            it.statusOrder == "Memesan" ||
+                    it.statusOrder == "Pesanan Sedang Dikemas"
         }
+        val hasReadyForCompletion = orders.any { it.statusOrder == "Pesanan Sedang Dikemas" }
 
-        // If all orders are confirmed or canceled, hide the confirm button
-        if (allConfirmedOrCancelled) {
-            binding.confirmButton.visibility = View.GONE // Hanya sembunyikan konfirmasi pesanan
-        } else {
-            // Otherwise, show the confirm and cancel buttons
+        if (hasPendingOrders || hasReadyForCompletion) {
             binding.confirmButton.visibility = View.VISIBLE
             binding.cancelButton.visibility = View.VISIBLE
+        } else {
+            binding.confirmButton.visibility = View.GONE
+            binding.cancelButton.visibility = View.GONE
         }
     }
 

@@ -71,14 +71,20 @@ class TerimaPesananActivity : AppCompatActivity() {
                 Toast.makeText(this, "Confirming order", Toast.LENGTH_SHORT).show()
                 onConfirmOrder()
             }
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
 
         binding.tolakTawaran.setOnClickListener {
             Toast.makeText(this, "Cancelling order", Toast.LENGTH_SHORT).show()
             onCancelOrder()
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
         binding.btnKirimPesan.setOnClickListener {
-            sendMessageToUser()  // Call the method to send the thank-you message
+            sendMessageToUser()
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
     }
 
@@ -268,6 +274,7 @@ class TerimaPesananActivity : AppCompatActivity() {
                 orders.addAll(orderMap.values)
 
                 // Update UI dengan pesanan pertama jika tersedia
+                binding.namaPengguna.text = orders.firstOrNull()?.userName ?: "Nama tidak tersedia"
                 binding.email.text = orders.firstOrNull()?.email ?: "Email tidak tersedia"
                 binding.orderNumber.text =
                     orders.firstOrNull()?.orderNumber ?: "Order Number tidak tersedia"
@@ -320,38 +327,30 @@ class TerimaPesananActivity : AppCompatActivity() {
             return
         }
 
-        // Create a list to hold orders to be removed
-        val ordersToRemove = mutableListOf<Order>()
-
-        // Update the status of each order to "Pesanan Anda Sedang Di Proses"
         orders.forEach { order ->
-            // Update order status to "Pesanan Anda Sedang Di Proses" in Firestore
+            // Update the status to "Pesanan Sedang Dikemas" when seller confirms
             order.statusOrder = "Pesanan Sedang Dikemas"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             updateOrderStatus(
                 order,
-                "Pesanan Sedang Dikemas",
+                "Pesanan Sedang Dikemas", // Update to "Pesanan Sedang Dikemas"
                 metodePembayaran,
                 pesanKepadaPenjual
             )
-
-            // Add the confirmed order to the removal list
-            ordersToRemove.add(order)
         }
 
-        // Remove the confirmed orders from the local list after iteration
-        orders.removeAll(ordersToRemove)
-
-        // Refresh the cart after confirmation
+        // Refresh the cart after seller confirmation
         loadCartItems()
 
+        // Hide the button after seller confirmation
         binding.confirmButton.visibility = View.GONE
         binding.tolakTawaran.visibility = View.VISIBLE
         updateButtonVisibility()
         updateBottomLayout(itemCount, totalPrice)
     }
+
 
     private fun onCancelOrder() {
         val metodePembayaran = "Bayar Ditempat"

@@ -3,6 +3,7 @@ package com.project.tugasakhir.Account.Register
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
@@ -39,6 +40,8 @@ class RegisterActivity : AppCompatActivity() {
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }
+            binding.progressBar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.GONE
         }
 
         binding.tvLogin.setOnClickListener {

@@ -49,7 +49,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
     private fun loadSellerOrders() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            binding.progressbarSettings.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             Toast.makeText(this, "User belum login", Toast.LENGTH_SHORT).show()
             return
         }

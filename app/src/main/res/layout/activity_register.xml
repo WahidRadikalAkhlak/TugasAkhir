@@ -11,6 +11,20 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
+        <!-- ProgressBar - Centered in the layout and on top -->
+        <android.widget.ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:elevation="4dp"
+            android:indeterminate="true"
+            android:layout_centerInParent="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
         <!-- Welcome Text -->
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/tv_welcome_back"
@@ -133,7 +147,6 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
-
         <!-- Register Button -->
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/btnRegister"
@@ -161,6 +174,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="28dp"
             app:layout_constraintTop_toBottomOf="@id/btnRegister" />
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </ScrollView>

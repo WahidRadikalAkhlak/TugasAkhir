@@ -6,14 +6,19 @@
     android:layout_height="match_parent"
     tools:context=".Katalog.ProductPenjual.ProductBaruActivity">
 
-    <!-- ProgressBar for showing loading state -->
-    <ProgressBar
+    <!-- ProgressBar - Centered in the layout -->
+    <android.widget.ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:visibility="gone"
-        android:indeterminate="true" />
+        android:elevation="4dp"
+        android:indeterminate="true"
+        android:layout_centerInParent="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- ImageView for product image upload -->
     <ImageView

@@ -17,7 +17,7 @@
             android:id="@+id/icon_profil"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/account_circle"
+            android:src="@drawable/avatar"
             android:contentDescription="@string/icon_profil"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"

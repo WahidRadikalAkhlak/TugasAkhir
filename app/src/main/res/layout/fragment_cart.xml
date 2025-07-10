@@ -5,15 +5,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Cart.CartFragment">
 
-    <!-- ProgressBar is placed in front of the entire layout -->
-    <ProgressBar
-        android:id="@+id/progressbarSettings"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:indeterminateTint="@color/white"
-        android:visibility="gone"
-        android:layout_gravity="center" /> <!-- Center the progress bar -->
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintParent"
         android:layout_width="match_parent"

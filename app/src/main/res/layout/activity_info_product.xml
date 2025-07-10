@@ -19,14 +19,24 @@
         android:layout_height="wrap_content"
         android:text="@string/nama_produk"
         android:layout_below="@+id/img_product"
-        android:layout_margin="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="15dp"
         android:textSize="25sp"
         android:fontFamily="@font/poppinsextrabold"/>
+
+    <com.google.android.material.divider.MaterialDivider
+        android:id="@+id/divider_6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/jenis_produk"
+        android:layout_marginTop="8dp"
+        android:layout_centerHorizontal="true" />
+
     <RelativeLayout
         android:id="@+id/rl_usernameaddress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/nama_product"
+        android:layout_below="@id/divider_6"
         android:layout_alignStart="@id/nama_product"
         android:layout_marginTop="10dp">
 
@@ -79,7 +89,7 @@
             android:layout_width="wrap_content"
             android:textSize="16sp"
             android:layout_alignStart="@id/nama_product"
-            android:layout_below="@+id/rl_usernameaddress"
+            android:layout_below="@+id/nama_product"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppinsmedium"
             android:text="@string/jenis_produk" />
@@ -88,7 +98,7 @@
         android:id="@+id/layout_harga_tersedia"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/jenis_produk"
+        android:layout_below="@id/rl_usernameaddress"
         android:layout_alignStart="@id/nama_product"
         android:layout_marginTop="10dp">
 
@@ -107,16 +117,25 @@
             android:textStyle="bold" />
 
         <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/stock"
+            android:id="@+id/textstock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/tersedia"
             android:layout_marginRight="15dp"
             android:layout_alignParentEnd="true" />
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/stock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/_50kg"
+            android:layout_marginRight="15dp"
+            android:layout_below="@id/textstock"
+            android:textStyle="bold"
+            android:layout_alignStart="@+id/textstock"/>
     </RelativeLayout>
 
     <com.google.android.material.divider.MaterialDivider
-        android:layout_width="350dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/layout_harga_tersedia"
         android:layout_centerHorizontal="true"
@@ -140,20 +159,72 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/deskripsi"
         android:layout_alignStart="@id/nama_product"
+        android:layout_marginTop="8dp"
         android:text="@string/deskripsi" />
 
+<!--    <com.google.android.material.divider.MaterialDivider-->
+<!--        android:id="@+id/divider_4"-->
+<!--        android:layout_width="350dp"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@+id/deskripsi"-->
+<!--        android:layout_centerHorizontal="true"-->
+<!--        android:layout_marginTop="100dp" />-->
+
+<!--    <RelativeLayout-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_below="@+id/divider_4"-->
+<!--        android:layout_alignStart="@id/nama_product">-->
+
+<!--        <com.google.android.material.textview.MaterialTextView-->
+<!--            android:id="@+id/ulasan"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_marginTop="10dp"-->
+<!--            android:text="@string/ulasan"-->
+<!--            android:layout_centerVertical="true"-->
+<!--            android:textStyle="bold" />-->
+
+<!--        <ImageView-->
+<!--            android:id="@+id/svg_rate"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_toEndOf="@+id/ulasan"-->
+<!--            android:src="@drawable/rate_review"-->
+<!--            android:layout_marginStart="10dp"-->
+<!--            android:layout_centerVertical="true" />-->
+
+<!--        <com.google.android.material.textview.MaterialTextView-->
+<!--            android:id="@+id/txt_ulasan"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/txt_ulasan"-->
+<!--            android:layout_toEndOf="@id/svg_rate"-->
+<!--            android:layout_centerVertical="true"-->
+<!--            android:layout_marginStart="10dp" />-->
+
+<!--        <com.google.android.material.textview.MaterialTextView-->
+<!--            android:id="@+id/baca_ulasan"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="@string/baca_ulasan"-->
+<!--            android:layout_centerVertical="true"-->
+<!--            android:layout_marginRight="15dp"-->
+<!--            android:layout_alignParentEnd="true"-->
+<!--            android:textStyle="bold" />-->
+<!--    </RelativeLayout>-->
+
     <com.google.android.material.divider.MaterialDivider
-        android:id="@+id/divider_4"
-        android:layout_width="350dp"
+        android:id="@+id/divider_5"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/deskripsi"
+        android:layout_below="@+id/deskripsi_produk"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="100dp" />
-
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/divider_4"
+        android:layout_below="@+id/divider_5"
         android:layout_alignStart="@id/nama_product">
 
         <com.google.android.material.textview.MaterialTextView
@@ -193,15 +264,6 @@
             android:layout_alignParentEnd="true"
             android:textStyle="bold" />
     </RelativeLayout>
-
-    <com.google.android.material.divider.MaterialDivider
-        android:id="@+id/divider_5"
-        android:layout_width="350dp"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/divider_4"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="40dp" />
-
     <com.google.android.material.button.MaterialButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

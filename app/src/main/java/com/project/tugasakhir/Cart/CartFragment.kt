@@ -58,7 +58,6 @@ class CartFragment : Fragment() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
             if (isAdded) {
-                binding.progressbarSettings.visibility = View.GONE
                 Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
             }
             return
