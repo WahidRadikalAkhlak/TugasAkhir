@@ -23,7 +23,6 @@
         <item name="android:navigationBarColor">@color/chip_bg_states
         </item> <!-- Navigation Bar dengan warna hijau -->
     </style>
-
     <!-- Custom theme for your application -->
     <style name="Theme.TugasAkhir" parent="Base.Theme.TugasAkhir" />
 

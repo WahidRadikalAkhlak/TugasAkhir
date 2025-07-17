@@ -108,6 +108,7 @@ class ChatFragment : Fragment() {
         val otherParticipant = chat.participants.find { it != auth.currentUser?.uid }
         if (otherParticipant != null) {
             intent.putExtra("receiver_id", otherParticipant)  // Pass receiverId to PesanActivity
+            intent.putExtra("receiver_name", chat.receiverName) // Pass receiverName to PesanActivity
         }
 
         startActivity(intent)  // Open PesanActivity to send messages

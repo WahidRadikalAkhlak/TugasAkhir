@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -26,16 +25,25 @@
             android:text="@string/tv_daftarbisnis"
             android:textColor="@android:color/black"
             android:textSize="22sp"
-            android:textStyle="bold" />
+            android:fontFamily="@font/poppinssemibold" />
 
         <!-- Nomor Telepon -->
+        <TextView
+            android:id="@+id/tv_no_hp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nomor Telepon Lain"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_no_hp"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:hint="Nomor Telepon Lain">
+            android:hint="Nomor WhatsApp"
+            android:layout_height="wrap_content">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/et_no_hp"
@@ -45,12 +53,21 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Alamat Toko -->
+        <TextView
+            android:id="@+id/tv_alamat_toko"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Alamat Toko"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_alamat_toko"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:hint="Alamat Toko Anda">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -61,12 +78,21 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Nomor Izin Usaha -->
+        <TextView
+            android:id="@+id/tv_no_izin_usaha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="No Izin Usaha"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_no_izin_usaha"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:hint="No Izin Usaha">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -77,12 +103,21 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Deskripsi Profil -->
+        <TextView
+            android:id="@+id/tv_deskripsi_profil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Deskripsi Profil"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_deskripsi_profil"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:hint="Deskripsi Profil">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -94,12 +129,21 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Sosial Media -->
+        <TextView
+            android:id="@+id/tv_sosial_media"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sosial Media"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/til_sosial_media"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
             android:hint="Sosial Media">
 
             <com.google.android.material.textfield.TextInputEditText

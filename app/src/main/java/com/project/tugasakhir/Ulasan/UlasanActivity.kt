@@ -1,5 +1,6 @@
 package com.project.tugasakhir.Ulasan
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -60,6 +61,11 @@ class UlasanActivity : AppCompatActivity() {
                     .add(ulasan)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Ulasan berhasil dikirim", Toast.LENGTH_SHORT).show()
+
+                        // Send result back to InfoProductActivity
+                        val resultIntent = Intent()
+                        resultIntent.putExtra("REVIEW_COUNT", 1) // Send 1 review since this review was just added
+                        setResult(RESULT_OK, resultIntent)
                         finish() // Return to previous activity
                     }
                     .addOnFailureListener { e ->

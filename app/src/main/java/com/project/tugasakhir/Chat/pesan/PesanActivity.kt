@@ -2,6 +2,7 @@ package com.project.tugasakhir.Chat.pesan
 
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -31,10 +32,18 @@ class PesanActivity : AppCompatActivity() {
         binding = ActivityPesanBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Setup Toolbar
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowTitleEnabled(true)
+
         // Retrieve chatId, receiverId, and receiverName from Intent
         chatId = intent.getStringExtra("chat_id")
         receiverId = intent.getStringExtra("receiver_id") // Receiver's ID
         receiverName = intent.getStringExtra("receiver_name") // Receiver's Name
+
+        // Set the receiverName as the toolbar title
+        supportActionBar?.title = receiverName ?: "Pesan"
 
         // Retrieve product info if available (i.e., product seller's username)
         product = intent.getParcelableExtra("product") // Ensure Product is passed
@@ -70,6 +79,15 @@ class PesanActivity : AppCompatActivity() {
                 Toast.makeText(this, "Pesan tidak boleh kosong", Toast.LENGTH_SHORT).show()
             }
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            // Navigate back to the previous screen
+            onBackPressed()
+            return true
+        }
+        return super.onOptionsItemSelected(item)
     }
 
     private fun loadMessages() {

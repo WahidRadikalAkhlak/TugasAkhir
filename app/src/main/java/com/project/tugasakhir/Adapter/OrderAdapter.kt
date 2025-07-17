@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.project.tugasakhir.Cart.KeranjangPesananActivity
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product
 import com.project.tugasakhir.R
@@ -56,7 +57,8 @@ class OrderAdapter(
             val product = getProductForOrder(order)
 
             if (product != null) {
-                binding.userName.text = product.userName  // Penjual name
+                binding.userName.text = product.userName
+                binding.alamat.text = order.alamatToko
                 binding.orderNumber.text = order.orderNumber
                 binding.statusOrder.text = order.statusOrder
                 binding.tanggalOrder.text = order.orderDate
@@ -67,41 +69,42 @@ class OrderAdapter(
 
     inner class OrderDetailViewHolder(val binding: ItemKeranjangProdukBinding) :
         RecyclerView.ViewHolder(binding.root) {
-        init {
-            binding.root.setOnClickListener {
-                val position = adapterPosition
-                if (position != RecyclerView.NO_POSITION) {
-                    val selectedOrder = orders[position]
-                    onItemClick(selectedOrder)
-                }
-            }
 
+        init {
+            // Tombol plus
             binding.plus.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val currentOrder = orders[position]
                     currentOrder.quantity += 1
-                    updateOrderInFirestore(currentOrder)
+                    currentOrder.totalPrice =
+                        currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
+                    updateOrderInFirestore(currentOrder) // Perbarui Firestore
                     notifyItemChanged(position)
+                    updateBottomLayout() // Perbarui tampilan total harga
                 }
             }
 
+            // Tombol minus
             binding.mines.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val currentOrder = orders[position]
                     if (currentOrder.quantity > 1) {
                         currentOrder.quantity -= 1
-                        updateOrderInFirestore(currentOrder)
+                        currentOrder.totalPrice =
+                            currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
+                        updateOrderInFirestore(currentOrder) // Perbarui Firestore
                         notifyItemChanged(position)
+                        updateBottomLayout() // Perbarui tampilan total harga
                     }
                 }
             }
 
+            // Tombol hapus pesanan
             binding.btnDeleteOrder.setOnClickListener {
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
-                    Log.d("OrderAdapter", "Delete button clicked for order at position: $position")
                     deleteOrder(orders[position], position)
                 }
             }
@@ -117,6 +120,9 @@ class OrderAdapter(
                 binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
                 binding.banyakProduk.text = order.quantity.toString()
 
+                // Update total price based on quantity
+                binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
+
                 // Check if imageBase64List is available in the order
                 if (order.imageBase64List.isNotEmpty()) {
                     val base64Image = order.imageBase64List[0]
@@ -131,8 +137,22 @@ class OrderAdapter(
                 }
             }
         }
-    }
 
+        private fun updateBottomLayout() {
+            // Update jumlah item dan harga total di layout bagian bawah
+            var totalItemCount = 0
+            var totalPrice = 0.0
+
+            orders.forEach { order ->
+                totalItemCount += order.quantity
+                totalPrice += order.totalPrice
+            }
+
+            // Update tampilan total item dan harga di bottom layout
+            val activity = itemView.context as KeranjangPesananActivity
+            activity.updateBottomLayout(totalItemCount, totalPrice)
+        }
+    }
     private fun deleteOrder(order: Order, position: Int) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
@@ -163,14 +183,18 @@ class OrderAdapter(
     private fun updateOrderInFirestore(order: Order) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
-            // Ensure that 'orderNumber' is used as the document ID
+            // Pastikan menggunakan 'orderNumber' sebagai document ID
             val orderRef = FirebaseFirestore.getInstance()
-                .collection("carts")  // The parent collection
-                .document(order.orderNumber)  // Use 'orderNumber' as document ID
+                .collection("carts")  // Koleksi utama 'carts'
+                .document(order.orderNumber)  // Gunakan 'orderNumber' sebagai document ID
 
-            orderRef.update("quantity", order.quantity)
+            // Update 'quantity' dan 'totalPrice' di Firestore
+            orderRef.update(
+                "quantity", order.quantity,
+                "totalPrice", order.totalPrice // Memperbarui totalPrice
+            )
                 .addOnSuccessListener {
-                    Log.d("OrderAdapter", "Order updated successfully")
+                    Log.d("OrderAdapter", "Order updated successfully with totalPrice: ${order.totalPrice}")
                 }
                 .addOnFailureListener { e ->
                     Log.e("OrderAdapter", "Error updating order: ${e.message}")
@@ -226,6 +250,12 @@ class OrderAdapter(
     fun setOrders(newOrders: List<Order>) {
         orders.clear()
         orders.addAll(newOrders)
+        notifyDataSetChanged()
+    }
+
+    fun updateList(newOrders: List<Order>) {
+        this.orders.clear()
+        this.orders.addAll(newOrders)
         notifyDataSetChanged()
     }
 }

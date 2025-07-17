@@ -8,7 +8,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.project.tugasakhir.Account.Penjual.TerimaPesananActivity
 import com.project.tugasakhir.Adapter.OrderAdapter
 import com.project.tugasakhir.Data.Order
 import com.project.tugasakhir.Data.Product

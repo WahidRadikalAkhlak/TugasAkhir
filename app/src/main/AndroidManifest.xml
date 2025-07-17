@@ -12,12 +12,28 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@drawable/ic_app"
+        android:icon="@drawable/logo_app"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/ic_app"
+        android:roundIcon="@drawable/logo_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
+        <activity
+            android:name=".OnBoarding.OnboardingActivity"
+            android:exported="false" />
+        <!-- SplashScreenActivity declaration -->
+        <activity
+            android:name=".SplashScreenActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:theme="@style/Theme.TugasAkhir">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
             android:name=".Ulasan.ListUlasanActivity"
             android:exported="false" />
@@ -25,7 +41,7 @@
             android:name=".Account.Profile.LanguagesActivity"
             android:exported="false" />
         <activity
-            android:name=".Account.Penjual.TerimaPesananActivity"
+            android:name=".Cart.TerimaPesananActivity"
             android:exported="false" />
         <activity
             android:name=".MainActivity"
@@ -68,15 +84,6 @@
         <activity
             android:name=".Katalog.Product.InfoProductActivity"
             android:exported="false" />
-        <activity
-            android:name=".SplashActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
     </application>
 
 </manifest>

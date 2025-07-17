@@ -1,4 +1,4 @@
-package com.project.tugasakhir.Account.Penjual
+package com.project.tugasakhir.Cart
 
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -362,13 +362,12 @@ class TerimaPesananActivity : AppCompatActivity() {
         }
 
         orders.forEach { order ->
-            // Update the status to "Pesanan Anda Ditolak"
-            order.statusOrder = "Pesanan Ditolak"
+            order.statusOrder = "Pesanan Dibatalkan"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             // Update the order in Firestore
-            updateOrderStatus(order, "Pesanan Ditolak", metodePembayaran, pesanKepadaPenjual)
+            updateOrderStatus(order, "Pesanan Dibatalkan", metodePembayaran, pesanKepadaPenjual)
         }
 
         binding.confirmButton.visibility = View.GONE

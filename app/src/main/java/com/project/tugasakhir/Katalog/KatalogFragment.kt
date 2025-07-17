@@ -108,18 +108,17 @@ class KatalogFragment : Fragment() {
                         if (likesCountFetched.size == produkList.size) {
                             // Semua jumlah likes telah diambil, sekarang refresh RecyclerView
                             produkAdapter.notifyDataSetChanged()
-                            applyCollaborativeFiltering()
-                            updateRecommendations()
+
+                            // Panggil applyCollaborativeFiltering setelah semua data likes dihitung
+                            applyCollaborativeFiltering()  // <-- Panggilan fungsi Collaborative Filtering
+
+                            updateRecommendations()  // Update rekomendasi lainnya
                         }
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Gagal mengambil data produk: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -131,13 +130,14 @@ class KatalogFragment : Fragment() {
 
         // Iterate through each product type
         for ((type, productsInCategory) in groupedProducts) {
-            val productWithLikes = productsInCategory.filter { it.likesCount >= 3 }
+            // Filter products with at least 1 like
+            val likedProducts = productsInCategory.filter { it.likesCount > 0 }
 
-            if (productWithLikes.isNotEmpty()) {
-                // Add products with at least 3 likes to recommendations
-                recommendedProducts.addAll(productWithLikes)
+            if (likedProducts.isNotEmpty()) {
+                // If there are liked products, display the ones with likes
+                recommendedProducts.addAll(likedProducts)
             } else {
-                // If no product has likes >= 3, show the cheapest product
+                // If no liked products, display the cheapest product in that category
                 val cheapestProduct = productsInCategory.minByOrNull { it.pricePerUnit }
                 if (cheapestProduct != null) {
                     recommendedProducts.add(cheapestProduct)
@@ -145,6 +145,7 @@ class KatalogFragment : Fragment() {
             }
         }
 
+        // Update the recommendations adapter with the filtered list
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
@@ -154,44 +155,44 @@ class KatalogFragment : Fragment() {
             return
         }
 
-        if (allProducts.all { it.likesCount == 0 }) {
-            Log.e("KatalogFragment", "No likes available, applying fallback recommendations")
-            applyFallbackRecommendations()
+        // Mengambil produk dengan likes lebih dari 0 (dapat diubah menjadi lebih besar dari 3 jika perlu)
+        val filteredProducts = allProducts.filter { it.likesCount > 0 }
+
+        if (filteredProducts.isEmpty()) {
+            Log.e("KatalogFragment", "No products with sufficient likes")
+            applyFallbackRecommendations()  // Jika tidak ada produk dengan likes > 0, tampilkan produk termurah
             return
         }
 
+        // Membuat matriks kemiripan produk berdasarkan likes
         val productLikesMatrix = mutableListOf<MutableList<Double>>()
-        for (i in allProducts.indices) {
+
+        // Menghitung kemiripan antar produk berdasarkan likes
+        for (i in filteredProducts.indices) {
             val likesForProduct = mutableListOf<Double>()
-            for (j in allProducts.indices) {
+            for (j in filteredProducts.indices) {
                 if (i != j) {
-                    val similarity = computeCosineSimilarity(allProducts[i], allProducts[j])
+                    val similarity = computeCosineSimilarity(filteredProducts[i], filteredProducts[j])
                     likesForProduct.add(similarity)
                 }
             }
             productLikesMatrix.add(likesForProduct)
         }
 
-        val filteredProducts = allProducts.filter { it.likesCount > 3 }
-
-        if (filteredProducts.isEmpty()) {
-            Log.e("KatalogFragment", "No products with more than 3 likes")
-            applyFallbackRecommendations()
-            return
-        }
-
         // Rekomendasi produk berdasarkan similarity
         val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
+
+        // Perbarui data rekomendasi menggunakan produk yang direkomendasikan berdasarkan cosine similarity
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
     private fun applyFallbackRecommendations(filteredSource: List<Product> = allProducts) {
-        // Fallback logic if products don't have enough likes
+        // Fallback logic jika produk tidak memiliki cukup likes
         val groupedProducts = filteredSource.groupBy { it.productType }
 
         val recommendedProducts = groupedProducts.flatMap { (_, productList) ->
-            productList.sortedBy { it.pricePerUnit } // Sort by price for the fallback
-        }.take(10) // Show top 10 based on price
+            productList.sortedBy { it.pricePerUnit } // Urutkan berdasarkan harga untuk fallback
+        }.take(10) // Tampilkan 10 produk teratas berdasarkan harga
 
         rekomendasiAdapter.updateData(recommendedProducts)
     }
@@ -243,44 +244,44 @@ class KatalogFragment : Fragment() {
         return commonUsers
     }
 
-    private fun getCommonUsers(productA: Product, productB: Product): List<String> {
+//    private fun getCommonUsers(productA: Product, productB: Product): List<String> {
+//
+//        val commonUsers = mutableListOf<String>()
+//        productA.likes.keys.forEach { userId ->
+//            if (productB.likes.containsKey(userId)) {
+//                commonUsers.add(userId)
+//            }
+//        }
+//        return commonUsers
+//    }
 
-        val commonUsers = mutableListOf<String>()
-        productA.likes.keys.forEach { userId ->
-            if (productB.likes.containsKey(userId)) {
-                commonUsers.add(userId)
-            }
-        }
-        return commonUsers
-    }
-
-    private fun recommendProductsBasedOnSimilarity(matrix: List<List<Double>>, filteredProducts: List<Product>, topN: Int): List<Product> {
+    private fun recommendProductsBasedOnSimilarity(
+        matrix: List<List<Double>>,
+        filteredProducts: List<Product>,
+        topN: Int
+    ): List<Product> {
         val recommendedProducts = mutableListOf<Product>()
 
+        // Menghitung rekomendasi berdasarkan similarity
         for (i in matrix.indices) {
             val similarities = matrix[i]
 
-            // Cek apakah filteredProducts cukup besar untuk diakses
-            if (filteredProducts.size <= similarities.size) {
-                val sortedSimilarities = similarities.withIndex()
-                    .sortedByDescending { it.value }
-                    .take(topN) // Ambil 'topN' produk teratas yang mirip
+            // Menyortir kemiripan berdasarkan similarity tertinggi
+            val sortedSimilarities = similarities.withIndex()
+                .sortedByDescending { it.value }
+                .take(topN)
 
-                for (similarity in sortedSimilarities) {
-                    if (similarity.value > 0) {
-                        val recommendedProduct = filteredProducts.getOrNull(similarity.index)
-                        if (recommendedProduct != null && !recommendedProducts.contains(
-                                recommendedProduct
-                            )
-                        ) {
-                            recommendedProducts.add(recommendedProduct)
-                        }
+            // Menambahkan produk yang mirip
+            for (similarity in sortedSimilarities) {
+                if (similarity.value > 0) {
+                    val recommendedProduct = filteredProducts.getOrNull(similarity.index)
+                    if (recommendedProduct != null && !recommendedProducts.contains(recommendedProduct)) {
+                        recommendedProducts.add(recommendedProduct)
                     }
                 }
-            } else {
-                Log.e("KatalogFragment", "Mismatch in size between similarity matrix and filtered products list.")
             }
         }
+
         return recommendedProducts
     }
 
@@ -318,14 +319,8 @@ class KatalogFragment : Fragment() {
 
     private fun applyCombinedFilters(searchQuery: String = "") {
         val filtered = allProducts.filter {
-            (selectedChipType.isEmpty() || it.productType.equals(
-                selectedChipType,
-                ignoreCase = true
-            )) &&
-                    (searchQuery.isEmpty() || it.productName.contains(
-                        searchQuery,
-                        ignoreCase = true
-                    ))
+            (selectedChipType.isEmpty() || it.productType.equals(selectedChipType, ignoreCase = true)) &&
+                    (searchQuery.isEmpty() || it.productName.contains(searchQuery, ignoreCase = true))
         }
 
         // Update produk list
@@ -333,15 +328,23 @@ class KatalogFragment : Fragment() {
         produkList.addAll(filtered)
         produkAdapter.notifyDataSetChanged()
 
-        // Update rekomendasi
-        val recommended = filtered.filter { it.likesCount >= 3 }
+        // Update recommendations based on the filtered list
+        updateRecommendationsForFiltered(filtered)
+    }
 
-        if (recommended.isNotEmpty()) {
-            rekomendasiAdapter.updateData(recommended)
+    private fun updateRecommendationsForFiltered(filteredProducts: List<Product>) {
+        // Filter products with likes
+        val recommendedProducts = filteredProducts.filter { it.likesCount > 0 }
+
+        if (recommendedProducts.isNotEmpty()) {
+            // Show liked products in the recommendations section
+            rekomendasiAdapter.updateData(recommendedProducts)
         } else {
-            applyFallbackRecommendations(filtered)
+            // Fallback to showing the cheapest products when no likes are available
+            applyFallbackRecommendations(filteredProducts)
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

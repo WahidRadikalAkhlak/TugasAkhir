@@ -4,13 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Chat.ChatFragment">
+    tools:context=".Chat.ChatFragment"
+    android:background="@android:color/white">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:indeterminate="true"
+        android:elevation="4dp" />
 
     <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_pesan"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:listitem="@layout/item_chat"
-        app:layout_constraintStart_toStartOf="parent" />
+    android:id="@+id/rv_pesan"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginTop="16dp"
+    android:layout_marginBottom="16dp"
+    android:padding="8dp"
+    tools:listitem="@layout/item_chat"
+    app:layout_constraintStart_toStartOf="parent" />
 
-</FrameLayout>
+    </FrameLayout>

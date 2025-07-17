@@ -84,7 +84,7 @@
 
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/divider_1"
-                android:layout_width="350dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp" />
@@ -139,6 +139,30 @@
                     android:text="@string/statusorder" />
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/rv_alamattoko"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="15dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/txt_alamat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alamat"
+                    android:textSize="15sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/alamat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="3dp"
+                    android:layout_toEndOf="@id/txt_alamat"
+                    android:text="Jl. kayumalue indah no 5" />
+            </RelativeLayout>
+
             <!-- Date & Time -->
             <RelativeLayout
                 android:id="@+id/rv_tanggal_waktu"
@@ -182,7 +206,7 @@
 
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/divider_2"
-                android:layout_width="350dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="10dp" />
@@ -192,22 +216,16 @@
                 android:id="@+id/rv_produk_keranjang"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                tools:itemCount="2"
                 android:layout_marginTop="10dp"
                 tools:listitem="@layout/item_keranjang_produk" />
 
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/divider_3"
-                android:layout_width="350dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="10dp" />
-
-            <com.google.android.material.divider.MaterialDivider
-                android:id="@+id/divider_4"
-                android:layout_width="350dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="8dp" />
 
             <!-- Metode Pembayaran -->
             <LinearLayout
@@ -243,7 +261,7 @@
 
             <com.google.android.material.divider.MaterialDivider
                 android:id="@+id/divider_5"
-                android:layout_width="350dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="8dp" />
@@ -262,7 +280,7 @@
                     android:layout_marginTop="8dp"
                     android:text="@string/pesan_kepada_penjual"
                     android:textStyle="bold"
-                    android:visibility="gone"/>
+                    android:visibility="visible"/>
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/edittext_pesan"
@@ -273,13 +291,6 @@
                     android:background="@drawable/border_backround"
                     android:hint="Isi Pesan ..."
                     android:gravity="top" />
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/textViewPesanKepadaPenjual"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Pesan kepada Penjual: "
-                    android:textSize="14sp"
-                    android:visibility="gone" />
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

@@ -82,9 +82,18 @@ class AccountFragment : Fragment() {
             }
         }
 
-        binding.clsettings.setOnClickListener{
-            navigateToSettings()
+        binding.clsettings.setOnClickListener {
+            val currentUser = auth.currentUser
+            if (currentUser == null) {
+                // If the user is not logged in, show a Toast and navigate to login
+                Toast.makeText(requireContext(), "Harap Login Terlebih Dahulu", Toast.LENGTH_SHORT).show()
+                navigateToLogin() // This method will take the user to the LoginActivity
+            } else {
+                // If the user is logged in, navigate to Settings
+                navigateToSettings()
+            }
         }
+
 
         // Tombol ini cukup arahkan langsung ke pengecekan status bisnis
         binding.btnDaftarProduct.setOnClickListener {
@@ -93,10 +102,6 @@ class AccountFragment : Fragment() {
             } else {
                 checkBusinessAccountStatusForProduct(currentUser.email ?: "")
             }
-        }
-
-        binding.clsettings.setOnClickListener {
-            navigateToSettings()
         }
     }
 

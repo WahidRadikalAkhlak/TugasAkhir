@@ -7,9 +7,11 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -34,6 +36,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
         binding = ActivityInfoProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Get the product from the Intent
         product = intent.getParcelableExtra("product")
 
         if (product == null) {
@@ -41,6 +44,21 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             finish()
             return
         }
+
+        // Setup Toolbar with product name as title
+        val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+
+        // Set the title of the AppBar to product's name
+        supportActionBar?.title = product?.productName ?: "Produk"
+
+        // Handle back navigation on toolbar
+        toolbar.setNavigationOnClickListener {
+            onBackPressed()  // Perform the back navigation
+        }
+
         // InfoProductActivity: When "Baca Ulasan" is clicked, navigate to ListUlasanActivity
         binding.bacaUlasan.setOnClickListener {
             val intent = Intent(this, ListUlasanActivity::class.java)
@@ -50,20 +68,17 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
         source = intent.getStringExtra("source")
 
+        // Display product data
         displayProductData(product!!)
 
         // Get like count and check if liked
         getLikesCount(product!!)
         checkIfLiked(product!!)
 
-        // Handle message button click
-        // In your InfoProductActivity's onCreate or displayProductData method:
         binding.btnKirimPesan.setOnClickListener {
             if (source == "seller") {
-                // When the "Edit Produk" button is clicked, navigate to ProductBaruActivity
                 openEditProduct(product!!)
             } else {
-                // Handle sending message to seller for buyers
                 val recipientUserId = product?.userName
                 if (recipientUserId != null) {
                     sendMessageToSeller(recipientUserId, product!!)
@@ -184,17 +199,32 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            val reviewCount = data?.getIntExtra("REVIEW_COUNT", 0) ?: 0
+        }
+    }
+
     private fun displayProductData(p: Product) {
         with(binding) {
             // Display product details
             namaProduct.text = p.productName
             jenisProduk.text = "Jenis Produk: ${p.productType}"
-            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f",p.pricePerUnit)}" else "Harga belum tersedia"
+            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f", p.pricePerUnit)} /Kg" else "Harga belum tersedia"
             stock.text = "${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
-            userName.text = "Penjual: ${p.userName}"
-            address.text = "Alamat: ${p.alamatToko}"
+            userName.text = " : ${p.userName}"
+            address.text = " : ${p.alamatToko}"
 
+            // Display the discount
+            val discount = p.discount
+            if (discount > 0) {
+                binding.discountLabel.visibility = View.VISIBLE
+                binding.discountLabel.text = "$discount% OFF"
+            } else {
+                binding.discountLabel.visibility = View.GONE
+            }
             // Display the product image
             if (!p.imageUrls.isNullOrEmpty()) {
                 Glide.with(this@InfoProductActivity)

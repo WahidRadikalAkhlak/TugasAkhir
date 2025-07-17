@@ -1,5 +1,6 @@
 package com.project.tugasakhir.Ulasan
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -51,14 +52,22 @@ class ListUlasanActivity : AppCompatActivity() {
                     reviews.add(review)
                 }
 
+                // Update review count in InfoProductActivity
+                val reviewCount = reviews.size
+                val intent = Intent()
+                intent.putExtra("REVIEW_COUNT", reviewCount)
+
                 // If there are no reviews, show a message
                 if (reviews.isEmpty()) {
-                    Toast.makeText(this, "No reviews for this product", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Tidak Ada Ulasan Produk", Toast.LENGTH_SHORT).show()
                 }
 
                 // Set up the adapter with the reviews
                 val adapter = UlasanAdapter(reviews)
                 binding.rvReviews.adapter = adapter
+
+                // Send review count back to InfoProductActivity
+                setResult(RESULT_OK, intent)
             }
             .addOnFailureListener { e ->
                 // Handle any errors while fetching reviews

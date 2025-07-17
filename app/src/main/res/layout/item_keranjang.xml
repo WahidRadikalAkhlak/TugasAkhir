@@ -59,6 +59,15 @@
                     android:textSize="16sp"
                     android:textColor="@color/black"
                     android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:id="@+id/alamat"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/alamat"
+                    android:textSize="16sp"
+                    android:textColor="@color/dark_grey" />
+
             </LinearLayout>
         </LinearLayout>
 

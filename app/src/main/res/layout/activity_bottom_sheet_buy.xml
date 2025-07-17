@@ -251,7 +251,7 @@
                     android:textColor="@color/fontColor"
                     android:backgroundTint="@color/btn_color"
                     android:text="Tambah ke Keranjang"
-                    app:cornerRadius="16dp" />
+                    app:cornerRadius="12dp" />
             </LinearLayout>
 
         </RelativeLayout>

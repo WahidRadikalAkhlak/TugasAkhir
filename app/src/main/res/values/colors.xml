@@ -10,4 +10,7 @@
     <color name="btn_color">#B0DB9C</color>
     <color name="liked_button">#FF4081</color>
     <color name="unliked_button">#757575</color>
+    <color name="red">#DE1304</color>
+    <color name="green1">#48884E</color>
+
 </resources>

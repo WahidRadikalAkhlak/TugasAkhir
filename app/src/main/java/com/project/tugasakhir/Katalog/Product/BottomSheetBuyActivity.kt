@@ -181,9 +181,10 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
     private fun calculateMaxTawaran(qty: Int): Double {
         val totalPrice = qty * pricePerKg
         return when {
-            qty in 8..15 -> totalPrice * 0.95  // Diskon 5%
-            qty in 15..30 -> totalPrice * 0.90  // Diskon 10%
-            qty > 30 -> totalPrice * 0.85      // Diskon 15%
+            totalPrice >= 200000 -> {
+                val discount = product?.discount ?: 0.0 // Get discount from the product
+                totalPrice * (1 - discount / 100) // Apply the discount if the total price exceeds 200k
+            }
             else -> totalPrice
         }
     }
@@ -316,6 +317,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "productName" to productName,
             "productType" to productType,
             "pricePerUnit" to pricePerUnit,
+            "alamatToko" to product?.alamatToko,
             "userName" to (currentUser.displayName ?: "User"),
             "sellerName" to product?.userName,
             "productId" to productId,

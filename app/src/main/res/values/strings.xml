@@ -7,7 +7,7 @@
     <string name="jenis_produk">Jenis Produk</string>
     <string name="tipe_produk">Tipe Produk</string>
     <string name="deskripsi">Deskripsi Produk</string>
-    <string name="tersedia">Stock Tersedia :</string>
+    <string name="tersedia">Stok Tersedia :</string>
     <string name="jumlah_tersedia">Jumlah Tersedia</string>
     <string name="kg">(/kg)</string>
     <string name="harga">Harga :</string>
@@ -82,7 +82,7 @@
     <string name="memesan">Memesan</string>
     <string name="konfirmasi">Konfirmasi</string>
     <string name="selesai">Selesai</string>
-    <string name="stok">Stok</string>
+    <string name="stok">Stok :</string>
     <string name="bayarditempat">Bayar Ditempat</string>
     <string name="Batalkanpesanan">Batalkan Pesanan</string>
     <string name="konfpesanan">Proses pesanan</string>
@@ -96,4 +96,11 @@
     <string name="tvproduksaya">Produk Saya</string>
     <string name="tv_daftarbisnis">Daftar Akun Bisnis</string>
     <string name="Settingakun">Setting Akun</string>
+    <string name="batal">Batal</string>
+    <string name="proses">Proses</string>
+    <string name="alamat">Alamat Penjual : </string>
+    <string name="utama">Utama</string>
+    <string name="pesan">Pesan</string>
+    <string name="keranjang">Keranjang</string>
+    <string name="akun">Akun</string>
 </resources>

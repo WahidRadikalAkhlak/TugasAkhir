@@ -30,6 +30,7 @@ class CartFragment : Fragment() {
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
+    private var selectedChip: String = "ALL"
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,8 +53,33 @@ class CartFragment : Fragment() {
         binding.rvPesan.adapter = adapter
         loadUserOrders()
         loadProducts() // Load products as well
+        setupChipFilters()
     }
 
+    private fun setupChipFilters() {
+        binding.chip2.setOnClickListener { selectChip("Memesan") }
+        binding.chip3.setOnClickListener { selectChip("Menunggu Konfirmasi Penjual") }
+        binding.chip4.setOnClickListener { selectChip("Pesanan Sedang Dikemas") }
+        binding.chip5.setOnClickListener { selectChip("Pesanan Selesai") }
+        binding.chip6.setOnClickListener { selectChip("Pesanan Dibatalkan") }
+    }
+
+    private fun selectChip(status: String) {
+        selectedChip = status
+        filterOrdersByChip()
+    }
+
+    private fun filterOrdersByChip() {
+        val filteredOrders = when (selectedChip) {
+            "Memesan" -> orders.filter { it.statusOrder == "Memesan" }
+            "Menunggu Konfirmasi Penjual" -> orders.filter { it.statusOrder == "Menunggu Konfirmasi Penjual" }
+            "Pesanan Sedang Dikemas" -> orders.filter { it.statusOrder == "Pesanan Sedang Dikemas" }
+            "Pesanan Selesai" -> orders.filter { it.statusOrder == "Pesanan Selesai" }
+            "Pesanan Dibatalkan" -> orders.filter { it.statusOrder == "Pesanan Dibatalkan" }
+            else -> orders  // Show all orders for "ALL"
+        }
+        adapter.updateList(filteredOrders)
+    }
     private fun loadUserOrders() {
         val currentUser = auth.currentUser
         if (currentUser == null) {

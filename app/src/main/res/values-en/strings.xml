@@ -82,7 +82,7 @@
     <string name="memesan">Order</string>
     <string name="konfirmasi">Confirmation</string>
     <string name="selesai">Finished</string>
-    <string name="stok">Stock</string>
+    <string name="stok">Stock :</string>
     <string name="bayarditempat">Pay on Delivery</string>
     <string name="Batalkanpesanan">Cancel Order</string>
     <string name="konfpesanan">Order Process</string>
@@ -96,4 +96,11 @@
     <string name="tvproduksaya">My Products</string>
     <string name="tv_daftarbisnis">Business Account Registration</string>
     <string name="Settingakun">Setting Akun</string>
+    <string name="batal">Cancel</string>
+    <string name="proses">Process</string>
+    <string name="alamat">Shop Address : </string>
+    <string name="utama">Home</string>
+    <string name="pesan">Chat</string>
+    <string name="keranjang">Cart</string>
+    <string name="akun">Account</string>
 </resources>

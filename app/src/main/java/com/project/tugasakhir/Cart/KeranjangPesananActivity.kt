@@ -129,6 +129,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
                         email = doc.getString("email") ?: "Email tidak tersedia"
                         userName = doc.getString("userName") ?: "Nama tidak tersedia"
                         orderNumber = doc.getString("orderNumber") ?: ""
+                        alamatToko = doc.getString("alamatToko") ?: ""  // Set alamatToko
                         orderDate = doc.getString("orderDate") ?: ""
                         orderTime = doc.getString("orderTime") ?: ""
                         statusOrder = doc.getString("statusOrder") ?: "Memesan"
@@ -165,8 +166,9 @@ class KeranjangPesananActivity : AppCompatActivity() {
                         orders.firstOrNull()?.orderDate ?: "Order Date tidak tersedia"
                     binding.orderTime.text =
                         orders.firstOrNull()?.orderTime ?: "Order Time tidak tersedia"
+                    binding.alamat.text = orders.firstOrNull()?.alamatToko ?: "Alamat toko tidak tersedia"
                 }
-
+                loadPesanKepadaPenjual()
                 adapter.notifyDataSetChanged()
                 updateBottomLayout(itemCount, totalPrice)
                 updateButtonVisibility()
@@ -174,6 +176,25 @@ class KeranjangPesananActivity : AppCompatActivity() {
             .addOnFailureListener { e ->
                 Toast.makeText(this, "Gagal memuat data keranjang: ${e.message}", Toast.LENGTH_SHORT)
                     .show()
+            }
+    }
+
+    private fun loadPesanKepadaPenjual() {
+        // Get the message from Firestore
+        val order = orders.firstOrNull() ?: return
+        val orderNumber = order.orderNumber
+
+        db.collection("carts")
+            .document(orderNumber)
+            .get()
+            .addOnSuccessListener { document ->
+                val message = document.getString("pesanKepadaPenjual")
+                if (message != null) {
+                    binding.edittextPesan.setText(message)
+                }
+            }
+            .addOnFailureListener { e ->
+                Log.e("KeranjangPesanan", "Failed to load message: ${e.message}")
             }
     }
 
@@ -216,6 +237,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
                     metodePembayaran,
                     pesanKepadaPenjual
                 )
+                binding.edittextPesan.isEnabled = false
             } else if (order.statusOrder == "Pesanan Sedang Dikemas") {
                 // When order status is "Pesanan Sedang Dikemas", retrieve the message from Firestore
                 getPesanKepadaPenjualFromFirestore(order) { pesan ->
@@ -241,7 +263,7 @@ class KeranjangPesananActivity : AppCompatActivity() {
         // Refresh the cart after confirmation
         loadCartItems()
 
-        // Hide the button after the first confirmation
+        // Make sure the cancel button is still visible after confirmation
         binding.confirmButton.visibility = View.GONE
         binding.cancelButton.visibility = View.VISIBLE
         updateButtonVisibility()
@@ -287,22 +309,23 @@ class KeranjangPesananActivity : AppCompatActivity() {
         }
 
         orders.forEach { order ->
-            // Update the status to "Pesanan Anda Dibatalkan"
-            order.statusOrder = "Pesanan Anda Dibatalkan"
+            // Update the status to "Pesanan Dibatalkan"
+            order.statusOrder = "Pesanan Dibatalkan"
             order.metodePembayaran = metodePembayaran
             order.pesanKepadaPenjual = pesanKepadaPenjual
 
             // Update the order in Firestore
             updateOrderStatus(
                 order,
-                "Pesanan Anda Dibatalkan",
+                "Pesanan Dibatalkan",
                 metodePembayaran,
                 pesanKepadaPenjual
             )
         }
 
+        // Keep the cancel button visible even after cancellation
         binding.confirmButton.visibility = View.GONE
-        binding.cancelButton.visibility = View.GONE
+        binding.cancelButton.visibility = View.VISIBLE
         loadCartItems() // Reload the cart items after the cancellation
 
         // Update UI after the status change
@@ -318,16 +341,21 @@ class KeranjangPesananActivity : AppCompatActivity() {
         }
         val hasReadyForCompletion = orders.any { it.statusOrder == "Pesanan Sedang Dikemas" }
 
-        if (hasPendingOrders || hasReadyForCompletion) {
-            binding.confirmButton.visibility = View.VISIBLE
+        // Ensure cancel button stays visible even after confirmation, if the status is not completed or cancelled
+        if (orders.any { it.statusOrder == "Menunggu Konfirmasi Penjual" || it.statusOrder == "Pesanan Sedang Dikemas" }) {
             binding.cancelButton.visibility = View.VISIBLE
         } else {
-            binding.confirmButton.visibility = View.GONE
             binding.cancelButton.visibility = View.GONE
+        }
+
+        if (hasPendingOrders || hasReadyForCompletion) {
+            binding.confirmButton.visibility = View.VISIBLE
+        } else {
+            binding.confirmButton.visibility = View.GONE
         }
     }
 
-    private fun updateBottomLayout(itemCount: Int, totalPrice: Double) {
+    fun updateBottomLayout(itemCount: Int, totalPrice: Double) {
         binding.itemCount.text = "Item: $itemCount"
         binding.totalPrice.text = "Rp ${String.format("%,.0f", totalPrice)}"
     }

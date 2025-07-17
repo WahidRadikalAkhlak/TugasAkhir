@@ -25,6 +25,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import com.project.tugasakhir.R
 
 class ProductBaruActivity : AppCompatActivity() {
 
@@ -146,6 +149,14 @@ class ProductBaruActivity : AppCompatActivity() {
             return
         }
 
+        val discountStr = binding.discountInput.text.toString().trim()
+        val discount = discountStr.toIntOrNull() ?: 0
+        if (discount < 0 || discount > 100) {
+            Toast.makeText(this, "Diskon harus antara 0% hingga 100%", Toast.LENGTH_SHORT).show()
+            hideProgressBar()
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val base64Images = mutableListOf<String>()
@@ -165,6 +176,7 @@ class ProductBaruActivity : AppCompatActivity() {
 
                 val alamatToko = fetchAlamatTokoFromFirestore()
                 // Prepare product data without email and username if it's an update
+
                 val productData = hashMapOf(
                     "productName" to namaProduct,
                     "productType" to jenisProduk,
@@ -174,7 +186,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     "isAvailable" to tampilkanProduk,
                     "imageBase64List" to base64Images,
                     "sellerUID" to sellerUID,
-                    "alamatToko" to alamatToko
+                    "alamatToko" to alamatToko,
+                    "discount" to discount
                 )
 
                 if (editingProduct != null) {
@@ -263,11 +276,16 @@ class ProductBaruActivity : AppCompatActivity() {
     }
 
     private fun uriToBase64(uri: Uri): String? {
+        // Convert the image Uri to a Bitmap and resize it
         val inputStream = contentResolver.openInputStream(uri) ?: return null
-        val bitmap = BitmapFactory.decodeStream(inputStream)
+        var bitmap = BitmapFactory.decodeStream(inputStream)
+
+        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 800, 800, true) // 500x500px size
+
         val outputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
         val byteArray = outputStream.toByteArray()
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
+
 }
