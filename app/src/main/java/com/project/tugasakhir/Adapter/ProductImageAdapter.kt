@@ -28,46 +28,31 @@ class ProductImageAdapter(
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
 
+            // Bind the RatingBar to the product's avgRating
+            binding.ratingBar.rating = product.avgRating  // This will bind the avgRating
             binding.likesCount.visibility = View.GONE
-            // Muat gambar produk
+            binding.likesCount.text = "${product.likesCount} Likes" // Show the likes count
+
             loadProductImage(product)
 
-            binding.root.setOnClickListener { onItemClick(product) }
-
-            // Safely load images, checking for null/empty lists
-            if (product.imageUrls.isNotEmpty()) {
-                Glide.with(binding.imgProduct.context)
-                    .load(product.imageUrls[0])
-                    .placeholder(R.drawable.image_icon)
-                    .error(R.drawable.image_icon)
-                    .into(binding.imgProduct)
-            } else if (product.imageBase64List.isNotEmpty()) {
-                base64ToBitmap(product.imageBase64List[0])?.let {
-                    binding.imgProduct.setImageBitmap(it)
-                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
-            } else {
-                binding.imgProduct.setImageResource(R.drawable.image_icon)
-            }
-            loadProductImage(product)
             // Handle click event for the product
             binding.root.setOnClickListener { onItemClick(product) }
         }
 
         private fun loadProductImage(product: Product) {
-            // Cek jika imageUrls atau imageBase64List ada dan valid
+            // Check if imageUrls or imageBase64List is available and valid
             if (!product.imageUrls.isNullOrEmpty()) {
                 Glide.with(binding.imgProduct.context)
-                    .load(product.imageUrls[0])  // Ambil gambar pertama dari imageUrls
+                    .load(product.imageUrls[0])  // Load the first image from imageUrls
                     .placeholder(R.drawable.image_icon)
                     .error(R.drawable.image_icon)
                     .into(binding.imgProduct)
             } else if (!product.imageBase64List.isNullOrEmpty()) {
                 base64ToBitmap(product.imageBase64List[0])?.let {
                     binding.imgProduct.setImageBitmap(it)
-                }
-                    ?: binding.imgProduct.setImageResource(R.drawable.image_icon)  // Default jika base64 gagal
+                } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)  // Default if base64 fails
             } else {
-                binding.imgProduct.setImageResource(R.drawable.image_icon)  // Placeholder jika tidak ada gambar
+                binding.imgProduct.setImageResource(R.drawable.image_icon)  // Placeholder if no image
             }
         }
 
@@ -90,6 +75,7 @@ class ProductImageAdapter(
     override fun onBindViewHolder(holder: ProductViewHolder, position: Int) {
         holder.bind(products[position])
     }
+
     override fun getItemCount(): Int = products.size
 
     // Method to update data when filtering or when new data is available

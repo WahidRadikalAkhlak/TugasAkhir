@@ -62,7 +62,7 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-storage-ktx")
     implementation("com.google.firebase:firebase-auth")
-    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-messaging:25.0.0")
 
     // Glide
     implementation("com.github.bumptech.glide:glide:4.12.0")
@@ -83,8 +83,6 @@ dependencies {
 
     // Google Identity (GoogleID)
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
-    implementation("com.facebook.android:facebook-login:12.0.0")
-    implementation("com.facebook.android:facebook-login:[5,6)")
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")

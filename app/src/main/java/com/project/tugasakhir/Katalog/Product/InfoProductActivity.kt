@@ -2,8 +2,11 @@ package com.project.tugasakhir.Katalog.Product
 
 import BottomSheetBuyActivity
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
@@ -18,6 +21,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Chat.pesan.PesanActivity
 import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.Data.Product
+import com.project.tugasakhir.Data.Review
 import com.project.tugasakhir.Katalog.ProductPenjual.ProductBaruActivity
 import com.project.tugasakhir.R
 import com.project.tugasakhir.Ulasan.ListUlasanActivity
@@ -68,6 +72,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
         source = intent.getStringExtra("source")
 
+        getReviewsAndRating(product!!)
         // Display product data
         displayProductData(product!!)
 
@@ -92,6 +97,38 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
         binding.btnLike.setOnClickListener {
             toggleLikeStatusForUser(product!!)
         }
+    }
+
+    private fun getReviewsAndRating(product: Product) {
+        firestore.collection("ulasan")
+            .document(product.productId)  // Use productId as the unique identifier
+            .collection("ulasan")
+            .get()
+            .addOnSuccessListener { result ->
+                val reviewCount = result.size()
+                var totalRating = 0f
+
+                // Calculate the total rating by iterating over reviews
+                for (document in result) {
+                    val review = document.toObject(Review::class.java)
+                    totalRating += (review.ratingKomunikasi + review.ratingKualitas) // Sum ratings
+                }
+
+                // Calculate the average rating (average of all reviews)
+                if (reviewCount > 0) {
+                    product.avgRating = totalRating / (reviewCount * 2)  // Average rating (normalize)
+                }
+
+                // Update the UI elements
+                binding.likesCount.text = "$reviewCount Ulasan"
+                binding.overallRating.text = String.format("%.1f", product.avgRating)
+
+                // Set RatingBar value in InfoProductActivity
+                binding.ratingBar.rating = product.avgRating  // Set the actual value of RatingBar
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Failed to get reviews: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 
     private fun checkIfLiked(product: Product) {
@@ -215,7 +252,35 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             stock.text = "${p.stockAvailable} kg"
             deskripsiProduk.text = p.description
             userName.text = " : ${p.userName}"
+
+            // Set address text
             address.text = " : ${p.alamatToko}"
+
+            // Get seller email to fetch location data
+            val sellerEmail = p.email // Use the email from the Product object to fetch seller info
+            firestore.collection("penjual")
+                .document(sellerEmail.replace(".", "_"))  // Firestore uses _ instead of .
+                .get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        val shareLokasi = document.getString("shareLokasi") ?: ""
+                        if (shareLokasi.isNotEmpty()) {
+                            // Display the location link
+                            linkLokasi.text = shareLokasi
+                            // Make the location link clickable
+                            linkLokasi.setOnClickListener {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(shareLokasi))
+                                intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://com.google.android.apps.maps"))
+                                startActivity(intent)
+                            }
+                        } else {
+                            linkLokasi.text = "Lokasi tidak tersedia"
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(this@InfoProductActivity, "Failed to get location: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
 
             // Display the discount
             val discount = p.discount
@@ -225,6 +290,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             } else {
                 binding.discountLabel.visibility = View.GONE
             }
+
             // Display the product image
             if (!p.imageUrls.isNullOrEmpty()) {
                 Glide.with(this@InfoProductActivity)
@@ -239,6 +305,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             } else {
                 imgProduct.setImageResource(R.drawable.image_icon)
             }
+
             // Set button text and listeners based on source
             if (source == "seller") {
                 // Change button text and set functionality for seller

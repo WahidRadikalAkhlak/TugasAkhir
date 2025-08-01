@@ -23,6 +23,8 @@ class KeranjangPenjualActivity : AppCompatActivity() {
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
 
+    private var selectedChip: String = "ALL"  // Default filter for all orders
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityKeranjangPenjualBinding.inflate(layoutInflater)
@@ -30,16 +32,12 @@ class KeranjangPenjualActivity : AppCompatActivity() {
 
         // Setup RecyclerView
         binding.rvPesan.layoutManager = LinearLayoutManager(this)
-        adapter = OrderAdapter(orders, products, { selectedOrder ->
-            openOrderDetail(selectedOrder)
-        }, { orderToDelete ->
-            hapusPesanan(orderToDelete)
-        }, isForKeranjangPesanan = false)
-
+        adapter = OrderAdapter(orders, products, { selectedOrder -> openOrderDetail(selectedOrder) }, { orderToDelete -> hapusPesanan(orderToDelete) }, isForKeranjangPesanan = false)
         binding.rvPesan.adapter = adapter
 
-        loadSellerOrders() // Load orders for the seller
-        loadProducts() // Load the products to match with orders
+        binding.progressBar.visibility = View.VISIBLE  // Show progress bar when loading
+        loadSellerOrders()  // Load orders for the seller
+        loadProducts()  // Load the products to match with orders
 
         // Chip filter setup
         setupChipFilter()
@@ -53,34 +51,48 @@ class KeranjangPenjualActivity : AppCompatActivity() {
             return
         }
 
-        db.collection("carts")
-            .whereEqualTo("sellerUID", currentUser.uid)
-            .addSnapshotListener { documents, error ->
-                if (error != null) {
-                    Toast.makeText(
-                        this,
-                        "Error loading orders: ${error.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@addSnapshotListener
-                }
+        // Show progress bar while loading data
+        binding.progressBar.visibility = View.VISIBLE
 
-                if (documents != null && !documents.isEmpty) {
-                    orders.clear()  // Clear previous orders
-                    for (doc in documents) {
-                        val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id
-                        }
-                        val product = products.find { it.productId == order.productId }
-                        order.imageUrls = product?.imageUrls ?: emptyList()
-                        orders.add(order)
-                    }
-                    adapter.notifyDataSetChanged()  // Refresh the UI
-                } else {
-                    Toast.makeText(this, "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT)
-                        .show()
-                }
+        // Clear previous orders data before loading new data
+        orders.clear()
+
+        // Create the Firestore query with optional filtering based on the chip selection
+        var query = db.collection("carts")
+            .whereEqualTo("sellerUID", currentUser.uid)
+
+        // Apply filter only if the chip is not "ALL"
+        if (selectedChip != "ALL") {
+            query = query.whereEqualTo("statusOrder", selectedChip)
+        }
+
+        // Fetch the data with snapshot listener
+        query.addSnapshotListener { documents, error ->
+            binding.progressBar.visibility = View.GONE // Hide progress bar after loading
+
+            if (error != null) {
+                Toast.makeText(this, "Error loading orders: ${error.message}", Toast.LENGTH_SHORT).show()
+                return@addSnapshotListener
             }
+
+            // Check if documents are present
+            if (documents != null && documents.size() > 0) {
+                orders.clear()
+                for (doc in documents) {
+                    val order = doc.toObject(Order::class.java).apply {
+                        docId = doc.id
+                    }
+                    val product = products.find { it.productId == order.productId }
+                    order.imageUrls = product?.imageUrls ?: emptyList()
+                    orders.add(order)
+                }
+                adapter.notifyDataSetChanged()  // Refresh the UI
+            } else {
+                // If no orders, display a toast message and keep the chip active
+                Toast.makeText(this, "Tidak ada item dalam keranjang untuk status $selectedChip", Toast.LENGTH_SHORT).show()
+                adapter.notifyDataSetChanged()  // Refresh the UI with empty data
+            }
+        }
     }
 
     // Function to load products from Firestore to match with orders
@@ -96,23 +108,23 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                 adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     // Chip filter setup to filter orders based on their status
     private fun setupChipFilter() {
         binding.chipgrp2.setOnCheckedChangeListener { group, checkedId ->
-            val filteredOrders = when (checkedId) {
-                R.id.chip2 -> orders.filter { it.statusOrder == "Memesan" } // Order in "Memesan" status
-                R.id.chip3 -> orders.filter { it.statusOrder == "Konfirmasi" } // Order in "Konfirmasi" status
-                R.id.chip4 -> orders.filter { it.statusOrder == "Selesai" } // Order in "Selesai" status
-                else -> orders // Show all orders when "Semua" is selected
+            // Set the selected chip based on which chip is selected
+            selectedChip = when (checkedId) {
+                R.id.chip2 -> "Memesan"
+                R.id.chip3 -> "Menunggu Konfirmasi Penjual"
+                R.id.chip4 -> "Pesanan Sedang Dikemas"
+                R.id.chip5 -> "Pesanan Selesai"
+                R.id.chip6 -> "Pesanan Dibatalkan"
+                else -> "ALL" // Default is ALL
             }
-            orders.clear()
-            orders.addAll(filteredOrders)
-            adapter.notifyDataSetChanged()
+            loadSellerOrders()  // Reload orders when chip is selected
         }
     }
 
@@ -131,8 +143,7 @@ class KeranjangPenjualActivity : AppCompatActivity() {
                 loadSellerOrders()  // Reload the seller's orders
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Gagal menghapus pesanan: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

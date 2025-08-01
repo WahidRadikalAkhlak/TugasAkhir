@@ -42,8 +42,10 @@ class DaftarPenjualActivity : AppCompatActivity() {
         val noIzinUsaha = binding.etNoIzinusaha.text.toString().trim()
         val deskripsi = binding.etDeskripsi.text.toString().trim()
         val sosialMedia = binding.etSosialMedia.text.toString().trim()
+        val shareLokasi = binding.etShareLokasi.text.toString().trim()  // Link Lokasi Google Maps
 
-        if (noHp.isEmpty() || alamatToko.isEmpty() || noIzinUsaha.isEmpty() || deskripsi.isEmpty() || sosialMedia.isEmpty()) {
+        // Validasi input
+        if (noHp.isEmpty() || alamatToko.isEmpty() || noIzinUsaha.isEmpty() || deskripsi.isEmpty() || sosialMedia.isEmpty() || shareLokasi.isEmpty()) {
             Toast.makeText(this, "Harap isi semua kolom!", Toast.LENGTH_SHORT).show()
             showLoadingState(false)
             return
@@ -75,6 +77,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
 
         val username = currentUser.displayName ?: ""
 
+        // Menyimpan data penjual ke Firestore
         val sellerData = hashMapOf(
             "noHp" to noHp,
             "alamatToko" to alamatToko,
@@ -83,10 +86,11 @@ class DaftarPenjualActivity : AppCompatActivity() {
             "sosialMedia" to sosialMedia,
             "email" to email,
             "username" to username,
-            "isBusinessAccount" to true
+            "isBusinessAccount" to true,
+            "shareLokasi" to shareLokasi // Menyimpan Link Lokasi
         )
 
-        // Gunakan email sebagai ID dokumen, tapi ganti karakter '.' supaya valid di Firestore
+        // Ganti karakter '.' dalam email agar valid di Firestore
         val docId = email.replace(".", "_")
 
         db.collection("penjual")
@@ -111,13 +115,11 @@ class DaftarPenjualActivity : AppCompatActivity() {
         val userRef = db.collection("users")
         val docId = email.replace(".", "_")
 
-        // Coba update dokumen berdasarkan email sebagai ID dokumen
         userRef.document(docId).update("isBusinessAccount", true)
             .addOnSuccessListener {
                 // update sukses
             }
             .addOnFailureListener {
-                // Kalau gagal update (mungkin dokumen belum ada), buat dokumen baru
                 userRef.document(docId).set(mapOf("email" to email, "isBusinessAccount" to true))
                     .addOnSuccessListener { /* sukses buat baru */ }
                     .addOnFailureListener { e ->

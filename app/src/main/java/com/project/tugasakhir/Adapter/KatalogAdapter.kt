@@ -24,7 +24,7 @@ class KatalogAdapter(
             binding.deskripsiProduk.text = product.description ?: "Deskripsi tidak tersedia"
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
-
+            binding.ratingBar.rating = product.avgRating
             if (isRecommendation) {
                 binding.likesCount.text = "${product.likesCount} Likes"
                 binding.likesCount.visibility = View.VISIBLE
@@ -93,5 +93,8 @@ class KatalogAdapter(
         } else {
             "Harga belum tersedia"
         }
+    }
+    fun getData(): List<Product> {
+        return productList
     }
 }

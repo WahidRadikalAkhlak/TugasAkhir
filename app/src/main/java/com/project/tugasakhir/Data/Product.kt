@@ -20,10 +20,12 @@ data class Product(
     var isLiked: Boolean = false,
     var likesCount: Int = 0, // Likes count for the product
     val distance: Double = Double.MAX_VALUE,
+    val minimumPriceForDiscount: Double = 0.0,
     val discount: Double = 0.0,
     val userName: String = "",
     var likes: Map<String, Int> = emptyMap(),
     val email: String = "",
+    var avgRating: Float = 0f,
     var sellerUID: String = ""
 ) : Parcelable {
 

@@ -39,9 +39,10 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
     private var pricePerUnit: Double = 0.0
     private var productId: String = ""
     private var product: Product? = null
+    private var discount: Double = 0.0
+    private var minimumPriceForDiscount: Double = 0.0  // Dapatkan dari Product
     private var _binding: ActivityBottomSheetBuyBinding? = null
     private val binding get() = _binding!!
-    private val selectedImages = mutableListOf<Uri>()
 
     interface OnAddToCartListener {
         fun onAddToCart(quantity: Int)
@@ -63,7 +64,6 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             return fragment
         }
     }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         arguments?.let {
@@ -75,6 +75,8 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
                 productType = it.productType
                 pricePerUnit = it.pricePerUnit
                 productId = it.productId
+                discount = it.discount
+                minimumPriceForDiscount = it.minimumPriceForDiscount
             }
         }
     }
@@ -87,27 +89,36 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         _binding = ActivityBottomSheetBuyBinding.inflate(inflater, container, false)
 
         setupUI()
-        product?.let { p ->
-            loadProductImage(p) // Pastikan product tidak null
-        } ?: run {
-            binding.imgProduct.setImageResource(R.drawable.image_icon) // Gambar default jika produk null
-        }
-        setupHargaTawaran()
-        binding.progressBar.visibility = View.GONE
+        product?.let { p -> loadProductImage(p) }
 
+        // Set visibility of discount condition based on presence of discount and minimumPriceForDiscount
+        if (discount == 0.0 || minimumPriceForDiscount == 0.0) {
+            binding.diskonSyarat.visibility = View.GONE // Hide discount condition if no discount or min price for discount
+        } else {
+            binding.diskonSyarat.text = "Syarat Diskon: Pembelian lebih dari ${formatCurrency(minimumPriceForDiscount)} dengan diskon ${discount}%"
+        }
+
+        binding.progressBar.visibility = View.GONE
         binding.banyakPesanan.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 val qty = s.toString().toIntOrNull() ?: 0
                 if (qty <= 0) {
                     binding.totalHarga.text = "Rp 0"
+                    binding.hargadiskon.text = "Rp 0"
                     return
                 }
 
+                // Hitung harga total tanpa diskon
                 val total = qty * pricePerKg
                 binding.totalHarga.text = "Rp ${String.format("%,.0f", total)}"
 
-                val maxTawaran = calculateMaxTawaran(qty)
-                binding.batasTawaranHarga.text = "Rp ${String.format("%,.0f", maxTawaran)}"
+                // Hitung harga setelah diskon jika memenuhi syarat harga minimal diskon
+                var finalPriceWithDiscount = total
+                if (total >= minimumPriceForDiscount) {
+                    finalPriceWithDiscount = total * (1 - (discount / 100)) // Terapkan diskon
+                }
+
+                binding.hargadiskon.text = "Rp ${String.format("%,.0f", finalPriceWithDiscount)}"
             }
 
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
@@ -115,17 +126,9 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
         })
 
-        binding.tambah.setOnClickListener {
-            updateQuantity(true)
-        }
-
-        binding.kurang.setOnClickListener {
-            updateQuantity(false)
-        }
-
-        binding.btnKeranjang.setOnClickListener {
-            handleAddToCart()
-        }
+        binding.tambah.setOnClickListener { updateQuantity(true) }
+        binding.kurang.setOnClickListener { updateQuantity(false) }
+        binding.btnKeranjang.setOnClickListener { handleAddToCart() }
 
         return binding.root
     }
@@ -136,13 +139,20 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         binding.totalHarga.text = "Rp 0"
     }
 
+    private fun formatCurrency(amount: Double): String {
+        val locale = Locale("id", "ID")
+        val currencyFormat = NumberFormat.getCurrencyInstance(locale)
+        currencyFormat.minimumFractionDigits = 0
+        currencyFormat.maximumFractionDigits = 0
+        return currencyFormat.format(amount)
+    }
+
     private fun loadProductImage(product: Product) {
         binding.productName.text = product.productName
         binding.productType.text = product.productType
 
         // Display the product image
         if (!product.imageUrls.isNullOrEmpty()) {
-            // Load image from URL (preferred)
             Glide.with(this@BottomSheetBuyActivity)
                 .load(product.imageUrls[0])
                 .placeholder(R.drawable.image_icon)
@@ -151,9 +161,9 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         } else if (!product.imageBase64List.isNullOrEmpty()) {
             base64ToBitmap(product.imageBase64List[0])?.let {
                 binding.imgProduct.setImageBitmap(it)
-            } ?: binding.imgProduct.setImageResource(R.drawable.image_icon) // Default image if base64 decoding fails
+            } ?: binding.imgProduct.setImageResource(R.drawable.image_icon)
         } else {
-            binding.imgProduct.setImageResource(R.drawable.image_icon) // Default image if no image URL or base64
+            binding.imgProduct.setImageResource(R.drawable.image_icon)
         }
     }
 
@@ -178,79 +188,13 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
         }
     }
 
-    private fun calculateMaxTawaran(qty: Int): Double {
-        val totalPrice = qty * pricePerKg
-        return when {
-            totalPrice >= 200000 -> {
-                val discount = product?.discount ?: 0.0 // Get discount from the product
-                totalPrice * (1 - discount / 100) // Apply the discount if the total price exceeds 200k
-            }
-            else -> totalPrice
-        }
-    }
-
-    private fun formatCurrency(value: Double): String {
-        val locale = Locale("id", "ID") // Indonesia locale for proper formatting
-        val format = NumberFormat.getCurrencyInstance(locale)
-        format.minimumFractionDigits = 0 // Don't show decimal places
-        format.maximumFractionDigits = 0 // Don't show decimal places
-
-        return format.format(value) // Return as currency string
-    }
-
-    private fun setupHargaTawaran() {
-        binding.hargaTawaran.addTextChangedListener(object : TextWatcher {
-            var isUserTyping = true // To prevent recursive calls while updating the EditText
-
-            override fun afterTextChanged(s: Editable?) {
-                if (isUserTyping) {
-                    val priceText = s.toString().replace("Rp", "").replace(".", "").replace(",", "").trim() // Remove "Rp" and commas
-                    if (priceText.isNotEmpty()) {
-                        try {
-                            // Remove any previous TextWatcher temporarily to avoid conflicts during formatting
-                            isUserTyping = false
-
-                            // Parse the input price
-                            val price = priceText.toDouble()
-
-                            // Format the price back with thousands separator
-                            val formattedPrice = formatCurrency(price)
-
-                            // Set the formatted price back to the EditText
-                            binding.hargaTawaran.setText(formattedPrice)
-
-                            // Move the cursor to the end after setting the formatted text
-                            binding.hargaTawaran.setSelection(formattedPrice.length)
-
-                        } catch (e: NumberFormatException) {
-                            Log.e("HargaTawaran", "Error parsing price: ${e.message}")
-                        } finally {
-                            isUserTyping = true // Re-enable the TextWatcher
-                        }
-                    }
-                }
-            }
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-        })
-    }
-
     private fun handleAddToCart() {
         binding.progressBar.visibility = View.VISIBLE
 
         val quantity = binding.banyakPesanan.text.toString().toIntOrNull() ?: 0
-        val tawaranHargaText =
-            binding.hargaTawaran.text.toString().replace("Rp", "").replace(".", "").replace(",", "").trim()
-        val tawaranHarga = tawaranHargaText.toDoubleOrNull()
 
         if (quantity <= 0 || quantity > stockAvailable) {
-            Toast.makeText(
-                requireContext(),
-                "Jumlah pesanan tidak valid atau melebihi stok",
-                Toast.LENGTH_SHORT
-            ).show()
+            Toast.makeText(requireContext(), "Jumlah pesanan tidak valid atau melebihi stok", Toast.LENGTH_SHORT).show()
             binding.progressBar.visibility = View.GONE
             return
         }
@@ -261,34 +205,14 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             return
         }
 
-        // Menghitung tawaran harga maksimum
-        val maxTawaran = calculateMaxTawaran(quantity)
-        // Validasi tawaranHarga
-        if (tawaranHarga != null) {
-            if (tawaranHarga < maxTawaran) {
-                Toast.makeText(
-                    requireContext(),
-                    "Harga tawaran harus lebih besar dari Rp ${String.format("%,.0f", maxTawaran)}",
-                    Toast.LENGTH_SHORT
-                ).show()
-                binding.progressBar.visibility = View.GONE
-                return
-            }
-        }
-
-        // Tentukan harga akhir (gunakan tawaran harga jika ada, atau harga normal per unit)
-        val finalHarga = tawaranHarga ?: (quantity * pricePerKg)
+        // Hitung harga akhir dengan diskon
+        val totalPrice = quantity * pricePerKg
+        val finalHarga = totalPrice * (1 - (discount / 100)) // Hitung harga diskon
 
         // Retrieve imageBase64List from Firestore and then proceed to save the order
         getProductImageBase64(productId) { imageBase64List ->
-            // If imageBase64List is not empty, use it, otherwise use default images
-            val imagesToUse = if (imageBase64List.isNotEmpty()) {
-                imageBase64List
-            } else {
-                listOf("") // If no imageBase64List is found, send an empty string or you can choose a default image
-            }
-
-            saveOrderToFirestore(imagesToUse, quantity, finalHarga) // Save the order with image data
+            val imagesToUse = if (imageBase64List.isNotEmpty()) imageBase64List else listOf("")
+            saveOrderToFirestore(imagesToUse, quantity, finalHarga)
         }
     }
 
@@ -308,11 +232,11 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "statusOrder" to "Memesan",
             "orderDate" to currentDate,
             "orderTime" to currentTime,
-            "quantity" to quantity,  // Gunakan Int untuk quantity
+            "quantity" to quantity,
             "pricePerKg" to pricePerKg,
             "sellerUID" to product?.sellerUID,
-            "totalPrice" to finalHarga, // Gunakan harga akhir dalam Double
-            "orderNumber" to orderNumber, // Gunakan orderNumber yang sama untuk Firestore ID
+            "totalPrice" to finalHarga, // Gunakan harga akhir dengan diskon
+            "orderNumber" to orderNumber,
             "timestamp" to FieldValue.serverTimestamp(),
             "productName" to productName,
             "productType" to productType,
@@ -321,32 +245,24 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             "userName" to (currentUser.displayName ?: "User"),
             "sellerName" to product?.userName,
             "productId" to productId,
-            "hargaTawaran" to finalHarga,
-            "imageBase64List" to imageBase64List // Menyimpan Base64 gambar dalam array
+            "discount" to discount,
+            "imageBase64List" to imageBase64List,
+            "minimumPriceForDiscount" to minimumPriceForDiscount
         )
 
         val db = FirebaseFirestore.getInstance()
 
-        // Use orderNumber as Firestore document ID
         db.collection("carts")
-            .document(orderNumber) // Gunakan orderNumber sebagai ID dokumen
+            .document(orderNumber)
             .set(orderData)
             .addOnSuccessListener {
-                Toast.makeText(
-                    requireContext(),
-                    "Produk berhasil ditambahkan ke keranjang",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Produk berhasil ditambahkan ke keranjang", Toast.LENGTH_SHORT).show()
                 updateProductStock(productId, quantity)
                 dismiss()
                 binding.progressBar.visibility = View.GONE
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Gagal menambahkan produk ke keranjang: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Gagal menambahkan produk ke keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
                 binding.progressBar.visibility = View.GONE
             }
     }
@@ -359,7 +275,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
             .addOnSuccessListener { document ->
                 if (document.exists()) {
                     val imageBase64List = document.get("imageBase64List") as? List<String> ?: emptyList()
-                    onSuccess(imageBase64List) // Return the list of imageBase64
+                    onSuccess(imageBase64List)
                 } else {
                     Log.e("BottomSheetBuyActivity", "Product not found")
                     Toast.makeText(requireContext(), "Produk tidak ditemukan", Toast.LENGTH_SHORT).show()
@@ -370,7 +286,6 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
                 Toast.makeText(requireContext(), "Error getting product: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
 
     private fun updateProductStock(productId: String, orderedQuantity: Int) {
         val db = FirebaseFirestore.getInstance()
@@ -385,8 +300,7 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
                 if (newStock < 0) {
                     withContext(Dispatchers.Main) {
                         if (isAdded) {
-                            Toast.makeText(requireContext(), "Stok tidak cukup", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(requireContext(), "Stok tidak cukup", Toast.LENGTH_SHORT).show()
                         }
                     }
                     return@launch
@@ -396,22 +310,14 @@ class BottomSheetBuyActivity : BottomSheetDialogFragment() {
 
                 withContext(Dispatchers.Main) {
                     if (isAdded) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Stok produk berhasil diperbarui",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), "Stok produk berhasil diperbarui", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 Log.e("BottomSheetBuyActivity", "Gagal memperbarui stok", e)
                 withContext(Dispatchers.Main) {
                     if (isAdded) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Gagal memperbarui stok: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        Toast.makeText(requireContext(), "Gagal memperbarui stok: ${e.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             }

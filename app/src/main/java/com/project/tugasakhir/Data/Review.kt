@@ -6,3 +6,4 @@ data class Review(
     val ratingKualitas: Float = 0f,
     val komentar: String = ""
 )
+

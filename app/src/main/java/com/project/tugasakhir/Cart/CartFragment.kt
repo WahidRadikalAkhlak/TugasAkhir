@@ -19,18 +19,15 @@ import com.project.tugasakhir.databinding.FragmentCartBinding
 class CartFragment : Fragment() {
 
     private var _binding: FragmentCartBinding? = null
-    private val binding
-        get() = _binding
-            ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
+    private val binding get() = _binding ?: throw IllegalStateException("Binding harus diinisialisasi sebelum dipakai!")
 
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
-    private val products =
-        mutableListOf<Product>()  // Declare the products list to hold product data
+    private val products = mutableListOf<Product>()
 
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private var selectedChip: String = "ALL"
+    private var selectedChip: String = "ALL"  // Default filter for all orders
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -43,109 +40,97 @@ class CartFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Set up RecyclerView and Adapter
         binding.rvPesan.layoutManager = LinearLayoutManager(requireContext())
-        adapter = OrderAdapter(orders, products, { selectedOrder ->
-            openOrderDetail(selectedOrder)
-        }, { orderToDelete ->
-            hapusPesanan(orderToDelete)
-        }, isForKeranjangPesanan = false)
-
+        adapter = OrderAdapter(orders, products, { selectedOrder -> openOrderDetail(selectedOrder) }, { orderToDelete -> hapusPesanan(orderToDelete) }, isForKeranjangPesanan = false)
         binding.rvPesan.adapter = adapter
-        loadUserOrders()
-        loadProducts() // Load products as well
-        setupChipFilters()
+
+        binding.progressBar.visibility = View.VISIBLE  // Show progress bar when loading
+        loadUserOrders()  // Load orders initially
+        loadProducts()    // Load products for the cart
+        setupChipFilters()  // Initialize chip filters
     }
 
+    // Set up Chip filters
     private fun setupChipFilters() {
         binding.chip2.setOnClickListener { selectChip("Memesan") }
         binding.chip3.setOnClickListener { selectChip("Menunggu Konfirmasi Penjual") }
         binding.chip4.setOnClickListener { selectChip("Pesanan Sedang Dikemas") }
         binding.chip5.setOnClickListener { selectChip("Pesanan Selesai") }
         binding.chip6.setOnClickListener { selectChip("Pesanan Dibatalkan") }
+        binding.chip1.setOnClickListener { selectChip("ALL") }  // Chip for all orders
     }
 
     private fun selectChip(status: String) {
         selectedChip = status
-        filterOrdersByChip()
+        Log.d("Selected Chip", "Selected Status: $selectedChip")
+        loadUserOrders()  // Reload orders based on chip selection
     }
 
-    private fun filterOrdersByChip() {
-        val filteredOrders = when (selectedChip) {
-            "Memesan" -> orders.filter { it.statusOrder == "Memesan" }
-            "Menunggu Konfirmasi Penjual" -> orders.filter { it.statusOrder == "Menunggu Konfirmasi Penjual" }
-            "Pesanan Sedang Dikemas" -> orders.filter { it.statusOrder == "Pesanan Sedang Dikemas" }
-            "Pesanan Selesai" -> orders.filter { it.statusOrder == "Pesanan Selesai" }
-            "Pesanan Dibatalkan" -> orders.filter { it.statusOrder == "Pesanan Dibatalkan" }
-            else -> orders  // Show all orders for "ALL"
-        }
-        adapter.updateList(filteredOrders)
-    }
     private fun loadUserOrders() {
         val currentUser = auth.currentUser
         if (currentUser == null) {
-            if (isAdded) {
-                Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
-            }
+            Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
             return
         }
 
-        db.collection("carts")
-            .whereEqualTo("userId", currentUser.uid)
-            .addSnapshotListener { documents, error ->
-                if (error != null) {
-                    if (isAdded) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Error loading orders: ${error.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                    return@addSnapshotListener
-                }
+        // Show progress bar while loading data
+        binding.progressBar.visibility = View.VISIBLE
 
-                // Correctly checking if the documents are not empty
-                if (documents != null && documents.size() > 0) {
-                    orders.clear()
-                    for (doc in documents) {
-                        val order = doc.toObject(Order::class.java).apply {
-                            docId = doc.id
-                        }
+        // Clear previous orders data before loading new data
+        orders.clear()
 
-                        // Handle product images
-                        order.imageUrls = doc.get("imageUrls") as? List<String> ?: emptyList()
+        // Create the Firestore query
+        var query = db.collection("carts").whereEqualTo("userId", currentUser.uid)
 
-                        orders.add(order)
-                    }
-                    adapter.notifyDataSetChanged()
-                } else {
-                    if (isAdded) {
-                        Toast.makeText(
-                            requireContext(),
-                            "Tidak ada item dalam keranjang",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                }
+        // Apply filter only if the chip is not "ALL"
+        if (selectedChip != "ALL") {
+            query = query.whereEqualTo("statusOrder", selectedChip)
+        }
+
+        // Fetch the data with snapshot listener
+        query.addSnapshotListener { documents, error ->
+            binding.progressBar.visibility = View.GONE // Hide progress bar once data is loaded
+
+            if (error != null) {
+                Log.e("Firestore Error", "Error loading orders: ${error.message}")
+                return@addSnapshotListener
             }
+
+            // Check if documents are present
+            if (documents != null && documents.size() > 0) {
+                orders.clear()
+                for (doc in documents) {
+                    val order = doc.toObject(Order::class.java).apply {
+                        docId = doc.id
+                    }
+                    order.imageUrls = doc.get("imageUrls") as? List<String> ?: emptyList()
+                    orders.add(order)
+                }
+                adapter.notifyDataSetChanged()  // Update RecyclerView
+                Log.d("Firestore Query", "Loaded ${orders.size} orders for status: $selectedChip")
+            } else {
+                Log.d("Firestore Query", "No orders found for status: $selectedChip")
+                Toast.makeText(requireContext(), "Tidak ada item dalam keranjang", Toast.LENGTH_SHORT).show()
+                // Clear the adapter if no data is found for the selected chip
+                adapter.notifyDataSetChanged()
+            }
+        }
     }
 
     private fun loadProducts() {
         db.collection("products")
             .get()
             .addOnSuccessListener { documents ->
-                products.clear() // Clear the previous products
+                products.clear()
                 for (doc in documents) {
                     val product = doc.toObject(Product::class.java)
                     products.add(product)
                 }
-                adapter.notifyDataSetChanged() // Notify adapter that the product list is ready
+                adapter.notifyDataSetChanged()
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    requireContext(),
-                    "Gagal memuat data produk: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(requireContext(), "Gagal memuat data produk: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -153,7 +138,6 @@ class CartFragment : Fragment() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser == null) {
             Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
-            Log.d("KeranjangPesanan", "User not logged in.")
             return
         }
 
@@ -162,24 +146,18 @@ class CartFragment : Fragment() {
             return
         }
 
-        Log.d("KeranjangPesanan", "Attempting to delete order with orderNumber: ${order.orderNumber}")
-
-        // Hapus order dari koleksi 'carts'
-        val cartRef = db.collection("carts")
+        db.collection("carts")
             .whereEqualTo("orderNumber", order.orderNumber)
-            .limit(1)  // Pastikan hanya satu dokumen yang ditemukan
             .get()
             .addOnSuccessListener { querySnapshot ->
-                Log.d("KeranjangPesanan", "Query Firestore berhasil: ${querySnapshot.size()} documents found.")
                 if (!querySnapshot.isEmpty) {
                     val docId = querySnapshot.documents[0].id
                     db.collection("carts").document(docId).delete()
                         .addOnSuccessListener {
                             Toast.makeText(requireContext(), "Pesanan berhasil dihapus", Toast.LENGTH_SHORT).show()
-                            loadUserOrders()  // Reload orders setelah penghapusan
+                            loadUserOrders()  // Reload orders after deletion
                         }
                         .addOnFailureListener { e ->
-                            Log.e("Delete Order", "Error deleting order: ${e.message}")
                             Toast.makeText(requireContext(), "Gagal menghapus pesanan", Toast.LENGTH_SHORT).show()
                         }
                 } else {
@@ -187,42 +165,18 @@ class CartFragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("Delete Order", "Error querying Firestore: ${e.message}")
-                Toast.makeText(requireContext(), "Gagal menghapus pesanan", Toast.LENGTH_SHORT).show()
-            }
-
-        // Hapus produk yang terkait, jika ada
-        val productRef = db.collection("products")
-            .whereEqualTo("orderNumber", order.orderNumber)
-
-        productRef.get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    Log.d("KeranjangPesanan", "No related products found for order: ${order.orderNumber}")
-                }
-                for (doc in documents) {
-                    db.collection("products").document(doc.id).delete()
-                        .addOnSuccessListener {
-                            Log.d("KeranjangPesanan", "Produk berhasil dihapus dari produk")
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("KeranjangPesanan", "Gagal menghapus produk dari produk: ${e.message}")
-                        }
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("KeranjangPesanan", "Gagal mencari produk terkait: ${e.message}")
+                Toast.makeText(requireContext(), "Gagal mencari pesanan", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun openOrderDetail(order: Order) {
         val intent = Intent(context, KeranjangPesananActivity::class.java)
-        intent.putExtra("ORDER_NUMBER", order.orderNumber) // Mengirim orderNumber yang dipilih
+        intent.putExtra("ORDER_NUMBER", order.orderNumber)
         startActivity(intent)
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null  // Avoid memory leaks
+        _binding = null
     }
 }

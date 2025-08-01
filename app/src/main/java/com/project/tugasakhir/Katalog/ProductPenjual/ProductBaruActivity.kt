@@ -1,10 +1,13 @@
 package com.project.tugasakhir.Katalog.ProductPenjual
 
+import BottomSheetBuyActivity
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.util.Base64
 import android.util.Log
 import android.view.View
@@ -28,6 +31,8 @@ import java.io.ByteArrayOutputStream
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import com.project.tugasakhir.R
+import java.text.NumberFormat
+import java.util.Locale
 
 class ProductBaruActivity : AppCompatActivity() {
 
@@ -45,6 +50,7 @@ class ProductBaruActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityProductBaruBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setupCurrencyFormat()
 
         // AutoCompleteTextView for product type
         val jenisProdukArray =
@@ -89,9 +95,60 @@ class ProductBaruActivity : AppCompatActivity() {
         binding.stokTersedia.setText(product.stockAvailable.toString())
         binding.hargaPerUnit.setText(product.pricePerUnit.toString())
         binding.switchTampilkanproduk.isChecked = product.isAvailable
+    }
 
-        // You may want to display the product's image (if any) as well
-        // Convert base64 to Uri or handle it in RecyclerView if needed
+    private fun setupCurrencyFormat() {
+        // Flag to prevent recursive calls
+        var isUserTyping = true
+
+        // Format untuk Harga per satuan kg
+        binding.hargaPerUnit.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                if (isUserTyping) {
+                    val input = s.toString().replace("[Rp,.]".toRegex(), "")
+                    if (input.isNotEmpty()) {
+                        isUserTyping = false  // Disable the TextWatcher during manual changes
+                        val formatted = formatCurrency(input.toDouble())
+                        binding.hargaPerUnit.setText(formatted)
+                        binding.hargaPerUnit.setSelection(formatted.length)
+                        isUserTyping = true  // Re-enable the TextWatcher after formatting
+                    }
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+
+        // Format untuk Harga Minimal Diskon
+        binding.minimumPriceForDiscountInput.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+                if (isUserTyping) {
+                    val input = s.toString().replace("[Rp,.]".toRegex(), "")
+                    if (input.isNotEmpty()) {
+                        isUserTyping = false
+                        val formatted = formatCurrency(input.toDouble())
+                        binding.minimumPriceForDiscountInput.setText(formatted)
+                        binding.minimumPriceForDiscountInput.setSelection(formatted.length)
+                        isUserTyping = true
+                    }
+                }
+            }
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+        })
+    }
+
+    // Fungsi untuk memformat angka menjadi format mata uang Indonesia (Rupiah)
+    private fun formatCurrency(amount: Double): String {
+        val locale = Locale("id", "ID")
+        val currencyFormat = NumberFormat.getCurrencyInstance(locale)
+        currencyFormat.minimumFractionDigits = 0
+        currencyFormat.maximumFractionDigits = 0
+        return currencyFormat.format(amount)
     }
 
     private fun openGallery() {
@@ -130,6 +187,7 @@ class ProductBaruActivity : AppCompatActivity() {
         val stokTersediaStr = binding.stokTersedia.text.toString().trim()
         val hargaPerUnitStr = binding.hargaPerUnit.text.toString().trim()
         val tampilkanProduk = binding.switchTampilkanproduk.isChecked
+        val minimumPriceForDiscountStr = binding.minimumPriceForDiscountInput.text.toString().trim()
 
         if (namaProduct.isEmpty() || jenisProduk.isEmpty() || deskripsi.isEmpty() ||
             stokTersediaStr.isEmpty() || hargaPerUnitStr.isEmpty()
@@ -140,17 +198,25 @@ class ProductBaruActivity : AppCompatActivity() {
         }
 
         val stokTersedia = stokTersediaStr.toIntOrNull()
-        val hargaPerUnit = hargaPerUnitStr.toDoubleOrNull()
+        val hargaPerUnit = hargaPerUnitStr.replace("[Rp,.]".toRegex(), "").toDoubleOrNull()
 
         if (stokTersedia == null || hargaPerUnit == null) {
-            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT)
-                .show()
+            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT).show()
             hideProgressBar()
             return
         }
 
+        // Mendapatkan nilai diskon dari input (opsional)
         val discountStr = binding.discountInput.text.toString().trim()
-        val discount = discountStr.toIntOrNull() ?: 0
+        val discount = if (discountStr.isNotEmpty()) discountStr.toIntOrNull() ?: 0 else 0
+
+        // Memastikan minimumPriceForDiscount tidak null dan hanya diberi nilai jika diisi
+        val minimumPriceForDiscount = if (minimumPriceForDiscountStr.isNotEmpty()) {
+            minimumPriceForDiscountStr.replace("[Rp,.]".toRegex(), "").toDoubleOrNull() ?: 0.0
+        } else {
+            0.0
+        }
+
         if (discount < 0 || discount > 100) {
             Toast.makeText(this, "Diskon harus antara 0% hingga 100%", Toast.LENGTH_SHORT).show()
             hideProgressBar()
@@ -161,22 +227,20 @@ class ProductBaruActivity : AppCompatActivity() {
             try {
                 val base64Images = mutableListOf<String>()
                 if (selectedImages.isNotEmpty()) {
-                    // If new images are selected, convert them to base64 and update image list
+                    // Jika gambar baru dipilih, konversikan gambar ke base64
                     for (uri in selectedImages) {
                         val base64 = uriToBase64(uri)
                         if (base64 != null) base64Images.add(base64)
                     }
                 } else {
-                    // If no new images, retain the old image list from editingProduct
+                    // Jika tidak ada gambar baru, gunakan gambar lama dari editingProduct
                     base64Images.addAll(editingProduct?.imageBase64List ?: emptyList())
                 }
 
-                val sellerUID =
-                    FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
-
+                val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
                 val alamatToko = fetchAlamatTokoFromFirestore()
-                // Prepare product data without email and username if it's an update
 
+                // Siapkan data produk
                 val productData = hashMapOf(
                     "productName" to namaProduct,
                     "productType" to jenisProduk,
@@ -187,7 +251,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     "imageBase64List" to base64Images,
                     "sellerUID" to sellerUID,
                     "alamatToko" to alamatToko,
-                    "discount" to discount
+                    "discount" to discount, // The discount value (0 if not added)
+                    "minimumPriceForDiscount" to minimumPriceForDiscount // The minimum price for discount (0 if not added)
                 )
 
                 if (editingProduct != null) {
@@ -256,7 +321,6 @@ class ProductBaruActivity : AppCompatActivity() {
                 }
             }
         }
-        Log.d("UpdateProduct", "Updating product with email: $userEmail and username: $userName")
     }
 
     private suspend fun fetchAlamatTokoFromFirestore(): String {
@@ -276,16 +340,14 @@ class ProductBaruActivity : AppCompatActivity() {
     }
 
     private fun uriToBase64(uri: Uri): String? {
-        // Convert the image Uri to a Bitmap and resize it
         val inputStream = contentResolver.openInputStream(uri) ?: return null
-        var bitmap = BitmapFactory.decodeStream(inputStream)
+        val bitmap = BitmapFactory.decodeStream(inputStream)
 
-        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 800, 800, true) // 500x500px size
-
+        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 800, 800, true) // Resize
         val outputStream = ByteArrayOutputStream()
         resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
         val byteArray = outputStream.toByteArray()
+
         return Base64.encodeToString(byteArray, Base64.DEFAULT)
     }
-
 }

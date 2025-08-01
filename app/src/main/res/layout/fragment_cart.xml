@@ -107,5 +107,18 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView2"
             tools:listitem="@layout/item_keranjang" />
 
+        <!-- ProgressBar positioned at the center of the layout -->
+        <android.widget.ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:elevation="4dp"
+            android:indeterminate="true"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:layout_centerInParent="true"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

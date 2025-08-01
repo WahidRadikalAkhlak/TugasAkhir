@@ -12,5 +12,5 @@
     <color name="unliked_button">#757575</color>
     <color name="red">#DE1304</color>
     <color name="green1">#48884E</color>
-
+    <color name="border_color">#98FF98</color>
 </resources>

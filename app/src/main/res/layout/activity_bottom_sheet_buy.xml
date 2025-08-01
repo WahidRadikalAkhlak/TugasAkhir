@@ -28,11 +28,7 @@
                 android:visibility="gone"
                 android:elevation="4dp"
                 android:indeterminate="true"
-                android:layout_centerInParent="true"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"/>
+                android:layout_centerInParent="true"/>
 
             <!-- Main content inside the CardView -->
             <LinearLayout
@@ -163,6 +159,7 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/totalharga"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -185,62 +182,41 @@
                     </LinearLayout>
                 </LinearLayout>
 
-                <!-- Price Offer Section -->
+                <!-- Diskon dan Harga Minimal Diskon Section -->
                 <LinearLayout
-                    android:id="@+id/LLtawarharga"
+                    android:id="@+id/llhargadiskon"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal"
-                    android:weightSum="2">
+                    android:orientation="vertical">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:text="Harga Diskon"
+                        android:layout_gravity="end"
+                        android:textColor="#6B7280"
+                        android:textSize="12sp" />
 
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Masukkan Harga Tawaran"
-                            android:textColor="#6B7280"
-                            android:textSize="12sp" />
-
-                        <EditText
-                            android:id="@+id/hargaTawaran"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="numberDecimal"
-                            android:digits="0123456789."
-                            android:hint="Rp. 0"
-                            android:textSize="14sp"
-                            android:padding="8dp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
+                    <TextView
+                        android:id="@+id/hargadiskon"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="end">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Batas Tawaran Harga"
-                            android:textColor="#6B7280"
-                            android:textSize="12sp" />
-
-                        <TextView
-                            android:id="@+id/batasTawaranHarga"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Rp. 0"
-                            android:textStyle="bold"
-                            android:textColor="#FF0000" />
-                    </LinearLayout>
+                        android:text="Rp. 0"
+                        android:textStyle="bold"
+                        android:layout_gravity="end"
+                        android:textColor="#FF0000" />
                 </LinearLayout>
+
+                <!-- New Section: Diskon Syarat Pembelian -->
+                <TextView
+                    android:id="@+id/diskonSyarat"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Syarat diskon: Pembelian lebih dari Rp 100.000"
+                    android:textColor="#FF0000"
+                    android:textSize="14sp"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center" />
 
                 <!-- Add to Cart Button -->
                 <com.google.android.material.button.MaterialButton

@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.KatalogAdapter
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Data.Product
+import com.project.tugasakhir.Data.Review
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.FragmentKatalogBinding
@@ -26,9 +27,8 @@ class KatalogFragment : Fragment() {
     private val filteredProducts = mutableListOf<Product>()
     private val produkList = mutableListOf<Product>()
     private var selectedChipType: String = ""
-    private lateinit var produkAdapter: ProductImageAdapter // Adapter for product list
-    private lateinit var rekomendasiAdapter: KatalogAdapter // Adapter for recommendations
-
+    private lateinit var produkAdapter: ProductImageAdapter
+    private lateinit var rekomendasiAdapter: KatalogAdapter
     private val db = FirebaseFirestore.getInstance()
 
     override fun onCreateView(
@@ -43,7 +43,7 @@ class KatalogFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Adapter for the product list (without likes count)
+        // Set up the product adapter
         produkAdapter = ProductImageAdapter(produkList) { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
@@ -52,36 +52,29 @@ class KatalogFragment : Fragment() {
             context?.startActivity(intent)
         }
 
-        // Set the GridLayoutManager for horizontal scrolling with 2 items per row
         binding.rvProdukList.adapter = produkAdapter
         binding.rvProdukList.layoutManager =
             GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
 
-        // Adapter for recommendations (with likes count)
+        // Set up the recommendation adapter
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
                 putExtra("source", "catalog")
             }
             context?.startActivity(intent)
-        }, true) // Display likes count in recommendations
+        }, true)
 
-        binding.rvRekomendasi.adapter =
-            rekomendasiAdapter // Set rekomendasiAdapter to rvRekomendasi
-        binding.rvRekomendasi.layoutManager = GridLayoutManager(
-            requireContext(),
-            1,
-            GridLayoutManager.HORIZONTAL,
-            false
-        ) // Horizontal Layout
+        binding.rvRekomendasi.adapter = rekomendasiAdapter
+        binding.rvRekomendasi.layoutManager =
+            GridLayoutManager(requireContext(), 1, GridLayoutManager.HORIZONTAL, false)
 
         setupSearch()
         setupChipFilter()
-        loadProductsFromFirestore() // Load products from Firestore
+        loadProductsFromFirestore()
     }
 
     private fun loadProductsFromFirestore() {
-        // Ambil data produk dari Firestore
         db.collection("products")
             .get()
             .addOnSuccessListener { snapshots ->
@@ -89,7 +82,6 @@ class KatalogFragment : Fragment() {
                     doc.toObject(Product::class.java)
                 }.filter { product -> product.isAvailable }
 
-                // Menambahkan produk ke dalam list
                 allProducts.clear()
                 allProducts.addAll(productsFromFirestore)
 
@@ -99,45 +91,60 @@ class KatalogFragment : Fragment() {
                 produkList.clear()
                 produkList.addAll(productsFromFirestore)
 
-                // Ambil jumlah likes untuk setiap produk dan perbarui UI
                 val likesCountFetched = mutableListOf<Int>()
                 for (product in produkList) {
+                    getReviewsAndRating(product)
                     getLikesCountForProduct(product) { likesCount ->
                         product.likesCount = likesCount
                         likesCountFetched.add(likesCount)
                         if (likesCountFetched.size == produkList.size) {
-                            // Semua jumlah likes telah diambil, sekarang refresh RecyclerView
                             produkAdapter.notifyDataSetChanged()
-
-                            // Panggil applyCollaborativeFiltering setelah semua data likes dihitung
-                            applyCollaborativeFiltering()  // <-- Panggilan fungsi Collaborative Filtering
-
-                            updateRecommendations()  // Update rekomendasi lainnya
+                            applyCollaborativeFiltering()
+                            updateRecommendations()
                         }
                     }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Failed to fetch products: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun getReviewsAndRating(product: Product) {
+        db.collection("ulasan")
+            .document(product.productId)
+            .collection("ulasan")
+            .get()
+            .addOnSuccessListener { result ->
+                var totalRating = 0f
+                val reviewCount = result.size()
+                for (document in result) {
+                    val review = document.toObject(Review::class.java)
+                    totalRating += (review.ratingKomunikasi + review.ratingKualitas)
+                }
+
+                if (reviewCount > 0) {
+                    product.avgRating = totalRating / (reviewCount * 2)
+                }
+
+                produkAdapter.notifyDataSetChanged()
+                rekomendasiAdapter.notifyDataSetChanged()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Failed to get reviews: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun updateRecommendations() {
-        // Group products by product type
         val groupedProducts = allProducts.groupBy { it.productType }
-
         val recommendedProducts = mutableListOf<Product>()
 
-        // Iterate through each product type
         for ((type, productsInCategory) in groupedProducts) {
-            // Filter products with at least 1 like
             val likedProducts = productsInCategory.filter { it.likesCount > 0 }
 
             if (likedProducts.isNotEmpty()) {
-                // If there are liked products, display the ones with likes
                 recommendedProducts.addAll(likedProducts)
             } else {
-                // If no liked products, display the cheapest product in that category
                 val cheapestProduct = productsInCategory.minByOrNull { it.pricePerUnit }
                 if (cheapestProduct != null) {
                     recommendedProducts.add(cheapestProduct)
@@ -145,29 +152,84 @@ class KatalogFragment : Fragment() {
             }
         }
 
-        // Update the recommendations adapter with the filtered list
         rekomendasiAdapter.updateData(recommendedProducts)
     }
 
+    fun calculatePrecision(recommendedProducts: List<Product>, actualLikes: List<Product>): Double {
+        val relevantRecommendations = recommendedProducts.filter { recommended ->
+            actualLikes.contains(recommended)
+        }
+        return if (recommendedProducts.isEmpty()) 0.0 else relevantRecommendations.size.toDouble() / recommendedProducts.size.toDouble()
+    }
+
+    fun calculateMAE(predictedRatings: List<Float>, actualRatings: List<Float>): Double {
+        val absoluteErrors = predictedRatings.zip(actualRatings) { predicted, actual ->
+            Math.abs(predicted - actual)
+        }
+        return absoluteErrors.average()
+    }
+
+    fun getActualLikedProducts(): List<Product> {
+        return allProducts.filter { it.likesCount > 0 }
+    }
+
+    fun getPredictedRatings(products: List<Product>): List<Float> {
+        return products.map { it.likesCount.toFloat() }
+    }
+
+    // Actual ratings (1 if liked, 0 otherwise)
+    fun getActualRatings(products: List<Product>): List<Float> {
+        return products.map { if (it.likesCount > 0) 1f else 0f }
+    }
+
+    fun computeAccuracyMetrics() {
+        val recommendedProducts = rekomendasiAdapter.getData()
+        if (recommendedProducts.isEmpty()) {
+            Log.d("KatalogFragment", "No recommended products found.")
+            return
+        }
+
+        val actualLikes = getActualLikedProducts()
+        var totalPrecision = 0.0
+        var totalMAE = 0.0
+
+        recommendedProducts.forEach { product ->
+            val precision = calculatePrecision(listOf(product), actualLikes)
+            totalPrecision += precision
+
+            val predictedRatings = getPredictedRatings(listOf(product))
+            val actualRatings = getActualRatings(listOf(product))
+            val mae = calculateMAE(predictedRatings, actualRatings)
+            totalMAE += mae
+
+            Log.d("KatalogFragment", "Precision for ${product.productName}: $precision")
+            Log.d("KatalogFragment", "MAE for ${product.productName}: $mae")
+        }
+
+        val averagePrecision = totalPrecision / recommendedProducts.size
+        val averageMAE = totalMAE / recommendedProducts.size
+
+        Log.d("KatalogFragment", "Average Precision: $averagePrecision")
+        Log.d("KatalogFragment", "Average MAE: $averageMAE")
+    }
+
+    // Apply Collaborative Filtering
     private fun applyCollaborativeFiltering() {
         if (allProducts.isEmpty()) {
             Log.e("KatalogFragment", "No products available for collaborative filtering")
             return
         }
 
-        // Mengambil produk dengan likes lebih dari 0 (dapat diubah menjadi lebih besar dari 3 jika perlu)
         val filteredProducts = allProducts.filter { it.likesCount > 0 }
 
         if (filteredProducts.isEmpty()) {
             Log.e("KatalogFragment", "No products with sufficient likes")
-            applyFallbackRecommendations()  // Jika tidak ada produk dengan likes > 0, tampilkan produk termurah
+            applyFallbackRecommendations()
             return
         }
 
-        // Membuat matriks kemiripan produk berdasarkan likes
         val productLikesMatrix = mutableListOf<MutableList<Double>>()
 
-        // Menghitung kemiripan antar produk berdasarkan likes
         for (i in filteredProducts.indices) {
             val likesForProduct = mutableListOf<Double>()
             for (j in filteredProducts.indices) {
@@ -179,22 +241,46 @@ class KatalogFragment : Fragment() {
             productLikesMatrix.add(likesForProduct)
         }
 
-        // Rekomendasi produk berdasarkan similarity
         val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
 
-        // Perbarui data rekomendasi menggunakan produk yang direkomendasikan berdasarkan cosine similarity
-        rekomendasiAdapter.updateData(recommendedProducts)
+        if (recommendedProducts.isNotEmpty()) {
+            rekomendasiAdapter.updateData(recommendedProducts)
+            computeAccuracyMetrics()
+        } else {
+            Log.d("KatalogFragment", "No recommended products found.")
+            applyFallbackRecommendations()
+        }
     }
 
     private fun applyFallbackRecommendations(filteredSource: List<Product> = allProducts) {
-        // Fallback logic jika produk tidak memiliki cukup likes
-        val groupedProducts = filteredSource.groupBy { it.productType }
-
-        val recommendedProducts = groupedProducts.flatMap { (_, productList) ->
-            productList.sortedBy { it.pricePerUnit } // Urutkan berdasarkan harga untuk fallback
-        }.take(10) // Tampilkan 10 produk teratas berdasarkan harga
-
+        val recommendedProducts = filteredSource.sortedBy { it.pricePerUnit }.take(10)
         rekomendasiAdapter.updateData(recommendedProducts)
+        computeAccuracyMetricsForFallback(recommendedProducts)
+    }
+
+    private fun computeAccuracyMetricsForFallback(recommendedProducts: List<Product>) {
+        val actualLikes = getActualLikedProducts()
+        var totalPrecision = 0.0
+        var totalMAE = 0.0
+
+        recommendedProducts.forEach { product ->
+            val precision = calculatePrecision(listOf(product), actualLikes)
+            totalPrecision += precision
+
+            val predictedRatings = getPredictedRatings(listOf(product))
+            val actualRatings = getActualRatings(listOf(product))
+            val mae = calculateMAE(predictedRatings, actualRatings)
+            totalMAE += mae
+
+            Log.d("KatalogFragment", "Precision for ${product.productName}: $precision")
+            Log.d("KatalogFragment", "MAE for ${product.productName}: $mae")
+        }
+
+        val averagePrecision = totalPrecision / recommendedProducts.size
+        val averageMAE = totalMAE / recommendedProducts.size
+
+        Log.d("KatalogFragment", "Average Precision for fallback recommendations: $averagePrecision")
+        Log.d("KatalogFragment", "Average MAE for fallback recommendations: $averageMAE")
     }
 
     private fun setupChipFilter() {
@@ -214,22 +300,16 @@ class KatalogFragment : Fragment() {
     }
 
     private fun computeCosineSimilarity(productA: Product, productB: Product): Double {
-        val commonLikes = getCommonLikes(productA, productB)
+        val commonUsers = getCommonLikes(productA, productB)
+        if (commonUsers.isEmpty()) return 0.0
 
-        if (commonLikes.isEmpty()) return 0.0
-
-        // Menghitung dot product dan magnitudes (norma)
-        val dotProduct = commonLikes.sumBy { userId ->
-            (productA.likes[userId] ?: 0) * (productB.likes[userId] ?: 0)
+        var dotProduct = 0.0
+        commonUsers.forEach { userId ->
+            dotProduct += 1
         }
 
-        val magnitudeA = Math.sqrt(commonLikes.sumByDouble {
-            Math.pow((productA.likes[it] ?: 0).toDouble(), 2.0)
-        })
-
-        val magnitudeB = Math.sqrt(commonLikes.sumByDouble {
-            Math.pow((productB.likes[it] ?: 0).toDouble(), 2.0)
-        })
+        val magnitudeA = Math.sqrt(productA.likes.size.toDouble())
+        val magnitudeB = Math.sqrt(productB.likes.size.toDouble())
 
         return if (magnitudeA == 0.0 || magnitudeB == 0.0) 0.0 else dotProduct / (magnitudeA * magnitudeB)
     }
@@ -244,17 +324,6 @@ class KatalogFragment : Fragment() {
         return commonUsers
     }
 
-//    private fun getCommonUsers(productA: Product, productB: Product): List<String> {
-//
-//        val commonUsers = mutableListOf<String>()
-//        productA.likes.keys.forEach { userId ->
-//            if (productB.likes.containsKey(userId)) {
-//                commonUsers.add(userId)
-//            }
-//        }
-//        return commonUsers
-//    }
-
     private fun recommendProductsBasedOnSimilarity(
         matrix: List<List<Double>>,
         filteredProducts: List<Product>,
@@ -262,16 +331,13 @@ class KatalogFragment : Fragment() {
     ): List<Product> {
         val recommendedProducts = mutableListOf<Product>()
 
-        // Menghitung rekomendasi berdasarkan similarity
         for (i in matrix.indices) {
             val similarities = matrix[i]
 
-            // Menyortir kemiripan berdasarkan similarity tertinggi
             val sortedSimilarities = similarities.withIndex()
                 .sortedByDescending { it.value }
                 .take(topN)
 
-            // Menambahkan produk yang mirip
             for (similarity in sortedSimilarities) {
                 if (similarity.value > 0) {
                     val recommendedProduct = filteredProducts.getOrNull(similarity.index)
@@ -293,20 +359,19 @@ class KatalogFragment : Fragment() {
             .addOnSuccessListener { result ->
                 if (result.isEmpty) {
                     Log.e("KatalogFragment", "No likes found for product: ${product.productId}")
-                    onLikesCountFetched(0) // Kembalikan 0 jika tidak ada likes
+                    onLikesCountFetched(0)
                     return@addOnSuccessListener
                 }
 
-                val likesCount = result.size() // Menghitung jumlah likes
-                product.likesCount = likesCount // Menyimpan likesCount di objek produk
-                // Simpan likes setiap pengguna (userId sebagai key dan jumlah like sebagai value)
+                val likesCount = result.size()
+                product.likesCount = likesCount
                 val likesMap = result.associate { doc -> doc.id to 1 }
                 product.likes = likesMap
-                onLikesCountFetched(likesCount) // Memanggil callback untuk memperbarui likes
+                onLikesCountFetched(likesCount)
             }
             .addOnFailureListener { e ->
                 Log.e("KatalogFragment", "Failed to fetch likes count: ${e.message}")
-                onLikesCountFetched(0) // Jika gagal, anggap 0 likes
+                onLikesCountFetched(0)
             }
     }
 
@@ -323,28 +388,27 @@ class KatalogFragment : Fragment() {
                     (searchQuery.isEmpty() || it.productName.contains(searchQuery, ignoreCase = true))
         }
 
-        // Update produk list
         produkList.clear()
         produkList.addAll(filtered)
         produkAdapter.notifyDataSetChanged()
-
-        // Update recommendations based on the filtered list
         updateRecommendationsForFiltered(filtered)
     }
 
     private fun updateRecommendationsForFiltered(filteredProducts: List<Product>) {
-        // Filter products with likes
         val recommendedProducts = filteredProducts.filter { it.likesCount > 0 }
 
         if (recommendedProducts.isNotEmpty()) {
-            // Show liked products in the recommendations section
             rekomendasiAdapter.updateData(recommendedProducts)
+            val actualLikes = getActualLikedProducts()
+            val precision = calculatePrecision(recommendedProducts, actualLikes)
+            val mae = calculateMAE(getPredictedRatings(recommendedProducts), getActualRatings(actualLikes))
+
+            Log.d("KatalogFragment", "Precision: $precision")
+            Log.d("KatalogFragment", "MAE: $mae")
         } else {
-            // Fallback to showing the cheapest products when no likes are available
             applyFallbackRecommendations(filteredProducts)
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()

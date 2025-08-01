@@ -6,6 +6,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.ProductImageAdapter
 import com.project.tugasakhir.Cart.KeranjangPenjualActivity
@@ -32,13 +33,18 @@ class DaftarProductActivity : AppCompatActivity() {
 
     private var userEmail: String? = null
     private var userName: String? = null
+    private var sellerUID: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
 
+        // Get user info from Intent
         userEmail = intent.getStringExtra(EXTRA_EMAIL)
         userName = intent.getStringExtra(EXTRA_USERNAME)
+
+        // Get sellerUID from Firebase Authentication
+        sellerUID = FirebaseAuth.getInstance().currentUser?.uid
 
         if (userEmail.isNullOrEmpty()) {
             Toast.makeText(this, "Email user tidak tersedia. Harap login ulang.", Toast.LENGTH_LONG)
@@ -46,9 +52,9 @@ class DaftarProductActivity : AppCompatActivity() {
             finish()
             return
         }
+
         val displayName = userName ?: "User"
         Toast.makeText(this, "Name: $displayName", Toast.LENGTH_SHORT).show()
-
 
         setupRecyclerView()
         setupAddProductButton()
@@ -62,19 +68,16 @@ class DaftarProductActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Mengubah RecyclerView untuk menampilkan item secara horizontal
+        // Initialize the RecyclerView adapter
         adapter = ProductImageAdapter(productList) { product ->
             val intent = Intent(this, InfoProductActivity::class.java).apply {
-                putExtra("product", product)      // Kirim objek produk
-                putExtra(
-                    "source",
-                    "seller"
-                )      // Tandai asalnya dari daftar produk penjual (edit/hapus)
+                putExtra("product", product)      // Send product object
+                putExtra("source", "seller")      // Mark as coming from seller product list (edit/remove)
             }
             startActivity(intent)
         }
 
-        // Ubah GridLayoutManager menjadi LinearLayoutManager dengan orientasi horizontal
+        // Set the layout manager and adapter for the RecyclerView
         binding.rvProductList.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.rvProductList.adapter = adapter
@@ -117,16 +120,24 @@ class DaftarProductActivity : AppCompatActivity() {
             Toast.makeText(this, "Email user tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
+
+        // Pastikan sellerUID diambil dari Firebase Auth
+        val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+            Toast.makeText(this, "User tidak terdeteksi, harap login ulang.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Query Firestore untuk mendapatkan produk yang dimiliki oleh penjual berdasarkan sellerUID
         db.collection("products")
-            .whereEqualTo("email", email)
+            .whereEqualTo("sellerUID", sellerUID) // Filter produk berdasarkan sellerUID
             .get()
             .addOnSuccessListener { documents ->
                 val productsFromFirestore = documents.mapNotNull { doc ->
-                    doc.toObject(Product::class.java)
+                    doc.toObject(Product::class.java) // Mengonversi data menjadi objek Product
                 }
-                productList.clear() // Clear existing list
-                productList.addAll(productsFromFirestore) // Add new data
-                adapter.notifyDataSetChanged() // Notify adapter to refresh the list
+                productList.clear() // Clear data yang ada
+                productList.addAll(productsFromFirestore) // Menambahkan produk baru yang sesuai dengan sellerUID
+                adapter.notifyDataSetChanged() // Memberitahu adapter untuk memperbarui tampilan
 
                 if (productList.isEmpty()) {
                     Toast.makeText(this, "Belum ada produk tersedia.", Toast.LENGTH_SHORT).show()
@@ -140,8 +151,8 @@ class DaftarProductActivity : AppCompatActivity() {
                     Toast.LENGTH_SHORT
                 ).show()
             }
-
     }
+
 
     private fun filterProductList(query: String?) {
         if (query.isNullOrBlank()) {
@@ -149,10 +160,7 @@ class DaftarProductActivity : AppCompatActivity() {
         } else {
             val filteredList = productList.filter { product ->
                 product.productName.contains(query, ignoreCase = true) ||  // Filter by product name
-                        product.productType.contains(
-                            query,
-                            ignoreCase = true
-                        )    // Filter by product type
+                        product.productType.contains(query, ignoreCase = true)    // Filter by product type
             }
             adapter.updateData(filteredList)  // Update the adapter with the filtered list
         }

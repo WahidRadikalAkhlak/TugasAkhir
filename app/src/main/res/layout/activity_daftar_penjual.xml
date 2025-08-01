@@ -77,6 +77,30 @@
                 android:inputType="textPostalAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <TextView
+            android:id="@+id/tv_share_lokasi"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Link Alamat lokasi"
+            android:textSize="16sp"
+            android:layout_marginTop="16dp"
+            android:textColor="@android:color/black"
+            android:fontFamily="@font/poppinsmedium"/>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/til_share_lokasi"
+            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Link Lokasi Anda Pada Google Maps">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/et_share_lokasi"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri" />
+        </com.google.android.material.textfield.TextInputLayout>
+
         <!-- Nomor Izin Usaha -->
         <TextView
             android:id="@+id/tv_no_izin_usaha"

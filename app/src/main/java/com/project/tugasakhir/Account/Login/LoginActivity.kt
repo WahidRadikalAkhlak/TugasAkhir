@@ -109,10 +109,13 @@ class LoginActivity : AppCompatActivity() {
             }
     }
 
-    // Google Sign-In
     private fun signInWithGoogle() {
-        val signInIntent = googleSignInClient.signInIntent
-        startActivityForResult(signInIntent, RC_SIGN_IN)
+        // Memaksa keluar dari akun Google sebelumnya
+        GoogleSignIn.getClient(this, GoogleSignInOptions.DEFAULT_SIGN_IN).signOut().addOnCompleteListener {
+            // Setelah sign out, mulai Google sign-in lagi
+            val signInIntent = googleSignInClient.signInIntent
+            startActivityForResult(signInIntent, RC_SIGN_IN)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

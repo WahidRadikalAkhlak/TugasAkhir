@@ -97,49 +97,7 @@
                     android:inputType="textPersonName|textCapSentences" />
             </com.google.android.material.textfield.TextInputLayout>
 
-<!--            &lt;!&ndash; Discount Input &ndash;&gt;-->
-<!--            <com.google.android.material.textfield.TextInputLayout-->
-<!--                android:id="@+id/discountInputLayout"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">-->
-
-<!--                <com.google.android.material.textfield.TextInputEditText-->
-<!--                    android:id="@+id/discountInput"-->
-<!--                    android:layout_width="match_parent"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:inputType="number"-->
-<!--                    android:hint="Enter discount in %"-->
-<!--                    android:textColorHint="@color/dark_grey" />-->
-<!--            </com.google.android.material.textfield.TextInputLayout>-->
-
-<!--            &lt;!&ndash; Radio Group for Discount Selection &ndash;&gt;-->
-<!--            <android.widget.RadioGroup-->
-<!--                android:id="@+id/radioGroupDiscount"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="wrap_content"-->
-<!--                android:layout_marginTop="20dp"-->
-<!--                android:orientation="vertical">-->
-
-<!--                <android.widget.RadioButton-->
-<!--                    android:id="@+id/radioDiscount200"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="Belanja lebih dari 200rb dapat diskon 5%" />-->
-
-<!--                <android.widget.RadioButton-->
-<!--                    android:id="@+id/radioDiscount300"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="Belanja lebih dari 300rb dapat diskon 7%" />-->
-
-<!--                <android.widget.RadioButton-->
-<!--                    android:id="@+id/radioDiscount500"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:text="Belanja lebih dari 500rb dapat diskon 10%" />-->
-<!--            </android.widget.RadioGroup>-->
-
+            <!-- Diskon untuk produk -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/TIL_discount"
                 android:layout_width="match_parent"
@@ -156,6 +114,25 @@
                     android:layout_height="wrap_content"
                     android:hint="Masukkan diskon (%)"
                     android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Syarat harga minimum untuk diskon -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/TIL_minimumPriceForDiscount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                app:boxCornerRadiusBottomEnd="8dp"
+                app:boxCornerRadiusBottomStart="8dp"
+                app:boxCornerRadiusTopEnd="8dp"
+                app:boxCornerRadiusTopStart="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/minimumPriceForDiscountInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Harga minimal untuk diskon"
+                    android:inputType="numberDecimal" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <!-- Description -->

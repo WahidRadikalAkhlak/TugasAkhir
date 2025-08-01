@@ -5,7 +5,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".Cart.KeranjangPenjualActivity">
 
-    <!-- ProgressBar - Centered in the layout -->
     <android.widget.ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="wrap_content"
@@ -45,13 +44,13 @@
                 android:id="@+id/chipgrp2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
                 android:orientation="horizontal"
-                app:checkedChip="@id/chip1"
+                style="@style/Widget.MaterialComponents.Chip.Filter"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:singleLine="true"
+                app:checkedChip="@id/chip1"
                 app:singleSelection="true">
 
                 <com.google.android.material.chip.Chip
@@ -86,7 +85,25 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/proses"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip5"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="@string/selesai"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip6"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/batal"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
