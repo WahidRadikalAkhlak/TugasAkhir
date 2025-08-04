@@ -67,6 +67,13 @@ class AccountFragment : Fragment() {
             navigateToLogin() // Navigate to login screen
         }
 
+        if (currentUser != null) {
+            // Code that accesses currentUser properties should be inside this check
+            val email = currentUser.email ?: ""
+            val name = currentUser.displayName ?: "User"
+            // Use these variables for UI updates
+        }
+
         binding.clbahasa.setOnClickListener {
             navigateToLanguages()
         }
@@ -211,7 +218,7 @@ class AccountFragment : Fragment() {
     private fun navigateToLogin() {
         val intent = Intent(requireContext(), LoginActivity::class.java)
         startActivity(intent)
-        requireActivity().finish()
+        requireActivity().finish()  // Finish the current activity to prevent going back
     }
 
     private fun navigateToSettings() {
