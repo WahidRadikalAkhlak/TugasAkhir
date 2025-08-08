@@ -27,6 +27,7 @@ data class Product(
     val email: String = "",
     val ratings: Map<String, Float> = emptyMap(),
     var avgRating: Float = 0f,
+    var likesUsers: List<String> = mutableListOf(),
     var sellerUID: String = ""
 ) : Parcelable {
 

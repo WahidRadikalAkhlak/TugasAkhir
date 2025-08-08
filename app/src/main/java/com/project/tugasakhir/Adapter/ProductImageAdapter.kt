@@ -27,9 +27,13 @@ class ProductImageAdapter(
             binding.deskripsiProduk.text = product.description ?: "Deskripsi tidak tersedia"
             binding.tvStockAvailable.text = "Stock: ${product.stockAvailable}"
             binding.HargaBarang.text = setPriceText(product.pricePerUnit)
-
-            // Bind the RatingBar to the product's avgRating
-            binding.ratingBar.rating = product.avgRating  // This will bind the avgRating
+            if (product.discount > 0) {
+                binding.discountLabel.text = "Disc ${product.discount}%"
+                binding.discountLabel.visibility = View.VISIBLE
+            } else {
+                binding.discountLabel.visibility = View.GONE
+            }
+            binding.ratingBar.rating = product.avgRating
             binding.likesCount.visibility = View.GONE
             binding.likesCount.text = "${product.likesCount} Likes" // Show the likes count
 

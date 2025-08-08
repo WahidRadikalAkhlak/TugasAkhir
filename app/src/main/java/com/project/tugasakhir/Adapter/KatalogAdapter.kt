@@ -32,6 +32,12 @@ class KatalogAdapter(
                 binding.likesCount.visibility = View.GONE
             }
 
+            if (product.discount > 0) {
+                binding.discountLabel.text = "Disc ${product.discount}%"
+                binding.discountLabel.visibility = View.VISIBLE
+            } else {
+                binding.discountLabel.visibility = View.GONE
+            }
             // Muat gambar produk
             loadProductImage(product)
 

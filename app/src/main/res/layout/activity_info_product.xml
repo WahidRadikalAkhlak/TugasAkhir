@@ -118,6 +118,7 @@
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:layout_alignParentEnd="true"/>
+
             </RelativeLayout>
 
             <!-- Divider -->

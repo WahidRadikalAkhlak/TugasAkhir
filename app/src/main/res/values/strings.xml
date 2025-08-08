@@ -37,7 +37,7 @@
     <string name="tanggal_order">Tanggal Order Tersedia</string>
     <string name="waktu">Waktu Order Tersedia</string>
     <string name="waktu_order">Waktu :</string>
-    <string name="tambah_produk_baru">Tambah Produk Baru</string>
+    <string name="tambah_produk_baru">Tambah Produk</string>
     <string name="pesan_kepada_penjual">Pesan Kepada Penjual :</string>
     <string name="pembeli">Pembeli</string>
     <string name="proses_pesanan">Proses Pesanan</string>
@@ -73,8 +73,7 @@
     <string name="search">Mencari</string>
     <string name="allproduct">Semua</string>
     <string name="padi">Padi</string>
-    <string name="jagung">Jagung</string>
-    <string name="kedelai">Kedelai</string>
+    <string name="kacangan">Kacang-Kacangan</string>
     <string name="umbi">Umbi-Umbian</string>
     <string name="sayur">Sayur</string>
     <string name="buah">Buah</string>
@@ -103,4 +102,7 @@
     <string name="pesan">Pesan</string>
     <string name="keranjang">Keranjang</string>
     <string name="akun">Akun</string>
+    <string name="rempah">Rempah-Rempah</string>
+    <string name="hias">Tanaman Hias</string>
+    <string name="Editbisnis">Edit Profil Bisnis</string>
 </resources>

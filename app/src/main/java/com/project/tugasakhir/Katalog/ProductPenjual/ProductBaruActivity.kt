@@ -54,7 +54,7 @@ class ProductBaruActivity : AppCompatActivity() {
 
         // AutoCompleteTextView for product type
         val jenisProdukArray =
-            arrayOf("Padi", "Jagung", "Kedelai", "Umbi-Umbian", "Sayur", "Buah", "Tanaman Obat")
+            arrayOf("Padi", "Umbi-Umbian", "Kacang-Kacangan", "Sayuran", "Buah-Buahan", "Tanaman Obat", "Tanaman Hias", "Rempah-Rempah")
         val adapter =
             ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
         binding.jenisProduk.setAdapter(adapter)

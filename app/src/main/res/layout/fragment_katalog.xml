@@ -110,7 +110,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/jagung"
+                    android:text="@string/umbi"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -119,7 +119,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/kedelai"
+                    android:text="@string/kacangan"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -128,7 +128,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/umbi"
+                    android:text="@string/sayur"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -137,7 +137,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/sayur"
+                    android:text="@string/buah"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -146,7 +146,7 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/buah"
+                    android:text="@string/obat"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
 
@@ -155,7 +155,15 @@
                     style="@style/Widget.MaterialComponents.Chip.Filter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/obat"
+                    android:text="@string/hias"
+                    android:textColor="@color/fontColor"
+                    app:chipBackgroundColor="@color/chip_bg_states" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip9"
+                    style="@style/Widget.MaterialComponents.Chip.Filter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/rempah"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
@@ -178,14 +186,13 @@
             android:id="@+id/rv_produk_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:nestedScrollingEnabled="false"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tv_produk_list"
             tools:listitem="@layout/item_product" />
+
 
         <TextView
             android:id="@+id/rekomendasiText"

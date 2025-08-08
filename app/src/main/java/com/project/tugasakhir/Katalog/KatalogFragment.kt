@@ -92,11 +92,32 @@ class KatalogFragment : Fragment() {
                 produkList.clear()
                 produkList.addAll(productsFromFirestore)
 
+                // Group products by product type
+                val groupedByType = produkList.groupBy { it.productType }
+
+                // Log the products in the catalog, grouped by product type
+                groupedByType.forEach { (productType, products) ->
+                    val productDetails = products.joinToString("\n") { product ->
+                        "Product Name: ${product.productName}, Price/Kg: ${product.pricePerUnit}, Stock: ${product.stockAvailable}"
+                    }
+
+                    Log.d("KatalogFragment", "Products in Category: $productType\n$productDetails")
+                }
+
                 val likesCountFetched = mutableListOf<Int>()
                 for (product in produkList) {
                     getReviewsAndRating(product)
-                    getLikesCountForProduct(product) { likesCount ->
+
+                    // Get likes and usernames for each product
+                    getLikesCountForProduct(product) { likesCount, userNames ->
                         product.likesCount = likesCount
+                        product.likesUsers = userNames  // Store usernames who liked the product
+
+                        // Log the usernames of users who liked this product
+                        if (userNames.isNotEmpty()) {
+                            Log.d("KatalogFragment", "Users who liked ${product.productName}: $userNames")
+                        }
+
                         likesCountFetched.add(likesCount)
                         if (likesCountFetched.size == produkList.size) {
                             produkAdapter.notifyDataSetChanged()
@@ -108,6 +129,31 @@ class KatalogFragment : Fragment() {
             }
             .addOnFailureListener { e ->
                 Toast.makeText(requireContext(), "Failed to fetch products: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int, List<String>) -> Unit) {
+        db.collection("productLikes")
+            .document(product.productId)
+            .collection("users")
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    Log.e("KatalogFragment", "No likes found for product: ${product.productId}")
+                    onLikesCountFetched(0, emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val likesCount = result.size()
+                val userNames = result.map { it.id }  // Get usernames who liked the product
+                product.likesCount = likesCount
+
+                // Pass the like count and list of usernames to the callback function
+                onLikesCountFetched(likesCount, userNames)  // Pass usernames along with like count
+            }
+            .addOnFailureListener { e ->
+                Log.e("KatalogFragment", "Failed to fetch likes count: ${e.message}")
+                onLikesCountFetched(0, emptyList())
             }
     }
 
@@ -146,7 +192,6 @@ class KatalogFragment : Fragment() {
             if (likedProducts.isNotEmpty()) {
                 recommendedProducts.addAll(likedProducts)
             } else {
-                // Gunakan kemiripan produk untuk fallback
                 val cheapestProduct = productsInCategory.minByOrNull { it.pricePerUnit }
                 if (cheapestProduct != null) {
                     recommendedProducts.add(cheapestProduct)
@@ -154,10 +199,17 @@ class KatalogFragment : Fragment() {
             }
         }
 
-        // Jika tidak ada produk yang direkomendasikan, gunakan fallback dengan rating tertinggi
+        // If no recommendations, use fallback based on highest ratings
         if (recommendedProducts.isEmpty()) {
             applyFallbackRecommendations()
         } else {
+            // Log recommended products with details (price, stock, likes)
+            val recommendedProductDetails = recommendedProducts.map { product ->
+                "Product Name: ${product.productName}, Price/Kg: ${product.pricePerUnit}, Stock: ${product.stockAvailable}, Likes: ${product.likesCount}, Rating: ${product.avgRating}"
+            }
+
+            Log.d("KatalogFragment", "Recommended Products: \n${recommendedProductDetails.joinToString("\n")}")
+
             rekomendasiAdapter.updateData(recommendedProducts)
         }
     }
@@ -236,7 +288,7 @@ class KatalogFragment : Fragment() {
         var totalPrecision = 0.0
         var totalMAE = 0.0
 
-        // Periksa hanya produk dengan rating dan like yang valid
+        // Log each product's precision and MAE
         recommendedProducts.forEach { product ->
             if (product.ratings.isNotEmpty() || product.likesCount > 0) {
                 val precision = calculatePrecision(listOf(product), actualLikes)
@@ -332,12 +384,13 @@ class KatalogFragment : Fragment() {
         binding.chipgrp2.setOnCheckedChangeListener { _, checkedId ->
             selectedChipType = when (checkedId) {
                 R.id.chip2 -> "Padi"
-                R.id.chip3 -> "Jagung"
-                R.id.chip4 -> "Kedelai"
-                R.id.chip5 -> "Umbi-Umbian"
-                R.id.chip6 -> "Sayur"
-                R.id.chip7 -> "Buah"
-                R.id.chip8 -> "Tanaman Obat"
+                R.id.chip3 -> "Umbi-Umbian"
+                R.id.chip4 -> "Kacang-Kacangan"
+                R.id.chip5 -> "Sayuran"
+                R.id.chip6 -> "Buah-Buahan"
+                R.id.chip7 -> "Tanaman Obat"
+                R.id.chip8 -> "Tanaman Hias"
+                R.id.chip9 -> "Rempah-Rempah"
                 else -> "" // Semua
             }
             applyCombinedFilters()

@@ -2,10 +2,8 @@ package com.project.tugasakhir.Katalog.Product
 
 import BottomSheetBuyActivity
 import android.content.Intent
-import android.content.res.ColorStateList
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.util.Base64
@@ -30,7 +28,7 @@ import com.project.tugasakhir.databinding.ActivityInfoProductBinding
 class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToCartListener {
 
     private lateinit var binding: ActivityInfoProductBinding
-    private val firestore = FirebaseFirestore.getInstance()
+    private val firestore = FirebaseFirestore.getInstance()  // Initialize Firestore instance
     private val auth = FirebaseAuth.getInstance()
     private var product: Product? = null
     private var source: String? = null
@@ -107,11 +105,13 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             .addOnSuccessListener { result ->
                 val reviewCount = result.size()
                 var totalRating = 0f
+                val userNames = mutableListOf<String>()  // List to store user names who reviewed the product
 
                 // Calculate the total rating by iterating over reviews
                 for (document in result) {
                     val review = document.toObject(Review::class.java)
                     totalRating += (review.ratingKomunikasi + review.ratingKualitas) // Sum ratings
+                    userNames.add(review.userName)  // Add the reviewer's username to the list
                 }
 
                 // Calculate the average rating (average of all reviews)
@@ -123,6 +123,9 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 binding.likesCount.text = "$reviewCount Ulasan"
                 binding.overallRating.text = String.format("%.1f", product.avgRating)
 
+                // Display the usernames who rated the product
+                Log.d("InfoProductActivity", "Users who rated this product: $userNames")
+
                 // Set RatingBar value in InfoProductActivity
                 binding.ratingBar.rating = product.avgRating  // Set the actual value of RatingBar
             }
@@ -132,12 +135,12 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     }
 
     private fun checkIfLiked(product: Product) {
-        val currentUserId = auth.currentUser?.uid ?: return
+        val currentUserName = auth.currentUser?.displayName ?: return
 
         firestore.collection("productLikes")
             .document(product.productId) // Use productId as the unique identifier
             .collection("users")
-            .document(currentUserId)
+            .document(currentUserName)
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -147,8 +150,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to check like: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Failed to check like: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -305,7 +307,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             } else {
                 imgProduct.setImageResource(R.drawable.image_icon)
             }
-
+            checkIfLiked(p)
             // Set button text and listeners based on source
             if (source == "seller") {
                 // Change button text and set functionality for seller
@@ -381,49 +383,71 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     }
 
     private fun toggleLikeStatusForUser(product: Product) {
-        val currentUserId = auth.currentUser?.uid ?: return
+        val currentUserName = auth.currentUser?.displayName ?: "Unknown"
 
         val productLikesRef = firestore.collection("productLikes")
-            .document(product.productId) // Use productId for managing likes
+            .document(product.productId)  // Use productId as the document ID
             .collection("users")
-            .document(currentUserId)
+            .document(currentUserName) // Use username as the document ID
 
         productLikesRef.get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
+                    // If the product is already liked by the user, remove like
                     productLikesRef.delete()
                         .addOnSuccessListener {
                             updateLikeButtonStatus(false)
-                            updateLikesCount(product, false)
+                            updateLikesCount(product, false) // Decrease like count
+                            // Remove username from the list of likes
+                            removeUsernameFromLikes(product.productId, currentUserName)
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(
-                                this,
-                                "Failed to remove like: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Failed to remove like: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                 } else {
+                    // If the product is not liked by the user, add like
                     productLikesRef.set(mapOf("likedAt" to FieldValue.serverTimestamp()))
                         .addOnSuccessListener {
                             updateLikeButtonStatus(true)
-                            updateLikesCount(product, true)
+                            updateLikesCount(product, true) // Increase like count
+                            // Add username to the list of likes
+                            addUsernameToLikes(product.productId, currentUserName)
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(
-                                this,
-                                "Failed to add like: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Failed to add like: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(
-                    this,
-                    "Failed to check like status: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
+                Toast.makeText(this, "Failed to check like status: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun addUsernameToLikes(productId: String, username: String) {
+        firestore.collection("productLikes")
+            .document(productId)
+            .collection("users")
+            .document(username)  // Use username as the document ID
+            .set(mapOf("username" to username, "likedAt" to FieldValue.serverTimestamp()))
+            .addOnSuccessListener {
+                Log.d("InfoProductActivity", "Username added to likes: $username")
+            }
+            .addOnFailureListener { e ->
+                Log.e("InfoProductActivity", "Failed to add username to likes: ${e.message}")
+            }
+    }
+
+    private fun removeUsernameFromLikes(productId: String, username: String) {
+        firestore.collection("productLikes")
+            .document(productId)
+            .collection("users")
+            .document(username)  // Use username as the document ID
+            .delete()
+            .addOnSuccessListener {
+                Log.d("InfoProductActivity", "Username removed from likes: $username")
+            }
+            .addOnFailureListener { e ->
+                Log.e("InfoProductActivity", "Failed to remove username from likes: ${e.message}")
             }
     }
 
@@ -434,30 +458,24 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             .addOnSuccessListener { doc ->
                 if (doc.exists()) {
                     val currentLikesCount = doc.getLong("likesCount")?.toInt() ?: 0
-                    val newLikesCount =
-                        if (isLikeAdded) currentLikesCount + 1 else currentLikesCount - 1
+                    val newLikesCount = if (isLikeAdded) currentLikesCount + 1 else currentLikesCount - 1
 
                     productRef.update("likesCount", newLikesCount)
                         .addOnSuccessListener {
                             binding.likesCount.text = "$newLikesCount Likes"
                         }
                         .addOnFailureListener { e ->
-                            Toast.makeText(
-                                this,
-                                "Failed to update like count: ${e.message}",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this, "Failed to update like count: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to get likes count: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Failed to get likes count: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
     private fun getLikesCount(product: Product) {
-        firestore.collection("productLikes")
+        firestore.collection("productLikes")  // Replaced db with firestore
             .document(product.productId)
             .collection("users")
             .get()
@@ -489,9 +507,9 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
     private fun updateLikeButtonStatus(isLiked: Boolean) {
         if (isLiked) {
-            binding.btnLike.setImageResource(R.drawable.liked)
+            binding.btnLike.setImageResource(R.drawable.liked)  // Image when liked
         } else {
-            binding.btnLike.setImageResource(R.drawable.like)
+            binding.btnLike.setImageResource(R.drawable.like)  // Image when not liked
         }
     }
 
@@ -578,4 +596,3 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
     }
 }
-

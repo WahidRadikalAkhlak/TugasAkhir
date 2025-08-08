@@ -60,6 +60,7 @@ class DaftarProductActivity : AppCompatActivity() {
         setupAddProductButton()
         setupAcceptOrder()
         setupSearchView()
+        setupEditBisnis()
     }
 
     override fun onResume() {
@@ -96,6 +97,15 @@ class DaftarProductActivity : AppCompatActivity() {
     private fun setupAcceptOrder() {
         binding.btnAcceptOrder.setOnClickListener {
             val intent = Intent(this, KeranjangPenjualActivity::class.java).apply {
+                putExtra(EXTRA_EMAIL, userEmail)
+                putExtra(EXTRA_USERNAME, userName)
+            }
+            startActivity(intent)
+        }
+    }
+    private fun setupEditBisnis(){
+        binding.btnEditBisnis.setOnClickListener{
+            val  intent = Intent(this, DaftarPenjualActivity::class.java).apply {
                 putExtra(EXTRA_EMAIL, userEmail)
                 putExtra(EXTRA_USERNAME, userName)
             }
@@ -152,7 +162,6 @@ class DaftarProductActivity : AppCompatActivity() {
                 ).show()
             }
     }
-
 
     private fun filterProductList(query: String?) {
         if (query.isNullOrBlank()) {

@@ -16,7 +16,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDaftarPenjualBinding
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-
+    private var isEditing = false
     private var isRegistering = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,12 +26,15 @@ class DaftarPenjualActivity : AppCompatActivity() {
         binding.btnDaftar.backgroundTintList =
             ColorStateList.valueOf(resources.getColor(R.color.btn_color, null))
         binding.btnDaftar.setOnClickListener {
-            if (!isRegistering) {
+            if (isEditing) {
+                updateSellerProfile()
+            } else {
                 registerSeller()
             }
             binding.progressBar.visibility = View.VISIBLE
             binding.progressBar.visibility = View.GONE
         }
+        loadSellerProfile()
     }
 
     private fun registerSeller() {
@@ -42,17 +45,11 @@ class DaftarPenjualActivity : AppCompatActivity() {
         val noIzinUsaha = binding.etNoIzinusaha.text.toString().trim()
         val deskripsi = binding.etDeskripsi.text.toString().trim()
         val sosialMedia = binding.etSosialMedia.text.toString().trim()
-        val shareLokasi = binding.etShareLokasi.text.toString().trim()  // Link Lokasi Google Maps
+        val shareLokasi = binding.etShareLokasi.text.toString().trim()
 
         // Validasi input
         if (noHp.isEmpty() || alamatToko.isEmpty() || noIzinUsaha.isEmpty() || deskripsi.isEmpty() || sosialMedia.isEmpty() || shareLokasi.isEmpty()) {
             Toast.makeText(this, "Harap isi semua kolom!", Toast.LENGTH_SHORT).show()
-            showLoadingState(false)
-            return
-        }
-
-        if (!TextUtils.isDigitsOnly(noHp)) {
-            Toast.makeText(this, "Nomor HP hanya boleh angka!", Toast.LENGTH_SHORT).show()
             showLoadingState(false)
             return
         }
@@ -107,6 +104,93 @@ class DaftarPenjualActivity : AppCompatActivity() {
                 Toast.makeText(this, "Gagal membuat akun bisnis: ${e.message}", Toast.LENGTH_LONG)
                     .show()
                 e.printStackTrace()
+                showLoadingState(false)
+            }
+    }
+
+    private fun loadSellerProfile() {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val email = currentUser?.email ?: return
+
+        val docId = email.replace(".", "_")
+
+        db.collection("penjual").document(docId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val noHp = document.getString("noHp") ?: ""
+                    val alamatToko = document.getString("alamatToko") ?: ""
+                    val noIzinUsaha = document.getString("noIzinUsaha") ?: ""
+                    val deskripsi = document.getString("deskripsi") ?: ""
+                    val sosialMedia = document.getString("sosialMedia") ?: ""
+                    val shareLokasi = document.getString("shareLokasi") ?: ""
+
+                    // Menampilkan data di formulir
+                    binding.etNoHp.setText(noHp)
+                    binding.etAlamatToko.setText(alamatToko)
+                    binding.etNoIzinusaha.setText(noIzinUsaha)
+                    binding.etDeskripsi.setText(deskripsi)
+                    binding.etSosialMedia.setText(sosialMedia)
+                    binding.etShareLokasi.setText(shareLokasi)
+
+                    // Mengubah status isEditing menjadi true karena data profil sudah ada
+                    isEditing = true
+
+                    // Ubah teks tombol menjadi "Simpan Perubahan"
+                    binding.btnDaftar.text = "Simpan Perubahan"
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat profil: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateSellerProfile() {
+        showLoadingState(true)
+
+        val noHp = binding.etNoHp.text.toString().trim()
+        val alamatToko = binding.etAlamatToko.text.toString().trim()
+        val noIzinUsaha = binding.etNoIzinusaha.text.toString().trim()
+        val deskripsi = binding.etDeskripsi.text.toString().trim()
+        val sosialMedia = binding.etSosialMedia.text.toString().trim()
+        val shareLokasi = binding.etShareLokasi.text.toString().trim()
+
+        // Validasi input
+        if (noHp.isEmpty() || alamatToko.isEmpty() || noIzinUsaha.isEmpty() || deskripsi.isEmpty() || sosialMedia.isEmpty() || shareLokasi.isEmpty()) {
+            Toast.makeText(this, "Harap isi semua kolom!", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
+            return
+        }
+
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        val email = currentUser?.email ?: ""
+        if (email.isBlank()) {
+            Toast.makeText(this, "Email user tidak tersedia", Toast.LENGTH_SHORT).show()
+            showLoadingState(false)
+            return
+        }
+
+        val docId = email.replace(".", "_")
+
+        // Update data profil penjual di Firestore
+        val sellerData: MutableMap<String, Any> = hashMapOf(
+            "noHp" to noHp,
+            "alamatToko" to alamatToko,
+            "noIzinUsaha" to noIzinUsaha,
+            "deskripsi" to deskripsi,
+            "sosialMedia" to sosialMedia,
+            "shareLokasi" to shareLokasi
+        )
+
+        db.collection("penjual").document(docId)
+            .update(sellerData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Profil bisnis berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                showLoadingState(false)
+                finish() // Menutup activity setelah berhasil update
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memperbarui profil: ${e.message}", Toast.LENGTH_LONG).show()
                 showLoadingState(false)
             }
     }
