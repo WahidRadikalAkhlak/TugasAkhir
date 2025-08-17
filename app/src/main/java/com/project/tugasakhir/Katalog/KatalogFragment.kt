@@ -18,7 +18,6 @@ import com.project.tugasakhir.Data.Review
 import com.project.tugasakhir.Katalog.Product.InfoProductActivity
 import com.project.tugasakhir.R
 import com.project.tugasakhir.databinding.FragmentKatalogBinding
-import java.math.BigInteger
 
 class KatalogFragment : Fragment() {
     private var _binding: FragmentKatalogBinding? = null
@@ -31,6 +30,8 @@ class KatalogFragment : Fragment() {
     private lateinit var produkAdapter: ProductImageAdapter
     private lateinit var rekomendasiAdapter: KatalogAdapter
     private val db = FirebaseFirestore.getInstance()
+    private val MIN_LIKES = 2
+    private val fallbackWeight = 0.7f
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -221,18 +222,15 @@ class KatalogFragment : Fragment() {
             actualLikes.contains(recommended)  // Produk yang benar-benar disukai
         }
 
-        // Jika tidak ada produk yang relevan ditemukan, maka precision adalah 0
         return if (relevantRecommendations.isEmpty()) 0.0
         else relevantRecommendations.size.toDouble() / recommendedProducts.size.toDouble()
     }
 
     fun calculateMAE(predictedRatings: List<Float>, actualRatings: List<Float>): Double {
-        // Pastikan data tidak kosong dan ukuran sama
         if (predictedRatings.isEmpty() || actualRatings.isEmpty() || predictedRatings.size != actualRatings.size) {
-            return 0.0  // Jika data kosong atau tidak cocok, kembalikan 0.0
+            return 0.0
         }
 
-        // Menghitung kesalahan absolut
         val absoluteErrors = predictedRatings.zip(actualRatings) { predicted, actual ->
             Math.abs(predicted - actual)
         }
@@ -241,16 +239,15 @@ class KatalogFragment : Fragment() {
     }
 
     fun getActualLikedProducts(): List<Product> {
-        return allProducts.filter { it.likesCount > 0 }
+        return allProducts.filter { it.likesCount >= MIN_LIKES }
     }
 
     fun getPredictedRatings(products: List<Product>): List<Float> {
         return products.mapNotNull { product ->
-            // Pastikan produk memiliki rating atau likes yang valid untuk dihitung
             if (product.likesCount > 0 || product.ratings.isNotEmpty()) {
                 getPredictedRatingUsingCombinedScore(product, alpha = 0.7f)
             } else {
-                null  // Jika data tidak lengkap, abaikan perhitungan
+                null
             }
         }
     }
@@ -259,22 +256,14 @@ class KatalogFragment : Fragment() {
         val totalScore = product.ratings.values.sum() + product.likesCount
         val totalCount = product.ratings.size + product.likesCount
 
-        // Jika produk memiliki data valid, lakukan perhitungan prediksi rating
         if (totalCount > 0) {
-            return totalScore / totalCount  // Rata-rata gabungan dari rating dan likes
+            return totalScore / totalCount
         }
-        return 0f  // Jika tidak ada data, kembalikan rating 0
+        return 0f
     }
 
     fun getActualRatings(products: List<Product>): List<Float> {
         return products.map { if (it.likesCount > 0) 1f else 0f }
-    }
-
-    fun getCombinedScore(product: Product, userId: String, alpha: Float): Float {
-        val likeScore = if (product.likes.contains(userId)) 1f else 0f  // Like bernilai 1 jika disukai, 0 jika tidak
-        val ratingScore = product.ratings[userId] ?: 0f  // Rating pengguna (0 jika tidak ada rating)
-        // Menggabungkan rating dan like dengan bobot alpha
-        return alpha * ratingScore + (1 - alpha) * likeScore
     }
 
     fun computeAccuracyMetrics() {
@@ -288,20 +277,17 @@ class KatalogFragment : Fragment() {
         var totalPrecision = 0.0
         var totalMAE = 0.0
 
-        // Log each product's precision and MAE
         recommendedProducts.forEach { product ->
-            if (product.ratings.isNotEmpty() || product.likesCount > 0) {
-                val precision = calculatePrecision(listOf(product), actualLikes)
-                totalPrecision += precision
+            val precision = calculatePrecision(listOf(product), actualLikes)
+            totalPrecision += precision
 
-                val predictedRatings = getPredictedRatings(listOf(product))
-                val actualRatings = getActualRatings(listOf(product))
-                val mae = calculateMAE(predictedRatings, actualRatings)
-                totalMAE += mae
+            val predictedRatings = getPredictedRatings(listOf(product))
+            val actualRatings = getActualRatings(listOf(product))
+            val mae = calculateMAE(predictedRatings, actualRatings)
+            totalMAE += mae
 
-                Log.d("KatalogFragment", "Precision for ${product.productName}: $precision")
-                Log.d("KatalogFragment", "MAE for ${product.productName}: $mae")
-            }
+            Log.d("KatalogFragment", "Precision for ${product.productName}: $precision")
+            Log.d("KatalogFragment", "MAE for ${product.productName}: $mae")
         }
 
         val averagePrecision = totalPrecision / recommendedProducts.size
@@ -317,7 +303,8 @@ class KatalogFragment : Fragment() {
             return
         }
 
-        val filteredProducts = allProducts.filter { it.likesCount > 0 || it.avgRating >= 4.0 }
+        // Filter produk berdasarkan rating atau likes yang cukup
+        val filteredProducts = allProducts.filter { it.avgRating >= 4.0 || it.likesCount >= MIN_LIKES }
 
         Log.d("KatalogFragment", "Filtered Products for Collaborative Filtering: ${filteredProducts.size}")
 
@@ -329,6 +316,7 @@ class KatalogFragment : Fragment() {
 
         val productLikesMatrix = mutableListOf<MutableList<Double>>()
 
+        // Menghitung kemiripan antar produk menggunakan cosine similarity
         for (i in filteredProducts.indices) {
             val ratingsForProduct = mutableListOf<Double>()
             for (j in filteredProducts.indices) {
@@ -340,14 +328,16 @@ class KatalogFragment : Fragment() {
             productLikesMatrix.add(ratingsForProduct)
         }
 
+        // Menyaring produk berdasarkan similarity (kemiripan)
         val recommendedProducts = recommendProductsBasedOnSimilarity(productLikesMatrix, filteredProducts, topN = 10)
 
         if (recommendedProducts.isNotEmpty()) {
             rekomendasiAdapter.updateData(recommendedProducts)
+            Log.d("KatalogFragment", "Recommended Products: ${recommendedProducts.joinToString(", ") { it.productName }}")
             computeAccuracyMetrics()  // Menghitung akurasi rekomendasi
         } else {
             Log.d("KatalogFragment", "No recommended products found.")
-            applyFallbackRecommendations()
+            applyFallbackRecommendations(filteredProducts)
         }
     }
 
@@ -355,29 +345,16 @@ class KatalogFragment : Fragment() {
         val recommendedProducts = filteredSource
             .sortedByDescending { it.avgRating }  // Fallback berdasarkan rating tertinggi
             .take(10)
-        rekomendasiAdapter.updateData(recommendedProducts)
-    }
 
-    private fun computeAccuracyMetricsForFallback(recommendedProducts: List<Product>) {
-        val actualLikes = getActualLikedProducts()
-        var totalPrecision = 0.0
-        var totalMAE = 0.0
-
-        recommendedProducts.forEach { product ->
-            val precision = calculatePrecision(listOf(product), actualLikes)
-            totalPrecision += precision
-
-            val predictedRatings = getPredictedRatings(listOf(product))
-            val actualRatings = getActualRatings(listOf(product))
-            val mae = calculateMAE(predictedRatings, actualRatings)
-            totalMAE += mae
+        // Jika fallback berdasarkan harga, pilih produk dengan harga terendah
+        if (recommendedProducts.isEmpty()) {
+            val fallbackByPrice = filteredSource.sortedBy { it.pricePerUnit }.take(10)
+            rekomendasiAdapter.updateData(fallbackByPrice)
+            Log.d("KatalogFragment", "Fallback based on price: ${fallbackByPrice.joinToString(", ") { it.productName }}")
+        } else {
+            rekomendasiAdapter.updateData(recommendedProducts)
+            Log.d("KatalogFragment", "Fallback Recommendations: ${recommendedProducts.joinToString(", ") { it.productName }}")
         }
-
-        val averagePrecision = totalPrecision / recommendedProducts.size
-        val averageMAE = totalMAE / recommendedProducts.size
-
-        Log.d("KatalogFragment", "Average Precision for fallback recommendations: $averagePrecision")
-        Log.d("KatalogFragment", "Average MAE for fallback recommendations: $averageMAE")
     }
 
     private fun setupChipFilter() {
@@ -397,7 +374,7 @@ class KatalogFragment : Fragment() {
         }
     }
 
-    fun computeCosineSimilarity(productA: Product, productB: Product, alpha: Float): Double {
+    private fun computeCosineSimilarity(productA: Product, productB: Product, alpha: Float): Double {
         val commonUsers = getCommonLikes(productA, productB)
         if (commonUsers.isEmpty()) return 0.0
 
@@ -413,10 +390,14 @@ class KatalogFragment : Fragment() {
             magnitudeB += predictedScoreB * predictedScoreB
         }
 
-        // Jika magnitude A atau B adalah nol, return 0 karena tidak ada kemiripan
         if (magnitudeA == 0.0 || magnitudeB == 0.0) return 0.0
 
-        return dotProduct / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
+        val similarity = dotProduct / (Math.sqrt(magnitudeA) * Math.sqrt(magnitudeB))
+
+        // Log similarity untuk setiap produk
+        Log.d("KatalogFragment", "Cosine Similarity between ${productA.productName} and ${productB.productName}: $similarity")
+
+        return similarity
     }
 
     private fun getCommonLikes(productA: Product, productB: Product): List<String> {

@@ -18,7 +18,7 @@ import com.project.tugasakhir.databinding.ItemKeranjangProdukBinding
 
 class OrderAdapter(
     private val orders: MutableList<Order>,
-    private val products: List<Product>,  // List of products to match orders with
+    private val products: List<Product>, // List of products to match orders with
     private val onItemClick: (Order) -> Unit,
     private val onDeleteClick: (Order) -> Unit,
     private val isForKeranjangPesanan: Boolean
@@ -57,12 +57,12 @@ class OrderAdapter(
             val product = getProductForOrder(order)
 
             if (product != null) {
-                binding.userName.text = product.userName
-                binding.alamat.text = order.alamatToko
-                binding.orderNumber.text = order.orderNumber
-                binding.statusOrder.text = order.statusOrder
-                binding.tanggalOrder.text = order.orderDate
-                binding.orderTime.text = order.orderTime
+                binding.userName.text = product.userName ?: "Unknown"
+                binding.alamat.text = order.alamatToko ?: "No address"
+                binding.orderNumber.text = order.orderNumber ?: "No order number"
+                binding.statusOrder.text = order.statusOrder ?: "No status"
+                binding.tanggalOrder.text = order.orderDate ?: "No date"
+                binding.orderTime.text = order.orderTime ?: "No time"
             }
         }
     }
@@ -76,12 +76,13 @@ class OrderAdapter(
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val currentOrder = orders[position]
-                    currentOrder.quantity += 1
-                    currentOrder.totalPrice =
-                        currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
-                    updateOrderInFirestore(currentOrder) // Perbarui Firestore
-                    notifyItemChanged(position)
-                    updateBottomLayout() // Perbarui tampilan total harga
+                    if (currentOrder.quantity > 0) { // Check if quantity is valid
+                        currentOrder.quantity += 1
+                        currentOrder.totalPrice = currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
+                        updateOrderInFirestore(currentOrder) // Perbarui Firestore
+                        notifyItemChanged(position)
+                        updateBottomLayout() // Perbarui tampilan total harga
+                    }
                 }
             }
 
@@ -90,10 +91,9 @@ class OrderAdapter(
                 val position = adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     val currentOrder = orders[position]
-                    if (currentOrder.quantity > 1) {
+                    if (currentOrder.quantity > 1) { // Check if quantity is greater than 1
                         currentOrder.quantity -= 1
-                        currentOrder.totalPrice =
-                            currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
+                        currentOrder.totalPrice = currentOrder.quantity * currentOrder.pricePerUnit // Menghitung ulang totalPrice
                         updateOrderInFirestore(currentOrder) // Perbarui Firestore
                         notifyItemChanged(position)
                         updateBottomLayout() // Perbarui tampilan total harga
@@ -114,9 +114,9 @@ class OrderAdapter(
             val product = getProductForOrder(order)
 
             if (product != null) {
-                binding.productName.text = order.productName
-                binding.productType.text = order.productType
-                binding.description.text = order.description
+                binding.productName.text = order.productName ?: "No product name"
+                binding.productType.text = order.productType ?: "No product type"
+                binding.description.text = order.description ?: "No description"
                 binding.totalPrice.text = "Rp ${String.format("%,.0f", order.totalPrice)}"
                 binding.banyakProduk.text = order.quantity.toString()
 
@@ -153,6 +153,7 @@ class OrderAdapter(
             activity.updateBottomLayout(totalItemCount, totalPrice)
         }
     }
+
     private fun deleteOrder(order: Order, position: Int) {
         val currentUser = FirebaseAuth.getInstance().currentUser
         if (currentUser != null) {
@@ -178,7 +179,6 @@ class OrderAdapter(
             Log.e("OrderAdapter", "User is not authenticated.")
         }
     }
-
 
     private fun updateOrderInFirestore(order: Order) {
         val currentUser = FirebaseAuth.getInstance().currentUser

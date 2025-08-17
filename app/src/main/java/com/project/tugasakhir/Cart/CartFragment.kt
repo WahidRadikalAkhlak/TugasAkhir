@@ -24,7 +24,6 @@ class CartFragment : Fragment() {
     private val orders = mutableListOf<Order>()
     private lateinit var adapter: OrderAdapter
     private val products = mutableListOf<Product>()
-
     private val db = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var selectedChip: String = "ALL"  // Default filter for all orders
@@ -68,6 +67,11 @@ class CartFragment : Fragment() {
     }
 
     private fun loadUserOrders() {
+        if (_binding == null) {
+            Log.e("CartFragment", "Binding is null, skipping loadUserOrders")
+            return
+        }
+
         val currentUser = auth.currentUser
         if (currentUser == null) {
             Toast.makeText(requireContext(), "User belum login", Toast.LENGTH_SHORT).show()
@@ -90,7 +94,12 @@ class CartFragment : Fragment() {
 
         // Fetch the data with snapshot listener
         query.addSnapshotListener { documents, error ->
-            binding.progressBar.visibility = View.GONE // Hide progress bar once data is loaded
+            if (_binding == null) {
+                Log.e("CartFragment", "Binding is null, skipping further operations")
+                return@addSnapshotListener
+            }
+
+            binding.progressBar.visibility = View.GONE  // Hide progress bar once data is loaded
 
             if (error != null) {
                 Log.e("Firestore Error", "Error loading orders: ${error.message}")
@@ -177,6 +186,6 @@ class CartFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
-        _binding = null
+        _binding = null  // Set binding to null to avoid memory leaks or illegal access to view
     }
 }

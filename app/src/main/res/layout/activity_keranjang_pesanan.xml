@@ -290,6 +290,7 @@
                     android:layout_marginBottom="100dp"
                     android:background="@drawable/border_backround"
                     android:hint="Isi Pesan ..."
+                    android:padding="6dp"
                     android:gravity="top" />
             </LinearLayout>
         </LinearLayout>

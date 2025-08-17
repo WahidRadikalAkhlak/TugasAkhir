@@ -18,6 +18,22 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <!-- AppBar -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        android:theme="@style/ThemeOverlay.MaterialComponents.Dark.ActionBar"
+        app:title="Keranjang Penjual"
+        app:titleTextColor="@android:color/white"
+        app:navigationIcon="@drawable/arrow_left" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraintParent"
         android:layout_width="match_parent"
@@ -119,5 +135,5 @@
             app:layout_constraintTop_toBottomOf="@+id/imageView2"
             tools:listitem="@layout/item_keranjang" />
     </androidx.constraintlayout.widget.ConstraintLayout>
-
+    </LinearLayout>
 </FrameLayout>

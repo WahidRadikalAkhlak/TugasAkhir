@@ -30,6 +30,14 @@ class KeranjangPenjualActivity : AppCompatActivity() {
         binding = ActivityKeranjangPenjualBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        setSupportActionBar(binding.toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        supportActionBar?.setDisplayShowHomeEnabled(true)
+        supportActionBar?.title = "Keranjang Penjual"
+
+        binding.toolbar.setNavigationOnClickListener {
+            onBackPressedDispatcher.onBackPressed()
+        }
         // Setup RecyclerView
         binding.rvPesan.layoutManager = LinearLayoutManager(this)
         adapter = OrderAdapter(orders, products, { selectedOrder -> openOrderDetail(selectedOrder) }, { orderToDelete -> hapusPesanan(orderToDelete) }, isForKeranjangPesanan = false)

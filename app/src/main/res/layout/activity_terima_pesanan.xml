@@ -283,6 +283,7 @@
                     android:background="@drawable/border_backround"
                     android:text="Pesan akan muncul di sini"
                     android:gravity="top"
+                    android:padding="5dp"
                     android:textColor="@android:color/black"
                     android:textSize="14sp" />
             </LinearLayout>

@@ -335,24 +335,19 @@ class KeranjangPesananActivity : AppCompatActivity() {
     }
 
     private fun updateButtonVisibility() {
-        val hasPendingOrders = orders.any {
-            it.statusOrder == "Memesan" ||
-                    it.statusOrder == "Pesanan Sedang Dikemas"
-        }
-        val hasReadyForCompletion = orders.any { it.statusOrder == "Pesanan Sedang Dikemas" }
+        // status yang masih bisa dibatalkan oleh pembeli
+        val cancellableStatuses = setOf(
+            "Memesan",
+            "Menunggu Konfirmasi Penjual",
+            "Pesanan Sedang Dikemas"
+        )
 
-        // Ensure cancel button stays visible even after confirmation, if the status is not completed or cancelled
-        if (orders.any { it.statusOrder == "Menunggu Konfirmasi Penjual" || it.statusOrder == "Pesanan Sedang Dikemas" }) {
-            binding.cancelButton.visibility = View.VISIBLE
-        } else {
-            binding.cancelButton.visibility = View.GONE
-        }
+        val showCancel = orders.any { it.statusOrder in cancellableStatuses }
+        binding.cancelButton.visibility = if (showCancel) View.VISIBLE else View.GONE
 
-        if (hasPendingOrders || hasReadyForCompletion) {
-            binding.confirmButton.visibility = View.VISIBLE
-        } else {
-            binding.confirmButton.visibility = View.GONE
-        }
+        // tombol konfirmasi hanya muncul kalau masih ada yang perlu proses/penyelesaian
+        val showConfirm = orders.any { it.statusOrder == "Memesan" || it.statusOrder == "Pesanan Sedang Dikemas" }
+        binding.confirmButton.visibility = if (showConfirm) View.VISIBLE else View.GONE
     }
 
     fun updateBottomLayout(itemCount: Int, totalPrice: Double) {
