@@ -92,7 +92,11 @@ class ProductBaruActivity : AppCompatActivity() {
         binding.namaProduct.setText(product.productName)
         binding.jenisProduk.setText(product.productType) // Populate with the product type
         binding.deskripsi.setText(product.description)
-        binding.stokTersedia.setText(product.stockAvailable.toString())
+        binding.discountInput.setText(product.discount?.toString().orEmpty())
+        val minPrice = product.minimumPriceForDiscount ?: 0.0
+        binding.minimumPriceForDiscountInput.setText(
+            if (minPrice > 0) formatCurrency(minPrice) else ""
+        )
         binding.hargaPerUnit.setText(product.pricePerUnit.toString())
         binding.switchTampilkanproduk.isChecked = product.isAvailable
     }
