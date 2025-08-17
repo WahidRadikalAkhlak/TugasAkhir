@@ -54,7 +54,16 @@ class ProductBaruActivity : AppCompatActivity() {
 
         // AutoCompleteTextView for product type
         val jenisProdukArray =
-            arrayOf("Padi", "Umbi-Umbian", "Kacang-Kacangan", "Sayuran", "Buah-Buahan", "Tanaman Obat", "Tanaman Hias", "Rempah-Rempah")
+            arrayOf(
+                "Padi",
+                "Umbi-Umbian",
+                "Kacang-Kacangan",
+                "Sayuran",
+                "Buah-Buahan",
+                "Tanaman Obat",
+                "Tanaman Hias",
+                "Rempah-Rempah"
+            )
         val adapter =
             ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)
         binding.jenisProduk.setAdapter(adapter)
@@ -89,16 +98,77 @@ class ProductBaruActivity : AppCompatActivity() {
     }
 
     private fun populateForm(product: Product) {
-        binding.namaProduct.setText(product.productName)
-        binding.jenisProduk.setText(product.productType) // Populate with the product type
-        binding.deskripsi.setText(product.description)
+        // isi field teks
+        binding.namaProduct.setText(product.productName.orEmpty())
+        binding.jenisProduk.setText(product.productType.orEmpty(), false)
+        binding.deskripsi.setText(product.description.orEmpty())
         binding.discountInput.setText(product.discount?.toString().orEmpty())
+
         val minPrice = product.minimumPriceForDiscount ?: 0.0
-        binding.minimumPriceForDiscountInput.setText(
-            if (minPrice > 0) formatCurrency(minPrice) else ""
-        )
-        binding.hargaPerUnit.setText(product.pricePerUnit.toString())
+        binding.minimumPriceForDiscountInput.setText(if (minPrice > 0) formatCurrency(minPrice) else "")
+        val price = product.pricePerUnit ?: 0.0
+        binding.hargaPerUnit.setText(if (price > 0) formatCurrency(price) else "")
         binding.switchTampilkanproduk.isChecked = product.isAvailable
+
+        // 1) Tampilkan gambar dari object product (kalau sudah dibawa lewat Intent)
+        updateImageAdapterFromLists(
+            base64List = product.imageBase64List ?: emptyList(),
+            urlList    = product.imageUrls ?: emptyList()
+        )
+
+        // 2) Sinkronkan lagi dengan Firestore (ambil versi paling baru)
+        product.productId?.let { fetchImagesFromFirestore(it) }
+    }
+
+    private fun updateImageAdapterFromLists(
+        base64List: List<String>,
+        urlList: List<String>
+    ) {
+        selectedImages.clear()
+
+        // Base64 -> Uri sementara (content://) via FileProvider
+        base64List.forEach { b64 ->
+            base64ToTempUri(b64)?.let { selectedImages.add(it) }
+        }
+
+        // URL -> Uri (jika adapter/glide Anda bisa load dari Uri http/https)
+        urlList.forEach { url ->
+            if (url.isNotBlank()) selectedImages.add(Uri.parse(url))
+        }
+
+        imageAdapter.notifyDataSetChanged()
+    }
+
+    private fun base64ToTempUri(base64: String): Uri? {
+        return try {
+            val bytes = Base64.decode(base64, Base64.DEFAULT)
+            val file = kotlin.io.path.createTempFile(prefix = "prod_", suffix = ".jpg", directory = cacheDir.toPath()).toFile()
+            file.outputStream().use { it.write(bytes) }
+            androidx.core.content.FileProvider.getUriForFile(
+                this,
+                "${applicationContext.packageName}.fileprovider",
+                file
+            )
+        } catch (e: Exception) {
+            Log.e("ProductBaruActivity", "base64ToTempUri error: ${e.message}")
+            null
+        }
+    }
+
+    private fun fetchImagesFromFirestore(productId: String) {
+        showProgressBar()
+        db.collection("products").document(productId).get()
+            .addOnSuccessListener { doc ->
+                if (doc != null && doc.exists()) {
+                    val base64List = (doc.get("imageBase64List") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                    val urlList    = (doc.get("imageUrls") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+                    updateImageAdapterFromLists(base64List, urlList)
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal memuat gambar: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+            .addOnCompleteListener { hideProgressBar() }
     }
 
     private fun setupCurrencyFormat() {
@@ -205,7 +275,8 @@ class ProductBaruActivity : AppCompatActivity() {
         val hargaPerUnit = hargaPerUnitStr.replace("[Rp,.]".toRegex(), "").toDoubleOrNull()
 
         if (stokTersedia == null || hargaPerUnit == null) {
-            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Stok dan harga harus berupa angka yang valid", Toast.LENGTH_SHORT)
+                .show()
             hideProgressBar()
             return
         }
@@ -241,7 +312,8 @@ class ProductBaruActivity : AppCompatActivity() {
                     base64Images.addAll(editingProduct?.imageBase64List ?: emptyList())
                 }
 
-                val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
+                val sellerUID =
+                    FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
                 val alamatToko = fetchAlamatTokoFromFirestore()
 
                 // Siapkan data produk
