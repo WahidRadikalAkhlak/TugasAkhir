@@ -62,7 +62,6 @@ class ProductBaruActivity : AppCompatActivity() {
                 "Buah-Buahan",
                 "Tanaman Obat",
                 "Tanaman Hias",
-                "Rempah-Rempah"
             )
         val adapter =
             ArrayAdapter(this, android.R.layout.simple_dropdown_item_1line, jenisProdukArray)

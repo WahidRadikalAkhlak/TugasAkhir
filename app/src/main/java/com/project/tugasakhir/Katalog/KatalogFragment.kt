@@ -367,7 +367,6 @@ class KatalogFragment : Fragment() {
                 R.id.chip6 -> "Buah-Buahan"
                 R.id.chip7 -> "Tanaman Obat"
                 R.id.chip8 -> "Tanaman Hias"
-                R.id.chip9 -> "Rempah-Rempah"
                 else -> "" // Semua
             }
             applyCombinedFilters()

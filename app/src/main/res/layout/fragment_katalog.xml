@@ -158,14 +158,6 @@
                     android:text="@string/hias"
                     android:textColor="@color/fontColor"
                     app:chipBackgroundColor="@color/chip_bg_states" />
-                <com.google.android.material.chip.Chip
-                    android:id="@+id/chip9"
-                    style="@style/Widget.MaterialComponents.Chip.Filter"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/rempah"
-                    android:textColor="@color/fontColor"
-                    app:chipBackgroundColor="@color/chip_bg_states" />
             </com.google.android.material.chip.ChipGroup>
         </HorizontalScrollView>
 
