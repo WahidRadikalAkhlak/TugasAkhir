@@ -10,6 +10,7 @@ import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.KatalogAdapter
 import com.project.tugasakhir.Adapter.ProductImageAdapter
@@ -45,7 +46,6 @@ class KatalogFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Set up the product adapter
         produkAdapter = ProductImageAdapter(produkList) { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
@@ -55,10 +55,9 @@ class KatalogFragment : Fragment() {
         }
 
         binding.rvProdukList.adapter = produkAdapter
-        binding.rvProdukList.layoutManager =
-            GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
+        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 3, GridLayoutManager.HORIZONTAL, false)
 
-        // Set up the recommendation adapter
+// Set up the recommendation adapter with horizontal GridLayoutManager that has a maximum of 5 items per row
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
@@ -68,8 +67,12 @@ class KatalogFragment : Fragment() {
         }, true)
 
         binding.rvRekomendasi.adapter = rekomendasiAdapter
-        binding.rvRekomendasi.layoutManager =
-            GridLayoutManager(requireContext(), 1, GridLayoutManager.HORIZONTAL, false)
+        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
+
+
+        // Menghitung lebar item agar hanya ada 5 item per baris secara horizontal
+        val screenWidth = resources.displayMetrics.widthPixels
+        val itemWidth = screenWidth / 5 // Membagi lebar layar dengan 5 untuk mendapatkan lebar setiap item
 
         setupSearch()
         setupChipFilter()
@@ -363,7 +366,7 @@ class KatalogFragment : Fragment() {
                 R.id.chip2 -> "Padi"
                 R.id.chip3 -> "Umbi-Umbian"
                 R.id.chip4 -> "Kacang-Kacangan"
-                R.id.chip5 -> "Sayuran"
+                R.id.chip5 -> "Sayur Daun"
                 R.id.chip6 -> "Buah-Buahan"
                 R.id.chip7 -> "Tanaman Obat"
                 R.id.chip8 -> "Tanaman Hias"

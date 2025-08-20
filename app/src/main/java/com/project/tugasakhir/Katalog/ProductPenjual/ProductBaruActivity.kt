@@ -58,7 +58,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 "Padi",
                 "Umbi-Umbian",
                 "Kacang-Kacangan",
-                "Sayuran",
+                "Sayur Daun",
                 "Buah-Buahan",
                 "Tanaman Obat",
                 "Tanaman Hias",
