@@ -11,6 +11,7 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Adapter.KatalogAdapter
 import com.project.tugasakhir.Adapter.ProductImageAdapter
@@ -55,9 +56,8 @@ class KatalogFragment : Fragment() {
         }
 
         binding.rvProdukList.adapter = produkAdapter
-        binding.rvProdukList.layoutManager = GridLayoutManager(requireContext(), 3, GridLayoutManager.HORIZONTAL, false)
+        binding.rvProdukList.layoutManager = GridLayoutManager(context, 5, GridLayoutManager.VERTICAL, false)
 
-// Set up the recommendation adapter with horizontal GridLayoutManager that has a maximum of 5 items per row
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
                 putExtra("product", product)
@@ -67,8 +67,7 @@ class KatalogFragment : Fragment() {
         }, true)
 
         binding.rvRekomendasi.adapter = rekomendasiAdapter
-        binding.rvRekomendasi.layoutManager = GridLayoutManager(requireContext(), 2, GridLayoutManager.HORIZONTAL, false)
-
+        binding.rvRekomendasi.layoutManager = GridLayoutManager(context, 4, GridLayoutManager.VERTICAL, false)
 
         // Menghitung lebar item agar hanya ada 5 item per baris secara horizontal
         val screenWidth = resources.displayMetrics.widthPixels
