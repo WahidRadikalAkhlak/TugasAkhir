@@ -55,9 +55,9 @@ class UlasanActivity : AppCompatActivity() {
                 )
 
                 // Save the review under the product's subcollection
-                db.collection("ulasan")
+                db.collection("review")
                     .document(productId)  // Using product ID as the document ID for the product
-                    .collection("ulasan")  // Ulasan sub-collection
+                    .collection("review")  // Ulasan sub-collection
                     .add(ulasan)
                     .addOnSuccessListener {
                         Toast.makeText(this, "Ulasan berhasil dikirim", Toast.LENGTH_SHORT).show()

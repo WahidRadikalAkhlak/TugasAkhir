@@ -125,7 +125,7 @@ class AccountFragment : Fragment() {
 
         val docId = email.replace(".", "_")
 
-        db.collection("penjual").document(docId).get()
+        db.collection("seller").document(docId).get()
             .addOnSuccessListener { doc ->
                 val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
 
@@ -157,7 +157,7 @@ class AccountFragment : Fragment() {
 
         val docId = email.replace(".", "_")
 
-        db.collection("penjual").document(docId).get()
+        db.collection("seller").document(docId).get()
             .addOnSuccessListener { doc ->
                 val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
                 val currentUser = auth.currentUser

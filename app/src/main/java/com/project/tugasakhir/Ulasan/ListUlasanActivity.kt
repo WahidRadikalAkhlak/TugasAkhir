@@ -41,9 +41,9 @@ class ListUlasanActivity : AppCompatActivity() {
 
     // Function to fetch reviews from Firestore
     private fun loadReviews(productId: String) {
-        db.collection("ulasan")  // Base collection for reviews
+        db.collection("review")  // Base collection for reviews
             .document(productId)  // Document for specific product
-            .collection("ulasan")  // Subcollection containing the reviews
+            .collection("review")  // Subcollection containing the reviews
             .get()
             .addOnSuccessListener { documents ->
                 val reviews = mutableListOf<Review>()

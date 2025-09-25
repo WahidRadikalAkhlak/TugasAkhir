@@ -11,6 +11,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.project.tugasakhir.Account.Register.RegisterActivity
@@ -100,11 +102,21 @@ class LoginActivity : AppCompatActivity() {
                             finish()
                         }
                 } else {
-                    Toast.makeText(
-                        this,
-                        "Login failed: ${task.exception?.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
+                    // Handle specific errors for incorrect email or password
+                    val errorMessage = when {
+                        task.exception is FirebaseAuthInvalidCredentialsException -> {
+                            "Password salah"
+                        }
+                        task.exception is FirebaseAuthInvalidUserException -> {
+                            // Specific message for email not registered
+                            "Email belum terdaftar"
+                        }
+                        else -> {
+                            "Login failed: ${task.exception?.message}"
+                        }
+                    }
+
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
                 }
             }
     }

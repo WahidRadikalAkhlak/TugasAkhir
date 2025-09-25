@@ -260,7 +260,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
 
             // Get seller email to fetch location data
             val sellerEmail = p.email // Use the email from the Product object to fetch seller info
-            firestore.collection("penjual")
+            firestore.collection("seller")
                 .document(sellerEmail.replace(".", "_"))  // Firestore uses _ instead of .
                 .get()
                 .addOnSuccessListener { document ->

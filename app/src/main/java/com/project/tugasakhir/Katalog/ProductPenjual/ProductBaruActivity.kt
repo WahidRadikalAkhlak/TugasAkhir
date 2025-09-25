@@ -28,9 +28,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
-import com.project.tugasakhir.R
+
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -402,7 +400,7 @@ class ProductBaruActivity : AppCompatActivity() {
         val userEmail = FirebaseAuth.getInstance().currentUser?.email
         val emailForFirestore = userEmail?.replace(".", "_") ?: ""
 
-        val documentSnapshot = db.collection("penjual").document(emailForFirestore).get().await()
+        val documentSnapshot = db.collection("seller").document(emailForFirestore).get().await()
         return documentSnapshot.getString("alamatToko") ?: "Alamat tidak tersedia"
     }
 

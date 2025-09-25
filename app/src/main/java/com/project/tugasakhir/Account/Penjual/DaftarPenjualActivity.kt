@@ -90,7 +90,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
         // Ganti karakter '.' dalam email agar valid di Firestore
         val docId = email.replace(".", "_")
 
-        db.collection("penjual")
+        db.collection("seller")
             .document(docId)
             .set(sellerData)
             .addOnSuccessListener {
@@ -114,7 +114,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
 
         val docId = email.replace(".", "_")
 
-        db.collection("penjual").document(docId)
+        db.collection("seller").document(docId)
             .get()
             .addOnSuccessListener { document ->
                 if (document.exists()) {
@@ -182,7 +182,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
             "shareLokasi" to shareLokasi
         )
 
-        db.collection("penjual").document(docId)
+        db.collection("seller").document(docId)
             .update(sellerData)
             .addOnSuccessListener {
                 Toast.makeText(this, "Profil bisnis berhasil diperbarui!", Toast.LENGTH_SHORT).show()
