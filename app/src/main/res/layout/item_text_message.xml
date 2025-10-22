@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginBottom="8dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginStart="8dp"
+    android:layout_marginEnd="8dp">
+
+    <RelativeLayout
+        android:id="@+id/messageroot"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        app:cornerRadius="16dp"> <!-- Set to 'end' for the sender's message -->
+
+        <!-- Sender's message layout (Right aligned) -->
+        <TextView
+            android:id="@+id/tv_message_text"
+            android:layout_width="wrap_content"
+            android:maxWidth="250dp"
+            android:minWidth="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/tv_message" />
+
+        <TextView
+            android:id="@+id/tv_message_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/waktu"
+            android:layout_below="@+id/tv_message_text"
+            android:maxLines="1"
+            android:layout_alignEnd="@+id/tv_message_text"
+            android:layout_marginEnd="8dp"
+            android:textSize="12sp" />
+    </RelativeLayout>
+
+    <!-- Receiver's message layout (Left aligned) -->
+    <RelativeLayout
+        android:id="@+id/receiver_message_root"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:visibility="gone">
+
+        <!-- Display receiver's message -->
+        <TextView
+            android:id="@+id/tv_receiver_message_text"
+            android:layout_width="wrap_content"
+            android:maxWidth="250dp"
+            android:minWidth="120dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:text="@string/tv_message" />
+
+        <TextView
+            android:id="@+id/tv_receiver_message_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/waktu"
+            android:layout_below="@+id/tv_receiver_message_text"
+            android:maxLines="1"
+            android:layout_alignStart="@+id/tv_receiver_message_text"
+            android:layout_marginEnd="8dp"
+            android:textSize="12sp" />
+    </RelativeLayout>
+</FrameLayout>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Ulasan.UlasanActivity">
+
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_berikan_ulasan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Berikan Ulasan"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Rating for Communication -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_komunikasi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Komunikasi"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_berikan_ulasan"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatRatingBar
+        android:id="@+id/rating_komunikasi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:rating="0"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_komunikasi"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <!-- Rating for Quality -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_kualitas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kualitas"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/rating_komunikasi"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatRatingBar
+        android:id="@+id/rating_kualitas"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:numStars="5"
+        android:rating="0"
+        android:layout_marginTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_kualitas"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- Comment Section -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tv_komentar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Berikan Komentar"
+        android:textSize="14sp"
+        android:layout_marginTop="20dp"
+        app:layout_constraintTop_toBottomOf="@id/rating_kualitas"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <EditText
+        android:id="@+id/et_komentar"
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="8dp"
+        android:hint="Pesan ...."
+        android:inputType="textMultiLine"
+        android:gravity="top|start"
+        app:layout_constraintTop_toBottomOf="@id/tv_komentar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:background="@drawable/edit_text_background"
+        android:padding="10dp" />
+
+    <!-- Send Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_kirim_ulasan"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Kirim Ulasan"
+        app:layout_constraintTop_toBottomOf="@id/et_komentar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="20dp"
+        android:backgroundTint="@color/btn_color"
+        android:textColor="@color/black"
+        android:padding="16dp" />
+</androidx.constraintlayout.widget.ConstraintLayout>

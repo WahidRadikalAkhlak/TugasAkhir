@@ -2,25 +2,99 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="true"
         android:fullBackupContent="@xml/backup_rules"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/logo_app"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/logo_app"
         android:supportsRtl="true"
         android:theme="@style/Theme.TugasAkhir"
         tools:targetApi="31">
+
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".OnBoarding.OnboardingActivity"
+            android:exported="false" />
+        <!-- SplashScreenActivity declaration -->
+        <activity
+            android:name=".SplashScreenActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:noHistory="true"
+            android:theme="@style/Theme.TugasAkhir">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Ulasan.ListUlasanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Account.Profile.LanguagesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Cart.TerimaPesananActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Cart.KeranjangPenjualActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Account.Profile.SettingsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Account.Penjual.DaftarProductActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Katalog.ProductPenjual.ProductBaruActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Account.Penjual.DaftarPenjualActivity"
+            android:exported="false" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="YOUR_API_KEY" />
+
+        <activity
+            android:name=".Account.Register.RegisterActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Account.Login.LoginActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Ulasan.UlasanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Cart.KeranjangPesananActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Chat.pesan.PesanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Katalog.Product.InfoProductActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

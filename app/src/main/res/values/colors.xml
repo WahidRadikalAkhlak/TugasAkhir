@@ -1,5 +1,16 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Basic Colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="dark_grey">#A9A9A9</color>
+    <color name="chip_bg_states">#B3D8A8</color>
+    <color name="fontColor">#FF404A3A</color>
+    <color name="light_grey">#EFF3EA</color>
+    <color name="chip_bg">#D9D9D9</color>
+    <color name="btn_color">#B0DB9C</color>
+    <color name="liked_button">#FF4081</color>
+    <color name="unliked_button">#757575</color>
+    <color name="red">#DE1304</color>
+    <color name="green1">#48884E</color>
+    <color name="border_color">#98FF98</color>
 </resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Title Style with Black Color and Bold Font -->
+    <style name="titleBlackNeutral">
+        <item name="android:fontFamily">@font/poppinssemibold</item>
+        <item name="android:textColor">@color/fontColor</item>
+        <item name="android:textSize">@dimen/h1TextSize</item>
+    </style>
+
+    <!-- Card Text Style with Black Color and Regular Font -->
+    <style name="textCardBlack">
+        <item name="android:fontFamily">@font/poppinsregular</item>
+        <item name="android:textColor">@color/fontColor</item>
+        <item name="android:textSize">@dimen/h5TextSize</item>
+    </style>
+
+    <!-- Grey Neutral Text Style -->
+    <style name="textGreyNeutral">
+        <item name="android:fontFamily">@font/poppinsregular</item>
+        <item name="android:textColor">@color/dark_grey</item>
+        <item name="android:textSize">@dimen/h3TextSize</item>
+    </style>
+
+    <!-- Profile Title Text Style with Medium Font -->
+    <style name="profileTitleText">
+        <item name="android:fontFamily">@font/poppinsmedium</item>
+        <item name="android:textColor">@color/fontColor</item>
+        <item name="android:textSize">@dimen/h3TextSize</item>
+    </style>
+
+    <!-- Text Sizes -->
+    <dimen name="h1TextSize">28sp</dimen>
+    <dimen name="h2TextSize">24sp</dimen>
+    <dimen name="h3TextSize">18sp</dimen>
+    <dimen name="h4TextSize">15sp</dimen>
+    <dimen name="h5TextSize">13sp</dimen>
+
+    <style name="CustomBottomNavigationViewStyle" parent="Widget.MaterialComponents.BottomNavigationView">
+        <item name="itemIconTint">@color/black</item>
+        <item name="itemTextColor">@color/black</item>
+        <item name="itemRippleColor">@color/white</item>
+    </style>
+</resources>

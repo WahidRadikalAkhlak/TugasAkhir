@@ -1,0 +1,362 @@
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".Katalog.Product.InfoProductActivity">
+
+    <!-- AppBarLayout to handle the Toolbar -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Material Toolbar inside AppBarLayout -->
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?attr/colorPrimary"
+            android:title="Info Produk"
+            app:titleTextColor="@android:color/white"
+            app:navigationIcon="@drawable/arrow_left" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- NestedScrollView with LinearLayout for scrolling content -->
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingBottom="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- RelativeLayout for product image and discount label -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <!-- Product Image -->
+                <ImageView
+                    android:id="@+id/img_product"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:contentDescription="@string/gambar_produk"
+                    android:src="@drawable/image_icon"
+                    android:scaleType="centerCrop" />
+
+                <!-- Discount Label positioned over the image at the bottom-right -->
+                <TextView
+                    android:id="@+id/discountLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="10% OFF"
+                    android:textColor="@color/white"
+                    android:textSize="16sp"
+                    android:visibility="gone"
+                    android:textStyle="bold"
+                    android:background="@drawable/rounded_discount"
+                    android:layout_alignParentEnd="true"
+                    android:layout_alignParentBottom="true"
+                    android:layout_marginBottom="12dp"
+                    android:layout_marginEnd="12dp" /> <!-- Added proper margin to avoid overlap -->
+
+            </RelativeLayout>
+
+            <!-- Product Name and Like Button -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/img_product"
+                android:layout_marginTop="15dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/nama_product"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nama_produk"
+                    android:textColor="@color/black"
+                    android:textSize="25sp"
+                    android:fontFamily="@font/poppinsextrabold"
+                    android:layout_alignParentStart="true"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/jenis_produk"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"
+                    android:layout_below="@+id/nama_product"
+                    android:fontFamily="@font/poppinsmedium"
+                    android:text="@string/jenis_produk" />
+
+                <!-- Like Button aligned to the right -->
+                <ImageButton
+                    android:id="@+id/btnLike"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_marginTop="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/like_product"
+                    android:src="@drawable/like"
+                    app:tint="#E91E63" />
+
+                <!-- Likes Count -->
+                <TextView
+                    android:id="@+id/likesCount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0 Likes"
+                    android:layout_below="@id/btnLike"
+                    android:layout_marginTop="8dp"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:layout_alignParentEnd="true"/>
+
+            </RelativeLayout>
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_1"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"
+                android:layout_centerHorizontal="true" />
+
+            <!-- User Info (Seller Name, Address) -->
+            <!-- User Info (Seller Name, Address) -->
+            <RelativeLayout
+                android:id="@+id/rl_usernameaddress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/userName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawableStart="@drawable/user_solid"
+                    android:text="Penjual"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"
+                    android:fontFamily="@font/poppinsmedium"/>
+
+                <LinearLayout
+                    android:id="@+id/addressAndLocationContainer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_below="@+id/userName">
+
+                    <!-- Address TextView -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/address"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Alamat Toko"
+                        android:textSize="16sp"
+                        android:textColor="@color/black"
+                        android:fontFamily="@font/poppinsmedium"
+                        android:drawableStart="@drawable/ic_address"
+                        android:layout_marginTop="8dp"/>
+
+                    <!-- Link Lokasi TextView -->
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/link_lokasi"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Link Lokasi"
+                        android:textSize="16sp"
+                        android:textColor="@color/black"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:layout_marginStart="32dp"
+                        android:layout_alignParentStart="true"/>
+                </LinearLayout>
+
+            </RelativeLayout>
+
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"/>
+
+            <RelativeLayout
+                android:id="@+id/layout_harga_tersedia"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/Harga"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/harga"
+                    android:textSize="16sp"
+                    android:textColor="@color/black"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/HargaBarang"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/Harga"
+                    android:text="Rp 100,000"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/black"
+                    android:layout_marginTop="4dp"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/txt_stock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stok"
+                    android:textSize="16sp"
+                    android:layout_alignParentEnd="true"
+                    android:textColor="@color/black"/>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/stock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/_50kg"
+                    android:layout_below="@+id/txt_stock"
+                    android:layout_alignParentEnd="true"
+                    android:textSize="16sp"
+                    android:layout_marginTop="4dp"/>
+            </RelativeLayout>
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_2"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="8dp"/>
+
+            <!-- Description Section -->
+            <TextView
+                android:id="@+id/deskripsi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/deskripsi"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/deskripsi_produk"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="This is the product description."
+                android:layout_below="@id/deskripsi"
+                android:layout_marginTop="8dp"
+                android:textSize="14sp"/>
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="32dp"/>
+
+            <!-- Reviews Section -->
+            <RelativeLayout
+                android:id="@+id/rl_ulasan"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_below="@+id/divider_3"
+                android:layout_alignStart="@id/nama_product">
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/ulasan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="@string/ulasan"
+                    android:layout_centerVertical="true"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/overallRating"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0,0"
+                    android:textSize="16sp"
+                    android:layout_marginLeft="8dp"
+                    android:layout_toEndOf="@+id/ulasan"
+                    android:textColor="@color/black"
+                    android:layout_centerVertical="true"
+                    android:textStyle="bold"/>
+
+                <androidx.appcompat.widget.AppCompatRatingBar
+                    android:id="@+id/ratingBar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_toEndOf="@id/overallRating"
+                    android:numStars="5"
+                    android:rating="3.5"
+                    style="?android:attr/ratingBarStyleSmall"
+                    android:layout_marginStart="8dp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/baca_ulasan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/baca_ulasan"
+                    android:layout_centerVertical="true"
+                    android:layout_marginRight="15dp"
+                    android:layout_alignParentEnd="true"
+                    android:textStyle="bold" />
+            </RelativeLayout>
+
+            <!-- Divider -->
+            <com.google.android.material.divider.MaterialDivider
+                android:id="@+id/divider_4"
+                android:layout_width="match_parent"
+                android:layout_marginTop="8dp"
+                android:layout_height="1dp"/>
+
+            <!-- Buttons container to center the buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:layout_marginTop="16dp"
+                android:layout_below="@id/divider_4">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_kirim_pesan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/kirim_pesan"
+                    app:cornerRadius="16dp"
+                    app:strokeColor="@color/black"
+                    app:strokeWidth="2dp"
+                    android:backgroundTint="@color/white"
+                    android:textColor="@color/black"/>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_buy"
+                    android:layout_width="300dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/buy"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="20dp"
+                    app:cornerRadius="16dp"
+                    android:textColor="@color/white"
+                    android:backgroundTint="@color/btn_color"/>
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
