@@ -186,8 +186,8 @@
                 android:id="@+id/rv_produk_list"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
                 android:nestedScrollingEnabled="false"
                 tools:listitem="@layout/item_product" />
         </HorizontalScrollView>

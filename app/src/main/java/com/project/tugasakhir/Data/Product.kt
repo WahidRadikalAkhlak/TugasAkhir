@@ -6,7 +6,7 @@ import java.util.UUID
 
 @Parcelize
 data class Product(
-    val productId: String = UUID.randomUUID().toString(), // Unique product ID
+    val productId: String = "",
     val productName: String = "",
     val imageUrls: List<String> = emptyList(),
     val imageBase64List: List<String> = emptyList(),
@@ -18,7 +18,7 @@ data class Product(
     var isAvailable: Boolean = false,
     var isRecommended: Boolean = false,
     var isLiked: Boolean = false,
-    var likesCount: Int = 0, // Likes count for the product
+    var likesCount: Int = 0,
     val distance: Double = Double.MAX_VALUE,
     val minimumPriceForDiscount: Double = 0.0,
     val discount: Double = 0.0,
@@ -29,7 +29,7 @@ data class Product(
     var avgRating: Float = 0f,
     var likesUsers: List<String> = mutableListOf(),
     var sellerUID: String = ""
-) : Parcelable {
+) : Parcelable{
 
     fun getIsAvailable(): Boolean {
         return isAvailable

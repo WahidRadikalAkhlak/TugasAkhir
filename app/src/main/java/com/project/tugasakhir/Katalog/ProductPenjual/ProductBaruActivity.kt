@@ -57,7 +57,7 @@ class ProductBaruActivity : AppCompatActivity() {
                 "Umbi-Umbian",
                 "Kacang-Kacangan",
                 "Sayur Daun",
-                "Buah-Buahan",
+                "Buah",
                 "Tanaman Obat",
                 "Tanaman Hias",
             )
@@ -95,26 +95,27 @@ class ProductBaruActivity : AppCompatActivity() {
     }
 
     private fun populateForm(product: Product) {
-        // isi field teks
-        binding.namaProduct.setText(product.productName.orEmpty())
-        binding.jenisProduk.setText(product.productType.orEmpty(), false)
-        binding.deskripsi.setText(product.description.orEmpty())
-        binding.discountInput.setText(product.discount?.toString().orEmpty())
+        binding.namaProduct.setText(product.productName)
+        binding.jenisProduk.setText(product.productType, false)
+        binding.deskripsi.setText(product.description)
+        binding.discountInput.setText(product.discount.toString()) // <- tanpa ?.
 
-        val minPrice = product.minimumPriceForDiscount ?: 0.0
+        val minPrice = product.minimumPriceForDiscount
         binding.minimumPriceForDiscountInput.setText(if (minPrice > 0) formatCurrency(minPrice) else "")
-        val price = product.pricePerUnit ?: 0.0
+
+        val price = product.pricePerUnit
         binding.hargaPerUnit.setText(if (price > 0) formatCurrency(price) else "")
+
         binding.switchTampilkanproduk.isChecked = product.isAvailable
 
-        // 1) Tampilkan gambar dari object product (kalau sudah dibawa lewat Intent)
         updateImageAdapterFromLists(
-            base64List = product.imageBase64List ?: emptyList(),
-            urlList    = product.imageUrls ?: emptyList()
+            base64List = product.imageBase64List,
+            urlList    = product.imageUrls
         )
 
-        // 2) Sinkronkan lagi dengan Firestore (ambil versi paling baru)
-        product.productId?.let { fetchImagesFromFirestore(it) }
+        if (product.productId.isNotBlank()) {       // <- tanpa ?.
+            fetchImagesFromFirestore(product.productId)
+        }
     }
 
     private fun updateImageAdapterFromLists(
@@ -139,15 +140,19 @@ class ProductBaruActivity : AppCompatActivity() {
     private fun base64ToTempUri(base64: String): Uri? {
         return try {
             val bytes = Base64.decode(base64, Base64.DEFAULT)
-            val file = kotlin.io.path.createTempFile(prefix = "prod_", suffix = ".jpg", directory = cacheDir.toPath()).toFile()
+
+            // bikin file sementara di cache/ (AMAN utk FileProvider dengan <cache-path>)
+            val file = java.io.File.createTempFile("prod_", ".jpg", cacheDir)
             file.outputStream().use { it.write(bytes) }
+
+            // pastikan authority sesuai Manifest
             androidx.core.content.FileProvider.getUriForFile(
                 this,
-                "${applicationContext.packageName}.fileprovider",
+                "${packageName}.fileprovider",
                 file
             )
         } catch (e: Exception) {
-            Log.e("ProductBaruActivity", "base64ToTempUri error: ${e.message}")
+            Log.e("ProductBaruActivity", "base64ToTempUri error", e)
             null
         }
     }
@@ -314,9 +319,10 @@ class ProductBaruActivity : AppCompatActivity() {
                 val alamatToko = fetchAlamatTokoFromFirestore()
 
                 // Siapkan data produk
+                // Siapkan data produk (FIELD WAJIB + FIELD DUMMY COLAB)
                 val productData = hashMapOf(
                     "productName" to namaProduct,
-                    "productType" to jenisProduk,
+                    "productType" to jenisProduk,            // catatan: di dummy ada "Umbi-umbian", "Kacang-kacangan"
                     "description" to deskripsi,
                     "stockAvailable" to stokTersedia,
                     "pricePerUnit" to hargaPerUnit,
@@ -324,63 +330,50 @@ class ProductBaruActivity : AppCompatActivity() {
                     "imageBase64List" to base64Images,
                     "sellerUID" to sellerUID,
                     "alamatToko" to alamatToko,
-                    "discount" to discount, // The discount value (0 if not added)
-                    "minimumPriceForDiscount" to minimumPriceForDiscount // The minimum price for discount (0 if not added)
+                    "discount" to discount,                  // opsional (bukan bagian dummy, tapi tetap disimpan)
+                    "minimumPriceForDiscount" to minimumPriceForDiscount
                 )
 
                 if (editingProduct != null) {
-                    // If editing an existing product, update the product document
+                    // ===== UPDATE PRODUK =====
                     val productId = editingProduct?.productId
                     if (productId != null) {
-                        productData["productId"] = productId // Add productId to update the document
+                        productData["productId"] = productId  // pastikan tetap ada
                         db.collection("products").document(productId)
-                            .update(productData)
-                            .await() // Menunggu agar update selesai sebelum melanjutkan
+                            .update(productData)              // TIDAK menyentuh likes/rating (aman)
+                            .await()
                         withContext(Dispatchers.Main) {
                             hideProgressBar()
-                            Toast.makeText(
-                                this@ProductBaruActivity,
-                                "Produk berhasil diperbarui!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            // Optionally reload the updated product list in DaftarProductActivity
-                            startActivity(
-                                Intent(
-                                    this@ProductBaruActivity,
-                                    DaftarProductActivity::class.java
-                                )
-                            ) // Ensure this opens the updated list
-                            finish() // Close the current activity
+                            Toast.makeText(this@ProductBaruActivity, "Produk berhasil diperbarui!", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this@ProductBaruActivity, DaftarProductActivity::class.java))
+                            finish()
                         }
                     } else {
                         withContext(Dispatchers.Main) {
                             hideProgressBar()
-                            Toast.makeText(
-                                this@ProductBaruActivity,
-                                "ID produk tidak ditemukan",
-                                Toast.LENGTH_SHORT
-                            ).show()
+                            Toast.makeText(this@ProductBaruActivity, "ID produk tidak ditemukan", Toast.LENGTH_SHORT).show()
                         }
                     }
                 } else {
-                    // If it's a new product, create a new document in Firestore
-                    val newProductRef = db.collection("products")
-                        .document()  // Firestore generates a unique ID automatically
-                    productData["productId"] = newProductRef.id  // Add unique product ID
-                    productData["email"] =
-                        userEmail  // Only add email and username for new products
-                    productData["userName"] =
-                        userName  // Only add email and username for new products
-                    newProductRef.set(productData).await()  // Save the product data
+                    // ===== BUAT PRODUK BARU =====
+                    val newRef = db.collection("products").document()
+                    productData["productId"] = newRef.id
+                    productData["email"] = userEmail
+                    productData["userName"] = userName
+
+                    // DEFAULT SKEMA DUMMY (sangat penting):
+                    productData["likesCount"] = 0
+                    productData["likedBy"] = emptyList<String>()
+                    productData["ratingsCount"] = 0
+                    productData["avgRating"] = 0.0
+                    productData["ratedBy"] = emptyList<Map<String, Any>>() // di dummy: [{user, score}, ...]
+
+                    newRef.set(productData).await()
 
                     withContext(Dispatchers.Main) {
                         hideProgressBar()
-                        Toast.makeText(
-                            this@ProductBaruActivity,
-                            "Produk berhasil disimpan!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        finish() // Close the activity after saving
+                        Toast.makeText(this@ProductBaruActivity, "Produk berhasil disimpan!", Toast.LENGTH_SHORT).show()
+                        finish()
                     }
                 }
             } catch (e: Exception) {
@@ -412,15 +405,16 @@ class ProductBaruActivity : AppCompatActivity() {
         binding.progressBar.visibility = View.GONE
     }
 
-    private fun uriToBase64(uri: Uri): String? {
-        val inputStream = contentResolver.openInputStream(uri) ?: return null
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-
-        val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 800, 800, true) // Resize
-        val outputStream = ByteArrayOutputStream()
-        resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
-        val byteArray = outputStream.toByteArray()
-
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
+    private fun uriToBase64(uri: Uri): String? = try {
+        contentResolver.openInputStream(uri)?.use { inStream ->
+            val bitmap = BitmapFactory.decodeStream(inStream)
+            val resized = Bitmap.createScaledBitmap(bitmap, 800, 800, true)
+            val out = ByteArrayOutputStream()
+            resized.compress(Bitmap.CompressFormat.JPEG, 80, out)
+            Base64.encodeToString(out.toByteArray(), Base64.DEFAULT)
+        }
+    } catch (e: Exception) {
+        Log.e("ProductBaruActivity", "uriToBase64 error: ${e.message}")
+        null
     }
 }

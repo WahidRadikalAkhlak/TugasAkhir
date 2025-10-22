@@ -35,16 +35,25 @@
         android:background="@drawable/edit_text_background"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- RecyclerView for displaying product list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rv_product_list"
+    <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="20dp"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginTop="12dp"
+        android:id="@+id/HS_produklist"
         app:layout_constraintTop_toBottomOf="@id/searchView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_product" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rv_product_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:nestedScrollingEnabled="false"
+            tools:listitem="@layout/item_product" />
+    </HorizontalScrollView>
 
     <!-- LinearLayout container for 'Accept Order' and 'Add Product' Buttons -->
     <LinearLayout

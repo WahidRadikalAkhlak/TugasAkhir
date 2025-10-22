@@ -16,6 +16,7 @@ import com.google.android.material.appbar.MaterialToolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 import com.project.tugasakhir.Chat.pesan.PesanActivity
 import com.project.tugasakhir.Data.Message
 import com.project.tugasakhir.Data.Product
@@ -28,60 +29,47 @@ import com.project.tugasakhir.databinding.ActivityInfoProductBinding
 class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToCartListener {
 
     private lateinit var binding: ActivityInfoProductBinding
-    private val firestore = FirebaseFirestore.getInstance()  // Initialize Firestore instance
+    private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
     private var product: Product? = null
     private var source: String? = null
+    private var productListener: ListenerRegistration? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityInfoProductBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Get the product from the Intent
         product = intent.getParcelableExtra("product")
-
         if (product == null) {
             Toast.makeText(this, "Data produk tidak tersedia", Toast.LENGTH_SHORT).show()
-            finish()
-            return
+            finish(); return
         }
 
-        // Setup Toolbar with product name as title
         val toolbar: MaterialToolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.setDisplayShowHomeEnabled(true)
-
-        // Set the title of the AppBar to product's name
         supportActionBar?.title = product?.productName ?: "Produk"
-
-        // Handle back navigation on toolbar
-        toolbar.setNavigationOnClickListener {
-            onBackPressed()  // Perform the back navigation
-        }
-
-        // InfoProductActivity: When "Baca Ulasan" is clicked, navigate to ListUlasanActivity
-        binding.bacaUlasan.setOnClickListener {
-            val intent = Intent(this, ListUlasanActivity::class.java)
-            intent.putExtra("PRODUCT_ID", product?.productId)  // Pass productId to ListUlasanActivity
-            startActivity(intent)
-        }
+        toolbar.setNavigationOnClickListener { onBackPressedDispatcher.onBackPressed() }
 
         source = intent.getStringExtra("source")
 
-        getReviewsAndRating(product!!)
-        // Display product data
+        // Data awal
         displayProductData(product!!)
+        getReviewsAndRating(product!!)
+        startProductDocListener(product!!.productId) // 🔴 listen dokumen produk (likesCount realtime)
+        checkIfLiked(product!!)                       // 🔴 cek like di /products/{pid}/likesUsers/{uid}
 
-        // Get like count and check if liked
-        getLikesCount(product!!)
-        checkIfLiked(product!!)
+        // Aksi tombol
+        binding.bacaUlasan.setOnClickListener {
+            val i = Intent(this, ListUlasanActivity::class.java)
+            i.putExtra("PRODUCT_ID", product?.productId)
+            startActivity(i)
+        }
 
         binding.btnKirimPesan.setOnClickListener {
-            if (source == "seller") {
-                openEditProduct(product!!)
-            } else {
+            if (source == "seller") openEditProduct(product!!) else {
                 val recipientUserId = product?.userName
                 if (recipientUserId != null) {
                     sendMessageToSeller(recipientUserId, product!!)
@@ -91,150 +79,319 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
             }
         }
 
-        // Handle like button click
-        binding.btnLike.setOnClickListener {
-            toggleLikeStatusForUser(product!!)
+        binding.btnLike.setOnClickListener { toggleLike(product!!) }
+    }
+
+    // ========================= Likes: LISTEN DOKUMEN PRODUK =========================
+    private fun startProductDocListener(productId: String) {
+        if (productId.isBlank()) return
+        productListener?.remove()
+        productListener = firestore.collection("products")
+            .document(productId)
+            .addSnapshotListener { snap, err ->
+                if (err != null) {
+                    Log.e("InfoProductActivity", "product snapshot error: ${err.message}")
+                    return@addSnapshotListener
+                }
+                if (snap != null && snap.exists()) {
+                    val likesCount = snap.getLong("likesCount")?.toInt() ?: 0
+                    binding.likesCount.text = "$likesCount Likes"
+                }
+            }
+    }
+
+    // ========================= Likes: CEK SUDAH LIKE ATAU BELUM =========================
+    private fun checkIfLiked(product: Product) {
+        val uid = auth.currentUser?.uid ?: return
+        firestore.collection("products")
+            .document(product.productId)
+            .collection("likesUsers")
+            .document(uid)
+            .get()
+            .addOnSuccessListener { doc -> updateLikeButtonStatus(doc.exists()) }
+            .addOnFailureListener { e ->
+                Log.e("InfoProductActivity", "checkIfLiked fail: ${e.message}")
+                updateLikeButtonStatus(false)
+            }
+    }
+
+    // ========================= Likes: TOGGLE DENGAN TRANSAKSI =========================
+    private fun toggleLike(product: Product) {
+        val uid = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
+            return
+        }
+        val pid = product.productId
+        val prodRef = firestore.collection("products").document(pid)
+        val likeRef = prodRef.collection("likesUsers").document(uid)
+
+        firestore.runTransaction { tx ->
+            val prodDoc = tx.get(prodRef)
+            val likeDoc = tx.get(likeRef)
+            val currLikes = prodDoc.getLong("likesCount") ?: 0L
+
+            if (likeDoc.exists()) {
+                // UNLIKE
+                tx.delete(likeRef)
+                tx.update(prodRef, "likesCount", if (currLikes > 0) currLikes - 1 else 0)
+                false
+            } else {
+                // LIKE
+                tx.set(likeRef, mapOf("likedAt" to FieldValue.serverTimestamp()))
+                tx.update(prodRef, "likesCount", currLikes + 1)
+                true
+            }
+        }.addOnSuccessListener { likedNow ->
+            updateLikeButtonStatus(likedNow)
+            // Tidak perlu set text likesCount; listener dokumen akan update otomatis.
+        }.addOnFailureListener { e ->
+            Toast.makeText(this, "Gagal mengubah like: ${e.message}", Toast.LENGTH_SHORT).show()
         }
     }
 
+    // ========================= Reviews =========================
     private fun getReviewsAndRating(product: Product) {
-        firestore.collection("ulasan")
-            .document(product.productId)  // Use productId as the unique identifier
-            .collection("ulasan")
+        val pid = product.productId
+        if (pid.isBlank()) {
+            binding.overallRating.text = "0.0"
+            binding.ratingBar.rating = 0f
+            return
+        }
+        firestore.collection("review").document(pid).collection("review")
             .get()
             .addOnSuccessListener { result ->
-                val reviewCount = result.size()
                 var totalRating = 0f
-                val userNames = mutableListOf<String>()  // List to store user names who reviewed the product
-
-                // Calculate the total rating by iterating over reviews
+                val reviewCount = result.size()
                 for (document in result) {
                     val review = document.toObject(Review::class.java)
-                    totalRating += (review.ratingKomunikasi + review.ratingKualitas) // Sum ratings
-                    userNames.add(review.userName)  // Add the reviewer's username to the list
+                    totalRating += (review.ratingKomunikasi + review.ratingKualitas)
                 }
-
-                // Calculate the average rating (average of all reviews)
-                if (reviewCount > 0) {
-                    product.avgRating = totalRating / (reviewCount * 2)  // Average rating (normalize)
-                }
-
-                // Update the UI elements
-                binding.likesCount.text = "$reviewCount Ulasan"
-                binding.overallRating.text = String.format("%.1f", product.avgRating)
-
-                // Display the usernames who rated the product
-                Log.d("InfoProductActivity", "Users who rated this product: $userNames")
-
-                // Set RatingBar value in InfoProductActivity
-                binding.ratingBar.rating = product.avgRating  // Set the actual value of RatingBar
+                val avg = if (reviewCount > 0) totalRating / (reviewCount * 2) else 0f
+                product.avgRating = avg
+                binding.overallRating.text = String.format("%.1f", avg)
+                binding.ratingBar.rating = avg
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to get reviews: ${e.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener {
+                binding.overallRating.text = "0.0"
+                binding.ratingBar.rating = 0f
             }
     }
 
-    private fun checkIfLiked(product: Product) {
-        val currentUserName = auth.currentUser?.displayName ?: return
+    // ========================= UI Produk =========================
+    private fun displayProductData(p: Product) = with(binding) {
+        namaProduct.text = p.productName
+        jenisProduk.text = "Jenis Produk: ${p.productType}"
+        HargaBarang.text = if (p.pricePerUnit > 0)
+            "Rp ${String.format("%,.0f", p.pricePerUnit)} /Kg" else "Harga belum tersedia"
+        stock.text = "${p.stockAvailable} kg"
+        deskripsiProduk.text = p.description
+        userName.text = " : ${p.userName}"
+        address.text = " : ${p.alamatToko}"
 
-        firestore.collection("productLikes")
-            .document(product.productId) // Use productId as the unique identifier
-            .collection("users")
-            .document(currentUserName)
+        val sellerEmail = p.email
+        if (!sellerEmail.isNullOrBlank()) {
+            firestore.collection("seller")
+                .document(sellerEmail.replace(".", "_"))
+                .get()
+                .addOnSuccessListener { doc ->
+                    val shareLokasi = doc.getString("shareLokasi").orEmpty()
+                    linkLokasi.text = if (shareLokasi.isNotEmpty()) shareLokasi else "Lokasi tidak tersedia"
+                    if (shareLokasi.isNotEmpty()) {
+                        linkLokasi.setOnClickListener {
+                            val i = Intent(Intent.ACTION_VIEW, Uri.parse(shareLokasi))
+                            i.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://com.google.android.apps.maps"))
+                            startActivity(i)
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    linkLokasi.text = "Lokasi tidak tersedia"
+                }
+        } else linkLokasi.text = "Lokasi tidak tersedia"
+
+        val discount = p.discount
+        if (discount > 0) {
+            discountLabel.visibility = View.VISIBLE
+            discountLabel.text = "$discount% OFF"
+        } else discountLabel.visibility = View.GONE
+
+        if (!p.imageUrls.isNullOrEmpty()) {
+            Glide.with(this@InfoProductActivity)
+                .load(p.imageUrls[0])
+                .placeholder(R.drawable.image_icon)
+                .error(R.drawable.image_icon)
+                .into(imgProduct)
+        } else if (!p.imageBase64List.isNullOrEmpty()) {
+            base64ToBitmap(p.imageBase64List[0])?.let { imgProduct.setImageBitmap(it) }
+                ?: imgProduct.setImageResource(R.drawable.image_icon)
+        } else imgProduct.setImageResource(R.drawable.image_icon)
+
+        if (source == "seller") {
+            btnBuy.text = "Hapus Produk"
+            btnKirimPesan.text = "Edit Produk"
+            btnBuy.setOnClickListener { hapusProduk(p) }
+            btnKirimPesan.setOnClickListener { openEditProduct(p) }
+        } else {
+            btnBuy.text = "Beli Produk"
+            btnKirimPesan.text = "Kirim Pesan"
+            btnBuy.setOnClickListener {
+                val bottomSheet = BottomSheetBuyActivity.newInstance(product!!)
+                bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
+                bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
+            }
+            btnKirimPesan.setOnClickListener {
+                Toast.makeText(this@InfoProductActivity, "Fitur kirim pesan belum diimplementasi", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openEditProduct(p: Product) {
+        val i = Intent(this, ProductBaruActivity::class.java).apply { putExtra("product", p) }
+        startActivity(i)
+    }
+
+    private fun hapusProduk(p: Product) {
+        // Cukup hapus dokumen produk. (Jika ingin hapus likesUsers, sebaiknya via Cloud Function / batch delete)
+        firestore.collection("products").document(p.productId)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(this, "Produk berhasil dihapus", Toast.LENGTH_SHORT).show()
+                finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menghapus produk: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun updateLikeButtonStatus(isLiked: Boolean) {
+        binding.btnLike.setImageResource(if (isLiked) R.drawable.liked else R.drawable.like)
+    }
+
+    private fun base64ToBitmap(base64Str: String): Bitmap? = try {
+        val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    } catch (e: Exception) {
+        Log.e("InfoProductActivity", "Failed to decode base64 image", e)
+        null
+    }
+
+    // ========================= Keranjang =========================
+    override fun onAddToCart(quantity: Int) {
+        val p = product ?: return
+        val userId = auth.currentUser?.uid ?: run {
+            Toast.makeText(this, "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        firestore.collection("carts").document(userId).collection("items")
+            .whereEqualTo("productId", p.productId) // pakai productId supaya unik
             .get()
-            .addOnSuccessListener { document ->
-                if (document.exists()) {
-                    updateLikeButtonStatus(true) // If the product is liked by the user
+            .addOnSuccessListener { documents ->
+                if (documents.isEmpty) {
+                    addProductToCart(p, quantity, userId)
                 } else {
-                    updateLikeButtonStatus(false) // If the product is not liked by the user
+                    val doc = documents.first()
+                    val docRef = firestore.collection("carts").document(userId).collection("items").document(doc.id)
+                    val oldQty = doc.getLong("quantity")?.toInt() ?: 0
+                    val newQty = oldQty + quantity
+                    docRef.update(
+                        mapOf(
+                            "quantity" to newQty,
+                            "totalPrice" to p.pricePerUnit * newQty
+                        )
+                    ).addOnSuccessListener {
+                        Toast.makeText(this, "Jumlah produk diperbarui", Toast.LENGTH_SHORT).show()
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(this, "Gagal memperbarui keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to check like: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Gagal memeriksa keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
+    private fun addProductToCart(p: Product, quantity: Int, userId: String) {
+        val cartItem = hashMapOf(
+            "productId" to p.productId,
+            "productName" to p.productName,
+            "productType" to p.productType,
+            "quantity" to quantity,
+            "pricePerUnit" to p.pricePerUnit,
+            "totalPrice" to p.pricePerUnit * quantity,
+            "userName" to p.userName,
+            "timestamp" to FieldValue.serverTimestamp()
+        )
+        firestore.collection("carts").document(userId).collection("items")
+            .add(cartItem)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Produk berhasil ditambahkan ke keranjang", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Gagal menambahkan ke keranjang: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    override fun onDestroy() {
+        productListener?.remove()
+        productListener = null
+        super.onDestroy()
+    }
+
+    // ========================= Chat (tetap) =========================
     private fun sendMessageToSeller(recipientUserId: String, product: Product) {
         val messageText = "Tanya tentang produk: ${product.productName}"
-
-        // Ambil UID penjual berdasarkan userName penjual di Firestore
         firestore.collection("users")
-            .whereEqualTo("nama", product.userName)  // Asumsi product.userName adalah nama penjual
+            .whereEqualTo("nama", product.userName)
             .get()
             .addOnSuccessListener { result ->
                 if (!result.isEmpty) {
-                    // Ambil UID penjual dari dokumen yang ditemukan
                     val sellerDoc = result.documents.first()
-                    val sellerUid = sellerDoc.id  // UID penjual ada di ID dokumen Firestore
-
-                    // Membuat objek pesan
+                    val sellerUid = sellerDoc.id
                     val message = Message(
-                        senderId = auth.currentUser?.uid ?: "",  // UID pengguna yang sedang login
+                        senderId = auth.currentUser?.uid ?: "",
                         senderName = auth.currentUser?.displayName ?: "Unknown",
                         message = messageText,
                         timestamp = System.currentTimeMillis(),
-                        receiverId = sellerUid,  // Menggunakan UID penjual yang diambil dari Firestore
-                        receiverName = product.userName,  // Nama penjual diambil dari Product
-                        chatId = "chat_${auth.currentUser?.uid}_${sellerUid}" // Menambahkan chatId
+                        receiverId = sellerUid,
+                        receiverName = product.userName,
+                        chatId = "chat_${auth.currentUser?.uid}_${sellerUid}"
                     )
-
-                    val chatId =
-                        "chat_${auth.currentUser?.uid}_${sellerUid}" // ChatId berdasarkan senderId dan receiverId
-
+                    val chatId = "chat_${auth.currentUser?.uid}_${sellerUid}"
                     firestore.collection("chats").document(chatId).get()
                         .addOnSuccessListener { document ->
                             if (!document.exists()) {
-                                // Jika chat belum ada, buat dokumen chat baru dan kirim pesan pertama
                                 firestore.collection("chats").document(chatId).set(
                                     hashMapOf(
                                         "participants" to listOf(auth.currentUser?.uid, sellerUid),
                                         "timestamp" to System.currentTimeMillis(),
-                                        "receiverName" to product.userName // Nama penerima (penjual)
+                                        "receiverName" to product.userName
                                     )
                                 ).addOnSuccessListener {
-                                    // Tambahkan pesan pertama ke subcollection messages
-                                    firestore.collection("chats")
-                                        .document(chatId)
-                                        .collection("messages")
-                                        .add(message)  // Menambahkan chatId ke pesan
+                                    firestore.collection("chats").document(chatId)
+                                        .collection("messages").add(message)
                                         .addOnSuccessListener {
-                                            Log.d("PesanActivity", "Message sent successfully")
                                             val intent = Intent(this, PesanActivity::class.java)
                                             intent.putExtra("chat_id", chatId)
                                             startActivity(intent)
                                         }
-                                        .addOnFailureListener { e ->
-                                            Log.e("PesanActivity", "Failed to send message: $e")
-                                        }
                                 }
                             } else {
-                                // Jika chat sudah ada, langsung tambahkan pesan baru ke subcollection messages
-                                firestore.collection("chats")
-                                    .document(chatId)
-                                    .collection("messages")
-                                    .add(message)  // Menambahkan chatId ke pesan
+                                firestore.collection("chats").document(chatId)
+                                    .collection("messages").add(message)
                                     .addOnSuccessListener {
-                                        Log.d("PesanActivity", "Message sent successfully")
                                         val intent = Intent(this, PesanActivity::class.java)
                                         intent.putExtra("chat_id", chatId)
                                         startActivity(intent)
                                     }
-                                    .addOnFailureListener { e ->
-                                        Log.e("PesanActivity", "Failed to send message: $e")
-                                    }
                             }
-                        }
-                        .addOnFailureListener { e ->
-                            Log.e("PesanActivity", "Error checking chat existence: $e")
                         }
                 } else {
                     Toast.makeText(this, "Penjual tidak ditemukan", Toast.LENGTH_SHORT).show()
                 }
             }
             .addOnFailureListener { e ->
-                Log.e("PesanActivity", "Error fetching seller UID: $e")
-                Toast.makeText(this, "Error fetching seller UID: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Toast.makeText(this, "Error fetching seller UID: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
@@ -245,147 +402,10 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
         }
     }
 
-    private fun displayProductData(p: Product) {
-        with(binding) {
-            // Display product details
-            namaProduct.text = p.productName
-            jenisProduk.text = "Jenis Produk: ${p.productType}"
-            HargaBarang.text = if (p.pricePerUnit > 0) "Rp ${String.format("%,.0f", p.pricePerUnit)} /Kg" else "Harga belum tersedia"
-            stock.text = "${p.stockAvailable} kg"
-            deskripsiProduk.text = p.description
-            userName.text = " : ${p.userName}"
-
-            // Set address text
-            address.text = " : ${p.alamatToko}"
-
-            // Get seller email to fetch location data
-            val sellerEmail = p.email // Use the email from the Product object to fetch seller info
-            firestore.collection("seller")
-                .document(sellerEmail.replace(".", "_"))  // Firestore uses _ instead of .
-                .get()
-                .addOnSuccessListener { document ->
-                    if (document.exists()) {
-                        val shareLokasi = document.getString("shareLokasi") ?: ""
-                        if (shareLokasi.isNotEmpty()) {
-                            // Display the location link
-                            linkLokasi.text = shareLokasi
-                            // Make the location link clickable
-                            linkLokasi.setOnClickListener {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(shareLokasi))
-                                intent.putExtra(Intent.EXTRA_REFERRER, Uri.parse("android-app://com.google.android.apps.maps"))
-                                startActivity(intent)
-                            }
-                        } else {
-                            linkLokasi.text = "Lokasi tidak tersedia"
-                        }
-                    }
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(this@InfoProductActivity, "Failed to get location: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-
-            // Display the discount
-            val discount = p.discount
-            if (discount > 0) {
-                binding.discountLabel.visibility = View.VISIBLE
-                binding.discountLabel.text = "$discount% OFF"
-            } else {
-                binding.discountLabel.visibility = View.GONE
-            }
-
-            // Display the product image
-            if (!p.imageUrls.isNullOrEmpty()) {
-                Glide.with(this@InfoProductActivity)
-                    .load(p.imageUrls[0])
-                    .placeholder(R.drawable.image_icon)
-                    .error(R.drawable.image_icon)
-                    .into(imgProduct)
-            } else if (!p.imageBase64List.isNullOrEmpty()) {
-                base64ToBitmap(p.imageBase64List[0])?.let {
-                    imgProduct.setImageBitmap(it)
-                } ?: imgProduct.setImageResource(R.drawable.image_icon)
-            } else {
-                imgProduct.setImageResource(R.drawable.image_icon)
-            }
-            checkIfLiked(p)
-            // Set button text and listeners based on source
-            if (source == "seller") {
-                // Change button text and set functionality for seller
-                binding.btnBuy.text = "Hapus Produk"
-                binding.btnKirimPesan.text = "Edit Produk"
-
-                // Button to delete product
-                binding.btnBuy.setOnClickListener {
-                    hapusProduk(p) // Handle deleting the product
-                }
-
-                // Button to edit product
-                btnKirimPesan.setOnClickListener {
-                    openEditProduct(p) // Open ProductBaruActivity for editing
-                }
-            } else {
-                // Regular buy product functionality for non-seller users
-                binding.btnBuy.text = "Beli Produk"
-                binding.btnKirimPesan.text = "Kirim Pesan"
-                binding.btnBuy.setOnClickListener {
-                    val bottomSheet =
-                        BottomSheetBuyActivity.newInstance(product!!) // Send the whole product object
-                    bottomSheet.setOnAddToCartListener(this@InfoProductActivity)
-                    bottomSheet.show(supportFragmentManager, "BottomSheetBuy")
-                }
-                binding.btnKirimPesan.setOnClickListener {
-                    Toast.makeText(
-                        this@InfoProductActivity,
-                        "Fitur kirim pesan belum diimplementasi",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-    }
-
-    private fun openEditProduct(p: Product) {
-        val intent = Intent(this, ProductBaruActivity::class.java).apply {
-            putExtra("product", p)
-        }
-        startActivity(intent)
-    }
-
-    private fun hapusProduk(p: Product) {
-        firestore.collection("products")
-            .document(p.productId)
-            .delete()
-            .addOnSuccessListener {
-                // Remove associated likes as well
-                firestore.collection("productLikes")
-                    .document(p.productId)
-                    .delete()
-                    .addOnSuccessListener {
-                        Toast.makeText(
-                            this,
-                            "Produk berhasil dihapus beserta likes",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        finish()
-                    }
-                    .addOnFailureListener { e ->
-                        Toast.makeText(
-                            this,
-                            "Gagal menghapus likes: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal menghapus produk: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
     private fun toggleLikeStatusForUser(product: Product) {
         val currentUserName = auth.currentUser?.displayName ?: "Unknown"
 
-        val productLikesRef = firestore.collection("productLikes")
+        val productLikesRef = firestore.collection("products")
             .document(product.productId)  // Use productId as the document ID
             .collection("users")
             .document(currentUserName) // Use username as the document ID
@@ -424,7 +444,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     }
 
     private fun addUsernameToLikes(productId: String, username: String) {
-        firestore.collection("productLikes")
+        firestore.collection("products")
             .document(productId)
             .collection("users")
             .document(username)  // Use username as the document ID
@@ -438,7 +458,7 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     }
 
     private fun removeUsernameFromLikes(productId: String, username: String) {
-        firestore.collection("productLikes")
+        firestore.collection("products")
             .document(productId)
             .collection("users")
             .document(username)  // Use username as the document ID
@@ -475,17 +495,16 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
     }
 
     private fun getLikesCount(product: Product) {
-        firestore.collection("productLikes")  // Replaced db with firestore
-            .document(product.productId)
-            .collection("users")
+        val pid = product.productId
+        if (pid.isBlank()) return
+        firestore.collection("products").document(pid).collection("users")
             .get()
             .addOnSuccessListener { result ->
                 val likesCount = result.size()
                 updateLikesCountInProduct(product, likesCount)
             }
             .addOnFailureListener { e ->
-                Toast.makeText(this, "Failed to get like count: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
+                Log.e("InfoProductActivity", "getLikesCount failed: ${e.message}")
             }
     }
 
@@ -500,97 +519,6 @@ class InfoProductActivity : AppCompatActivity(), BottomSheetBuyActivity.OnAddToC
                 Toast.makeText(
                     this,
                     "Failed to update like count: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
-    }
-
-    private fun updateLikeButtonStatus(isLiked: Boolean) {
-        if (isLiked) {
-            binding.btnLike.setImageResource(R.drawable.liked)  // Image when liked
-        } else {
-            binding.btnLike.setImageResource(R.drawable.like)  // Image when not liked
-        }
-    }
-
-    private fun base64ToBitmap(base64Str: String): Bitmap? {
-        return try {
-            val decodedBytes = Base64.decode(base64Str, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-        } catch (e: Exception) {
-            Log.e("InfoProductActivity", "Failed to decode base64 image", e)
-            null
-        }
-    }
-
-    override fun onAddToCart(quantity: Int) {
-        val p = product ?: return
-        val userId = auth.currentUser?.uid ?: run {
-            Toast.makeText(this, "Harap login terlebih dahulu", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        firestore.collection("carts").document(userId).collection("items")
-            .whereEqualTo("productName", p.productName)
-            .get()
-            .addOnSuccessListener { documents ->
-                if (documents.isEmpty) {
-                    addProductToCart(p, quantity, userId)
-                } else {
-                    for (doc in documents) {
-                        val docRef = firestore.collection("carts")
-                            .document(userId)
-                            .collection("items")
-                            .document(doc.id)
-
-                        val newQuantity = doc.getLong("quantity")?.toInt() ?: 0 + quantity
-                        docRef.update(
-                            "quantity",
-                            newQuantity,
-                            "totalPrice",
-                            p.pricePerUnit * newQuantity
-                        )
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "Jumlah produk diperbarui", Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                            .addOnFailureListener { e ->
-                                Toast.makeText(
-                                    this,
-                                    "Gagal memperbarui keranjang: ${e.message}",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                    }
-                }
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(this, "Gagal memeriksa keranjang: ${e.message}", Toast.LENGTH_SHORT)
-                    .show()
-            }
-    }
-
-    private fun addProductToCart(p: Product, quantity: Int, userId: String) {
-        val cartItem = hashMapOf(
-            "productName" to p.productName,
-            "productType" to p.productType,
-            "quantity" to quantity,
-            "pricePerUnit" to p.pricePerUnit,
-            "totalPrice" to p.pricePerUnit * quantity,
-            "userName" to p.userName,
-            "timestamp" to FieldValue.serverTimestamp()
-        )
-
-        firestore.collection("carts").document(userId).collection("items")
-            .add(cartItem)
-            .addOnSuccessListener {
-                Toast.makeText(this, "Produk berhasil ditambahkan ke keranjang", Toast.LENGTH_SHORT)
-                    .show()
-            }
-            .addOnFailureListener { e ->
-                Toast.makeText(
-                    this,
-                    "Gagal menambahkan ke keranjang: ${e.message}",
                     Toast.LENGTH_SHORT
                 ).show()
             }

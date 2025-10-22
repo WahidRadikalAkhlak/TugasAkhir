@@ -88,7 +88,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
         )
 
         // Ganti karakter '.' dalam email agar valid di Firestore
-        val docId = email.replace(".", "_")
+        val docId = email.replace(".", "_").replace("@", "_")
 
         db.collection("seller")
             .document(docId)
@@ -112,7 +112,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
         val currentUser = FirebaseAuth.getInstance().currentUser
         val email = currentUser?.email ?: return
 
-        val docId = email.replace(".", "_")
+        val docId = email.replace(".", "_").replace("@", "_")
 
         db.collection("seller").document(docId)
             .get()
@@ -170,7 +170,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
             return
         }
 
-        val docId = email.replace(".", "_")
+        val docId = email.replace(".", "_").replace("@", "_")
 
         // Update data profil penjual di Firestore
         val sellerData: MutableMap<String, Any> = hashMapOf(
@@ -197,7 +197,7 @@ class DaftarPenjualActivity : AppCompatActivity() {
 
     private fun updateUserStatus(email: String) {
         val userRef = db.collection("users")
-        val docId = email.replace(".", "_")
+        val docId = email.replace(".", "_").replace("@", "_")
 
         userRef.document(docId).update("isBusinessAccount", true)
             .addOnSuccessListener {

@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -69,19 +70,19 @@ class DaftarProductActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        // Initialize the RecyclerView adapter
         adapter = ProductImageAdapter(productList) { product ->
             val intent = Intent(this, InfoProductActivity::class.java).apply {
-                putExtra("product", product)      // Send product object
-                putExtra("source", "seller")      // Mark as coming from seller product list (edit/remove)
+                putExtra("product", product)
+                putExtra("source", "seller")
             }
             startActivity(intent)
         }
 
-        // Set the layout manager and adapter for the RecyclerView
-        binding.rvProductList.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        binding.rvProductList.adapter = adapter
+        binding.rvProductList.apply {
+            layoutManager = GridLayoutManager(context, 4, GridLayoutManager.VERTICAL, false)
+            adapter = this@DaftarProductActivity.adapter
+            setHasFixedSize(true)
+        }
     }
 
     private fun setupAddProductButton() {
@@ -130,37 +131,61 @@ class DaftarProductActivity : AppCompatActivity() {
             Toast.makeText(this, "Email user tidak valid", Toast.LENGTH_SHORT).show()
             return
         }
-
-        // Pastikan sellerUID diambil dari Firebase Auth
-        val sellerUID = FirebaseAuth.getInstance().currentUser?.uid ?: run {
+        val user = FirebaseAuth.getInstance().currentUser ?: run {
             Toast.makeText(this, "User tidak terdeteksi, harap login ulang.", Toast.LENGTH_SHORT).show()
             return
         }
+        val sellerUID = user.uid
+        val displayName = user.displayName ?: ""
 
-        // Query Firestore untuk mendapatkan produk yang dimiliki oleh penjual berdasarkan sellerUID
+        // 1) by sellerUID
         db.collection("products")
-            .whereEqualTo("sellerUID", sellerUID) // Filter produk berdasarkan sellerUID
+            .whereEqualTo("sellerUID", sellerUID)
             .get()
-            .addOnSuccessListener { documents ->
-                val productsFromFirestore = documents.mapNotNull { doc ->
-                    doc.toObject(Product::class.java) // Mengonversi data menjadi objek Product
+            .addOnSuccessListener { docs1 ->
+                if (!docs1.isEmpty) {
+                    consumeProducts(docs1.toObjects(Product::class.java))
+                    return@addOnSuccessListener
                 }
-                productList.clear() // Clear data yang ada
-                productList.addAll(productsFromFirestore) // Menambahkan produk baru yang sesuai dengan sellerUID
-                adapter.notifyDataSetChanged() // Memberitahu adapter untuk memperbarui tampilan
+                // 2) fallback by email
+                db.collection("products")
+                    .whereEqualTo("email", email)
+                    .get()
+                    .addOnSuccessListener { docs2 ->
+                        if (!docs2.isEmpty) {
+                            consumeProducts(docs2.toObjects(Product::class.java))
+                            return@addOnSuccessListener
+                        }
+                        // 3) fallback by userName (nama tampilan)
+                        if (displayName.isNotBlank()) {
+                            db.collection("products")
+                                .whereEqualTo("userName", displayName)
+                                .get()
+                                .addOnSuccessListener { docs3 ->
+                                    consumeProducts(docs3.toObjects(Product::class.java))
+                                }
+                                .addOnFailureListener { e -> onFetchError(e) }
+                        } else {
+                            consumeProducts(emptyList())
+                        }
+                    }
+                    .addOnFailureListener { e -> onFetchError(e) }
+            }
+            .addOnFailureListener { e -> onFetchError(e) }
+    }
 
-                if (productList.isEmpty()) {
-                    Toast.makeText(this, "Belum ada produk tersedia.", Toast.LENGTH_SHORT).show()
-                }
-            }
-            .addOnFailureListener { e ->
-                Log.e("DaftarProductActivity", "Gagal mengambil data produk", e)
-                Toast.makeText(
-                    this,
-                    "Gagal mengambil data produk: ${e.message}",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+    private fun consumeProducts(list: List<Product>) {
+        productList.clear()
+        productList.addAll(list)
+        adapter.notifyDataSetChanged()
+        if (productList.isEmpty()) {
+            Toast.makeText(this, "Belum ada produk tersedia.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun onFetchError(e: Exception) {
+        Log.e("DaftarProductActivity", "Gagal mengambil data produk", e)
+        Toast.makeText(this, "Gagal mengambil data produk: ${e.message}", Toast.LENGTH_SHORT).show()
     }
 
     private fun filterProductList(query: String?) {

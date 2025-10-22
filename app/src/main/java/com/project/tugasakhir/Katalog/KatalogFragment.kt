@@ -55,8 +55,10 @@ class KatalogFragment : Fragment() {
             context?.startActivity(intent)
         }
 
-        binding.rvProdukList.adapter = produkAdapter
-        binding.rvProdukList.layoutManager = GridLayoutManager(context, 5, GridLayoutManager.VERTICAL, false)
+        binding.rvProdukList.apply {
+            adapter = produkAdapter
+            layoutManager = GridLayoutManager(context, 5, GridLayoutManager.VERTICAL, false)
+        }
 
         rekomendasiAdapter = KatalogAdapter(mutableListOf(), { product ->
             val intent = Intent(context, InfoProductActivity::class.java).apply {
@@ -66,12 +68,10 @@ class KatalogFragment : Fragment() {
             context?.startActivity(intent)
         }, true)
 
-        binding.rvRekomendasi.adapter = rekomendasiAdapter
-        binding.rvRekomendasi.layoutManager = GridLayoutManager(context, 4, GridLayoutManager.VERTICAL, false)
-
-        // Menghitung lebar item agar hanya ada 5 item per baris secara horizontal
-        val screenWidth = resources.displayMetrics.widthPixels
-        val itemWidth = screenWidth / 5 // Membagi lebar layar dengan 5 untuk mendapatkan lebar setiap item
+        binding.rvRekomendasi.apply {
+            adapter = rekomendasiAdapter
+            layoutManager = GridLayoutManager(context, 4, GridLayoutManager.VERTICAL, false)
+        }
 
         setupSearch()
         setupChipFilter()
@@ -84,7 +84,7 @@ class KatalogFragment : Fragment() {
             .addOnSuccessListener { snapshots ->
                 val productsFromFirestore = snapshots.map { doc ->
                     doc.toObject(Product::class.java)
-                }.filter { product -> product.isAvailable }
+                }.filter { product -> product.isAvailable || product.stockAvailable > 0 }
 
                 allProducts.clear()
                 allProducts.addAll(productsFromFirestore)
@@ -95,34 +95,32 @@ class KatalogFragment : Fragment() {
                 produkList.clear()
                 produkList.addAll(productsFromFirestore)
 
-                // Group products by product type
+                // Log kelompok produk per kategori (opsional)
                 val groupedByType = produkList.groupBy { it.productType }
-
-                // Log the products in the catalog, grouped by product type
                 groupedByType.forEach { (productType, products) ->
-                    val productDetails = products.joinToString("\n") { product ->
-                        "Product Name: ${product.productName}, Price/Kg: ${product.pricePerUnit}, Stock: ${product.stockAvailable}"
+                    val productDetails = products.joinToString("\n") { p ->
+                        "Product Name: ${p.productName}, Price/Kg: ${p.pricePerUnit}, Stock: ${p.stockAvailable}, Likes: ${p.likesCount}"
                     }
-
                     Log.d("KatalogFragment", "Products in Category: $productType\n$productDetails")
                 }
 
-                val likesCountFetched = mutableListOf<Int>()
-                for (product in produkList) {
+                // Ambil rating + likesCount (likesCount sebenarnya sudah ikut termapping kalau field ada)
+                var pending = produkList.size
+                if (pending == 0) {
+                    produkAdapter.notifyDataSetChanged()
+                    applyCollaborativeFiltering()
+                    updateRecommendations()
+                    return@addOnSuccessListener
+                }
+
+                produkList.forEach { product ->
+                    // refresh rating dari koleksi review (opsional—kalau avgRating sdh ada, bisa skip)
                     getReviewsAndRating(product)
 
-                    // Get likes and usernames for each product
-                    getLikesCountForProduct(product) { likesCount, userNames ->
-                        product.likesCount = likesCount
-                        product.likesUsers = userNames  // Store usernames who liked the product
-
-                        // Log the usernames of users who liked this product
-                        if (userNames.isNotEmpty()) {
-                            Log.d("KatalogFragment", "Users who liked ${product.productName}: $userNames")
-                        }
-
-                        likesCountFetched.add(likesCount)
-                        if (likesCountFetched.size == produkList.size) {
+                    // refresh likesCount langsung dari field dokumen (aman & sesuai struktur)
+                    getLikesCountForProduct(product) { _ ->
+                        pending--
+                        if (pending == 0) {
                             produkAdapter.notifyDataSetChanged()
                             applyCollaborativeFiltering()
                             updateRecommendations()
@@ -135,35 +133,25 @@ class KatalogFragment : Fragment() {
             }
     }
 
-    private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int, List<String>) -> Unit) {
-        db.collection("productLikes")
+    private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int) -> Unit) {
+        db.collection("products")
             .document(product.productId)
-            .collection("users")
             .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Log.e("KatalogFragment", "No likes found for product: ${product.productId}")
-                    onLikesCountFetched(0, emptyList())
-                    return@addOnSuccessListener
-                }
-
-                val likesCount = result.size()
-                val userNames = result.map { it.id }  // Get usernames who liked the product
+            .addOnSuccessListener { doc ->
+                val likesCount = doc.getLong("likesCount")?.toInt() ?: 0
                 product.likesCount = likesCount
-
-                // Pass the like count and list of usernames to the callback function
-                onLikesCountFetched(likesCount, userNames)  // Pass usernames along with like count
+                onLikesCountFetched(likesCount)
             }
             .addOnFailureListener { e ->
-                Log.e("KatalogFragment", "Failed to fetch likes count: ${e.message}")
-                onLikesCountFetched(0, emptyList())
+                Log.e("KatalogFragment", "Failed to fetch likesCount: ${e.message}")
+                onLikesCountFetched(0)
             }
     }
 
     private fun getReviewsAndRating(product: Product) {
-        db.collection("ulasan")
+        db.collection("review")
             .document(product.productId)
-            .collection("ulasan")
+            .collection("review")
             .get()
             .addOnSuccessListener { result ->
                 var totalRating = 0f
@@ -172,16 +160,13 @@ class KatalogFragment : Fragment() {
                     val review = document.toObject(Review::class.java)
                     totalRating += (review.ratingKomunikasi + review.ratingKualitas)
                 }
-
                 if (reviewCount > 0) {
                     product.avgRating = totalRating / (reviewCount * 2)
                 }
-
-                produkAdapter.notifyDataSetChanged()
-                rekomendasiAdapter.notifyDataSetChanged()
+                // biarkan adapter di-notify saat batch selesai
             }
             .addOnFailureListener { e ->
-                Toast.makeText(requireContext(), "Failed to get reviews: ${e.message}", Toast.LENGTH_SHORT).show()
+                Log.e("KatalogFragment", "Failed to get reviews: ${e.message}")
             }
     }
 
@@ -366,7 +351,7 @@ class KatalogFragment : Fragment() {
                 R.id.chip3 -> "Umbi-Umbian"
                 R.id.chip4 -> "Kacang-Kacangan"
                 R.id.chip5 -> "Sayur Daun"
-                R.id.chip6 -> "Buah-Buahan"
+                R.id.chip6 -> "Buah"
                 R.id.chip7 -> "Tanaman Obat"
                 R.id.chip8 -> "Tanaman Hias"
                 else -> "" // Semua
@@ -440,30 +425,6 @@ class KatalogFragment : Fragment() {
         }
 
         return recommendedProducts
-    }
-
-    private fun getLikesCountForProduct(product: Product, onLikesCountFetched: (Int) -> Unit) {
-        db.collection("productLikes")
-            .document(product.productId)
-            .collection("users")
-            .get()
-            .addOnSuccessListener { result ->
-                if (result.isEmpty) {
-                    Log.e("KatalogFragment", "No likes found for product: ${product.productId}")
-                    onLikesCountFetched(0)
-                    return@addOnSuccessListener
-                }
-
-                val likesCount = result.size()
-                product.likesCount = likesCount
-                val likesMap = result.associate { doc -> doc.id to 1 }
-                product.likes = likesMap
-                onLikesCountFetched(likesCount)
-            }
-            .addOnFailureListener { e ->
-                Log.e("KatalogFragment", "Failed to fetch likes count: ${e.message}")
-                onLikesCountFetched(0)
-            }
     }
 
     private fun setupSearch() {

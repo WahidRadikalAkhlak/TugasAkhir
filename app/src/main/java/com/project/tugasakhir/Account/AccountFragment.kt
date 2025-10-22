@@ -49,7 +49,7 @@ class AccountFragment : Fragment() {
 
             // Check business account status based on email, not uid
             checkBusinessAccountStatus(email)
-
+            ensureBusinessAndClaim(email, name)
         } else {
             // User not logged in
             binding.tvUserName.text = "Guest"
@@ -111,6 +111,81 @@ class AccountFragment : Fragment() {
         }
     }
 
+    private fun ensureBusinessAndClaim(email: String, displayName: String) {
+        if (email.isBlank()) return
+
+        val user = auth.currentUser ?: return
+        val sellerUID = user.uid
+        val docId = email.replace(".", "_").replace("@", "_")
+
+        val sellerRef = db.collection("sellers").document(docId)
+
+        sellerRef.get()
+            .addOnSuccessListener { snap ->
+                if (!snap.exists()) {
+                    // buat seller doc otomatis
+                    val data = hashMapOf(
+                        "email" to email,
+                        "username" to displayName,
+                        "isBusinessAccount" to true,
+                        "alamatToko" to "-",
+                        "deskripsi" to "Akun bisnis otomatis dari login",
+                        "noHp" to "-",
+                        "noIzinUsaha" to "-",
+                        "sosialMedia" to "-",
+                        "shareLokasi" to "-",
+                        "claimedDummyProducts" to false
+                    )
+                    sellerRef.set(data)
+                }
+
+                val alreadyClaimed = snap.getBoolean("claimedDummyProducts") ?: false
+                if (!alreadyClaimed) {
+                    claimDummyProductsForThisSeller(email, sellerUID, displayName) {
+                        // set flag agar hanya sekali
+                        sellerRef.set(mapOf("claimedDummyProducts" to true), com.google.firebase.firestore.SetOptions.merge())
+                    }
+                }
+            }
+    }
+
+    private fun claimDummyProductsForThisSeller(
+        email: String,
+        sellerUID: String,
+        displayName: String,
+        onDone: () -> Unit
+    ) {
+        // cari produk yang belum punya owner (email & sellerUID tidak ada / null)
+        db.collection("products")
+            .whereEqualTo("isAvailable", true)
+            .limit(10) // batasi agar ringan
+            .get()
+            .addOnSuccessListener { docs ->
+                val toClaim = docs.documents.filter { d ->
+                    // belum dimiliki siapa pun?
+                    d.getString("email").isNullOrBlank() && d.getString("sellerUID").isNullOrBlank()
+                }
+                if (toClaim.isEmpty()) {
+                    onDone()
+                    return@addOnSuccessListener
+                }
+
+                val batch = db.batch()
+                toClaim.forEach { d ->
+                    val ref = d.reference
+                    batch.update(ref, mapOf(
+                        "email" to email,
+                        "sellerUID" to sellerUID,
+                        "userName" to displayName
+                    ))
+                }
+                batch.commit()
+                    .addOnSuccessListener { onDone() }
+                    .addOnFailureListener { onDone() }
+            }
+            .addOnFailureListener { onDone() }
+    }
+
     private fun navigateToLanguages() {
         val intent = Intent(requireContext(), LanguagesActivity::class.java)
         startActivity(intent)
@@ -123,27 +198,51 @@ class AccountFragment : Fragment() {
             return
         }
 
-        val docId = email.replace(".", "_")
+        val docId = email.replace(".", "_").replace("@", "_")
 
-        db.collection("seller").document(docId).get()
+        db.collection("sellers").document(docId).get()
             .addOnSuccessListener { doc ->
                 val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
 
                 if (isBusinessAccount) {
+                    // Sudah bisnis
                     binding.btnDaftarProduct.visibility = View.VISIBLE
                     binding.btnDaftarbisnis.visibility = View.GONE
-                    // Setup tombol dengan behavior untuk user sudah terdaftar
                     setupBtnDaftarProduct(true)
                 } else {
-                    binding.btnDaftarProduct.visibility = View.VISIBLE
-                    binding.btnDaftarbisnis.visibility = View.VISIBLE
-                    setupBtnDaftarProduct(false)
+                    // cek produk, mungkin dia sudah jualan
+                    db.collection("products")
+                        .whereEqualTo("email", email)
+                        .get()
+                        .addOnSuccessListener { products ->
+                            if (!products.isEmpty) {
+                                // ada produk, otomatis akun bisnis
+                                val autoData = mapOf(
+                                    "email" to email,
+                                    "username" to (auth.currentUser?.displayName ?: "User"),
+                                    "isBusinessAccount" to true,
+                                    "alamatToko" to products.documents.first().getString("alamatToko").orEmpty(),
+                                    "deskripsi" to "Akun bisnis otomatis dari produk yang sudah ada",
+                                    "noHp" to "-",
+                                    "noIzinUsaha" to "-",
+                                    "sosialMedia" to "-",
+                                    "shareLokasi" to "-"
+                                )
+                                db.collection("sellers").document(docId).set(autoData)
+                                binding.btnDaftarProduct.visibility = View.VISIBLE
+                                binding.btnDaftarbisnis.visibility = View.GONE
+                                setupBtnDaftarProduct(true)
+                            } else {
+                                // memang benar belum bisnis
+                                binding.btnDaftarProduct.visibility = View.GONE
+                                binding.btnDaftarbisnis.visibility = View.VISIBLE
+                            }
+                        }
                 }
             }
             .addOnFailureListener {
-                // Jika gagal ambil data, asumsikan belum terdaftar
+                binding.btnDaftarProduct.visibility = View.GONE
                 binding.btnDaftarbisnis.visibility = View.VISIBLE
-                binding.btnDaftarProduct.visibility = View.VISIBLE
                 setupBtnDaftarProduct(false)
             }
     }
@@ -157,7 +256,7 @@ class AccountFragment : Fragment() {
 
         val docId = email.replace(".", "_")
 
-        db.collection("seller").document(docId).get()
+        db.collection("sellers").document(docId).get()
             .addOnSuccessListener { doc ->
                 val isBusinessAccount = doc.exists() && (doc.getBoolean("isBusinessAccount") ?: false)
                 val currentUser = auth.currentUser
